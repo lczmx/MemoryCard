@@ -27,7 +27,7 @@ class Tag(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     uid = Column(Integer, ForeignKey("User.id"))
     icon = Column(String(32), nullable=False, default="", comment='图标的类名')
-    color = Column(String(128), nullable=False, default="", comment='标签颜色')
+    color = Column(String(7), nullable=False, default="#205580", comment='标签颜色')
 
     card = relationship("Card", backref="tag")
 
@@ -40,7 +40,7 @@ class Card(Base):
 
     created_at = Column(DateTime, server_default=func.now(), comment='创建时间')
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), comment='更新时间')
-    summary = Column(String(64), default="", comment='卡片的概要信息')
+    summary = Column(String(64), default="", comment='卡片的概要信息(提示信息)')
     description = Column(Text, nullable=False, comment='卡片的详细内容')
 
     current_plan = relationship("CurrentPlan", backref="card")  # 目前的计划子表

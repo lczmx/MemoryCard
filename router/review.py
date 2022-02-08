@@ -3,9 +3,9 @@
 """
 from fastapi import APIRouter
 
-router = APIRouter(prefix="/home")
+router = APIRouter(prefix="/review")
 
 
 @router.get("/")
 async def index():
-    return {"index": "home"}
+    return {"index": "复习数据"}
