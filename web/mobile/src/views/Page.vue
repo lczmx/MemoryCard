@@ -3,7 +3,7 @@
   <!-- 默认 review-->
   <router-view></router-view>
 
-  <van-tabbar v-model="active" router>
+  <van-tabbar v-model="active" router :fixed="true" >
     <van-tabbar-item replace to="/" name="review" icon="underway-o">复习</van-tabbar-item>
     <van-tabbar-item replace to="/cards" name="memory" icon="more-o">卡片</van-tabbar-item>
     <van-tabbar-item replace to="/tags" name="tags" icon="label-o">标签</van-tabbar-item>

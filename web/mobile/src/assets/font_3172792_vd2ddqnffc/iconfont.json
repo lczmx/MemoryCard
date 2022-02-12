@@ -1,0 +1,30 @@
+{
+  "id": "3172792",
+  "name": "记忆卡牌",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "248935",
+      "name": "tag",
+      "font_class": "tag",
+      "unicode": "e66c",
+      "unicode_decimal": 58988
+    },
+    {
+      "icon_id": "586784",
+      "name": "c",
+      "font_class": "c",
+      "unicode": "e6c2",
+      "unicode_decimal": 59074
+    },
+    {
+      "icon_id": "21169182",
+      "name": "check-box",
+      "font_class": "check-box",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    }
+  ]
+}
