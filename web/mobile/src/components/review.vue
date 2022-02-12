@@ -194,7 +194,7 @@ export default defineComponent({
       justify-content: center;
       align-items: center;
 
-      height: 90px;
+      // height: 66px;
       margin-right: 5px;
       .swipe_right_btn {
         margin-bottom: 5px;

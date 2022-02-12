@@ -1,6 +1,3 @@
-
-
-
 <template>
   <van-nav-bar title="卡片" @click-left="reload" @click-right="more">
     <template #left>
@@ -24,7 +21,7 @@
   </van-nav-bar>
 
   <!-- 复习页面的主题 -->
-  <div class="review_body">
+  <div class="cards_body">
     <!-- 加载框 -->
     <van-loading color="#1989fa" v-if="!data" />
 
@@ -36,13 +33,7 @@
       class="cell_item"
     >
       <van-swipe-cell>
-        <van-cell
-          :title="item.title"
-          :label="item.next_review_at"
-          center
-          title-class="content_item"
-          label-class="content_date"
-        >
+        <van-cell center title-class="content_item" label-class="content_date">
           <template #icon>
             <van-icon
               :name="item.icon"
@@ -52,10 +43,16 @@
             />
           </template>
           <template #title>
-            <span class="item-tag" :style="{ color: item.color }">{{
-              item.tag_name
-            }}</span>
             <span class="item-title">{{ item.title }}</span>
+          </template>
+          <template #label>
+            <span class="item-tag">
+              <van-tag :color="item.color" text-color="#fff">{{
+                item.tag_name
+              }}</van-tag>
+
+              {{ item.next_review_at }}
+            </span>
           </template>
         </van-cell>
         <template #right>
@@ -97,8 +94,8 @@ export default defineComponent({
     const showCal = ref(false); // 显示日历
     // 弹框选项
     const actions = [
-      { text: "今日卡片", icon: " iconfont icon-c" },
-      { text: "标签筛选", icon: " iconfont icon-tag" },
+      { text: "排序", icon: " iconfont icon-c" },
+      { text: "只看星标", icon: " iconfont icon-tag" },
       { text: "选择卡片", icon: " iconfont icon-check-box" },
     ];
     // 弹框选项选中回调
@@ -127,6 +124,7 @@ export default defineComponent({
 
     axios({
       method: "get",
+      // TODO: 修改url
       url: "http://localhost:8080/data/review/cards.json",
     }).then((response) => {
       data.value = response.data;
@@ -149,7 +147,7 @@ export default defineComponent({
 
 
 <style lang="scss">
-.review_body {
+.cards_body {
   background-color: #f4f3f5;
   min-height: calc(100vh - 96px);
   margin-bottom: 50px;
@@ -164,9 +162,6 @@ export default defineComponent({
       .item-tag {
         display: flex;
         font-size: 8px;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
       }
       .item-title {
         font-size: 16px;
@@ -184,7 +179,7 @@ export default defineComponent({
       justify-content: center;
       align-items: center;
 
-      height: 70px;
+      // height: 90px;
       margin-right: 5px;
       .swipe_right_btn {
         margin-bottom: 5px;

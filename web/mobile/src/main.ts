@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import "./assets/font_3172792_vd2ddqnffc/iconfont.css"
+import "./assets/font_3172792_qg6o8lnk3tt/iconfont.css"
 
 import { Tabbar, TabbarItem } from 'vant';
 import { Icon } from 'vant';  // 图标
