@@ -2,7 +2,7 @@
 定义表结构
 """
 
-from sqlalchemy import Column, String, Integer, DateTime, Text, ForeignKey, func
+from sqlalchemy import Column, String, Integer, DateTime, Text, Boolean, ForeignKey, func
 from sqlalchemy.orm import relationship
 
 from orm import Base
@@ -26,10 +26,24 @@ class Tag(Base):
     __tablename__ = 'Tag'  # 数据表的表名
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     uid = Column(Integer, ForeignKey("User.id"))
-    icon = Column(String(32), nullable=False, default="", comment='图标的类名')
+    tag_name = Column(String(32), nullable=False, default="", comment='标签名')
+    icon = Column(String(32), nullable=False, default="", comment='标签图标的类名')
     color = Column(String(7), nullable=False, default="#205580", comment='标签颜色')
-
     card = relationship("Card", backref="tag")
+    is_star = Column(Boolean, nullable=False, default=False, comment="是否星标")
+    # TODO: is_start 为迁移
+
+
+class TagClassName(Base):
+    __tablename__ = "TagClassName"  # 标签类名
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    class_name = Column(String(32), unique=True, nullable=False, comment='图标的类名')
+
+
+class TagColor(Base):
+    __tablename__ = "TagColor"  # 标签颜色
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    color = Column(String(7), unique=True, nullable=False, comment='图标的类名')
 
 
 class Card(Base):
@@ -37,11 +51,13 @@ class Card(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     uid = Column(Integer, ForeignKey("User.id"))
     tid = Column(Integer, ForeignKey("Tag.id"))
-
+    title = Column(String(32), nullable=False, comment="卡片标题")
     created_at = Column(DateTime, server_default=func.now(), comment='创建时间')
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), comment='更新时间')
     summary = Column(String(64), default="", comment='卡片的概要信息(提示信息)')
     description = Column(Text, nullable=False, comment='卡片的详细内容')
+    is_star = Column(Boolean, nullable=False, default=False, comment="是否星标")
+    # TODO: is_start 为迁移
 
     current_plan = relationship("CurrentPlan", backref="card")  # 目前的计划子表
 

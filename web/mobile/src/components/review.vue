@@ -48,22 +48,22 @@
         <van-cell center title-class="content_item" label-class="content_date">
           <template #icon>
             <van-icon
-              :name="item.icon"
+              :name="item.tag.icon"
               class="left-icon"
               size="24"
-              :color="item.color"
+              :color="item.tag.color"
             />
           </template>
           <template #title>
-            <span class="item-title">{{ item.title }}</span>
+            <div class="van-ellipsis item-title">{{ item.title }}</div>
           </template>
           <template #label>
             <span class="item-tag">
-              <van-tag :color="item.color" text-color="#fff">{{
-                item.tag_name
+              <van-tag :color="item.tag.color" text-color="#fff">{{
+                item.tag.name
               }}</van-tag>
 
-              {{ item.next_review_at }}
+              {{ item.reviewDate }}
             </span>
           </template>
         </van-cell>
@@ -108,7 +108,7 @@ export default defineComponent({
     const actions = [
       { text: "今日卡片", icon: " iconfont icon-c" },
       { text: "标签筛选", icon: " iconfont icon-tag" },
-      { text: "选择卡片", icon: " iconfont icon-check-box" },
+      { text: "选择卡片", icon: " iconfont icon-select" },
     ];
     // 弹框选项选中回调
     const onSelect = (action: PopoverAction, index: number) => {
@@ -161,12 +161,12 @@ export default defineComponent({
 </script>
 
 
-<style lang="scss">
+<style lang="scss" >
 .review_body {
   background-color: #f4f3f5;
-  min-height: calc(100vh - 96px);
+  min-height: calc(100vh - 106px);
   margin-bottom: 50px;
-
+  padding-top: 10px;
   .cell_item {
     margin-bottom: 10px;
     .content_item {

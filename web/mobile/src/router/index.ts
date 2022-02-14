@@ -5,16 +5,17 @@ import Cards from '@/components/cards.vue'
 import Tags from '@/components/tags.vue'
 import Settings from '@/components/settings.vue'
 
+
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'Page',
     component: Page,
     children: [
-      { path: "", component: Review, },
-      { path: "/cards", component: Cards, },
-      { path: "/tags", component: Tags, },
-      { path: "/settings", component: Settings, },
+      { path: "", component: Review, name: "review" },
+      { path: "/cards", component: Cards, name: "cards" },
+      { path: "/tags", component: Tags, name: "tags" },
+      { path: "/settings", component: Settings, name: "settings"},
     ],
 
   },

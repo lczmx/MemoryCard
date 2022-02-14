@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 3172792 */
-  src: url('iconfont.woff2?t=1644673496523') format('woff2'),
-       url('iconfont.woff?t=1644673496523') format('woff'),
-       url('iconfont.ttf?t=1644673496523') format('truetype');
+  src: url('iconfont.woff2?t=1644685842795') format('woff2'),
+       url('iconfont.woff?t=1644685842795') format('woff'),
+       url('iconfont.ttf?t=1644685842795') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,46 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-fsux_tubiao_fenbuquxiantu:before {
+  content: "\e600";
+}
+
+.icon-tongji:before {
+  content: "\e64d";
+}
+
+.icon-favorfill:before {
+  content: "\e64b";
+}
+
+.icon-favor:before {
+  content: "\e64c";
+}
+
+.icon-question:before {
+  content: "\e691";
+}
+
+.icon-delete:before {
+  content: "\e6b4";
+}
+
+.icon-roundaddfill:before {
+  content: "\e6d8";
+}
+
+.icon-roundadd:before {
+  content: "\e6d9";
+}
+
+.icon-add:before {
+  content: "\e6da";
+}
+
+.icon-star-fill:before {
+  content: "\e86a";
 }
 
 .icon-select:before {
@@ -63,9 +103,5 @@
 
 .icon-c:before {
   content: "\e6c2";
-}
-
-.icon-check-box:before {
-  content: "\e600";
 }
 

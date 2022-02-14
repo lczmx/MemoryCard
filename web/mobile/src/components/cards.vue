@@ -36,22 +36,22 @@
         <van-cell center title-class="content_item" label-class="content_date">
           <template #icon>
             <van-icon
-              :name="item.icon"
+              :name="item.tag.icon"
               class="left-icon"
               size="24"
-              :color="item.color"
+              :color="item.tag.color"
             />
           </template>
           <template #title>
-            <span class="item-title">{{ item.title }}</span>
+            <div class="van-ellipsis item-title">{{ item.title }}</div>
           </template>
           <template #label>
             <span class="item-tag">
-              <van-tag :color="item.color" text-color="#fff">{{
-                item.tag_name
+              <van-tag :color="item.tag.color" text-color="#fff">{{
+                item.tag.name
               }}</van-tag>
 
-              {{ item.next_review_at }}
+              {{ item.reviewDate }}
             </span>
           </template>
         </van-cell>
@@ -91,12 +91,11 @@ export default defineComponent({
   setup() {
     const data = ref("");
     const showPopover = ref(false);
-    const showCal = ref(false); // 显示日历
     // 弹框选项
     const actions = [
-      { text: "排序", icon: " iconfont icon-c" },
-      { text: "只看星标", icon: " iconfont icon-tag" },
-      { text: "选择卡片", icon: " iconfont icon-check-box" },
+      { text: "排序", icon: " iconfont icon-sorting" },
+      { text: "只看星标", icon: " iconfont icon-star" },
+      { text: "选择卡片", icon: " iconfont icon-select" },
     ];
     // 弹框选项选中回调
     const onSelect = (action: PopoverAction, index: number) => {
@@ -115,11 +114,6 @@ export default defineComponent({
     };
     const more = () => {
       console.log("more");
-    };
-
-    const handlerConfirmCal = (value: Date) => {
-      console.log("handlerConfirmCal", value);
-      showCal.value = false;
     };
 
     axios({
@@ -149,9 +143,9 @@ export default defineComponent({
 <style lang="scss">
 .cards_body {
   background-color: #f4f3f5;
-  min-height: calc(100vh - 96px);
+  min-height: calc(100vh - 106px);
   margin-bottom: 50px;
-
+  padding-top: 10px;
   .cell_item {
     margin-bottom: 10px;
     .content_item {

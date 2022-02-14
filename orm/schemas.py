@@ -16,3 +16,11 @@ class ReadTagModel(TagModel):
 
     class Config:
         orm_mode = True
+
+
+class TagClassNameModel(BaseModel):
+    class_name: str
+
+
+class TagColorModel(BaseModel):
+    color: str

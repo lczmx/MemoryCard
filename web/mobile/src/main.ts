@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import "./assets/font_3172792_qg6o8lnk3tt/iconfont.css"
+import "./assets/font_3172792_vrhpj6dtw7i/iconfont.css"
 
 import { Tabbar, TabbarItem } from 'vant';
 import { Icon } from 'vant';  // 图标
@@ -15,8 +15,11 @@ import { Popover } from 'vant';
 import { Popup } from 'vant';
 import { Calendar } from 'vant';  // 日历
 import { Tag } from 'vant';  //标签
+import { NoticeBar } from 'vant';  // 通知栏
+import { ActionSheet } from 'vant';  // 动作面板
 
-
+import Vue3TouchEvents from "vue3-touch-events";  // 滑动事件
+// 文档: https://github.com/robinrodricks/vue3-touch-events
 
 
 const app = createApp(App)
@@ -34,6 +37,9 @@ app.use(Popover);
 app.use(Popup);
 app.use(Calendar);
 app.use(Tag);
+app.use(NoticeBar);
+app.use(ActionSheet);
+app.use(Vue3TouchEvents);
 
 
 app.use(store).use(router).mount('#app')
