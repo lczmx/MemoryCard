@@ -2,47 +2,26 @@
 增删改查数据库 数据
 """
 import logging
-from typing import List, Any
+from typing import List, TypeVar, Type, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import select, or_
 from pydantic import BaseModel
-from orm.models import Tag, TagClassName, TagColor
-from orm.database import Base
-from orm.schemas import TagModel, TagClassNameModel, TagColorModel
+from orm.models import Category, Plan
+from orm.schemas.category import WriteCategoryModel
+from orm.schemas.generic import QueryLimit
+
+ModelT = TypeVar("ModelT")
+DataT = TypeVar("DataT", bound=BaseModel)
 
 
-def create_tag(session: Session, tag_data: TagModel) -> Tag:
-    """
-    创建单个标签数据
-    :param session: 数据库连接
-    :param tag_data: tag 数据
-    :return:Tag
-    """
-
-    logging.info("创建tag数据")
-    tag_obj = save_one_to_db(session=session, model_class=Tag, data=tag_data)
-    logging.debug(f"已经tag创建数据: {tag_obj:r}")
-    return tag_obj
+def create_category(session: Session, data: WriteCategoryModel) -> Type[Category]:
+    """创建分类"""
+    logging.info("创建category数据")
+    cate_obj = save_one_to_db(session=session, model_class=Category, data=data)
+    return cate_obj
 
 
-def create_tag_class_name(session: Session, tag_class_name_models: List[TagClassNameModel]) -> List[TagClassName]:
-    """
-    创建多条标签类名数据
-    :return:
-    """
-    tag_class_name_objs = save_all_to_db(session, TagClassName, tag_class_name_models)
-    return tag_class_name_objs
-
-
-def create_tag_color(session: Session, tag_color_models: List[TagColorModel]) -> List[TagColor]:
-    """
-    创建多条标签类颜色
-    :return:
-    """
-    tag_color_objs = save_all_to_db(session, TagColor, tag_color_models)
-    return tag_color_objs
-
-
-def save_one_to_db(session: Session, model_class: Base, data: BaseModel) -> Base:
+def save_one_to_db(session: Session, model_class: ModelT, data: DataT) -> ModelT:
     """
     保存一条到数据库
     :param session:
@@ -65,7 +44,7 @@ def save_one_to_db(session: Session, model_class: Base, data: BaseModel) -> Base
         raise e
 
 
-def save_all_to_db(session: Session, model_class: Base, data_list: List[BaseModel]) -> List[Base]:
+def save_all_to_db(session: Session, model_class: ModelT, data_list: List[DataT]) -> List[ModelT]:
     """
     将多条保存到数据库
     :param session:
@@ -84,3 +63,31 @@ def save_all_to_db(session: Session, model_class: Base, data_list: List[BaseMode
         session.rollback()
         logging.error(str(e))
         raise e
+
+
+def query_plan_by_user(session: Session, uid: int,
+                       query_prams: Optional[QueryLimit]) -> List[Plan]:
+    """
+    查询某个用户的复习曲线
+    包括默认的
+    """
+    res = session.execute(
+        select(Plan).where(
+            or_(
+                Plan.uid == uid,
+                Plan.uid.is_(None)
+            )
+        ).limit(query_prams.limit).offset(query_prams.offset)
+    )
+
+    return res.scalars().all()
+
+
+def query_plan_title_by_user(session: Session, *, uid: Optional[int] = None,
+                             query_prams: Optional[QueryLimit]) -> List[str]:
+    """查询某个用户的复习曲线名称"""
+    res = session.execute(
+        select(Plan.title).where(Plan.uid == uid).limit(query_prams.limit).offset(query_prams.offset)
+    )
+
+    return res.scalars().all()

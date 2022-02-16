@@ -1,5 +1,5 @@
 <template>
-  <van-nav-bar title="复习" @click-left="calendar" @click-right="more">
+  <van-nav-bar title="复习" :fixed="true" @click-left="calendar" @click-right="more">
     <template #left>
       <van-icon name="calendar-o" size="20" />
     </template>
@@ -48,19 +48,19 @@
         <van-cell center title-class="content_item" label-class="content_date">
           <template #icon>
             <van-icon
-              :name="item.tag.icon"
+              :name="item.category.icon"
               class="left-icon"
               size="24"
-              :color="item.tag.color"
+              :color="item.category.color"
             />
           </template>
           <template #title>
             <div class="van-ellipsis item-title">{{ item.title }}</div>
           </template>
           <template #label>
-            <span class="item-tag">
-              <van-tag :color="item.tag.color" text-color="#fff">{{
-                item.tag.name
+            <span class="item-category">
+              <van-tag :color="item.category.color" text-color="#fff">{{
+                item.category.name
               }}</van-tag>
 
               {{ item.reviewDate }}
@@ -107,7 +107,7 @@ export default defineComponent({
     // 弹框选项
     const actions = [
       { text: "今日卡片", icon: " iconfont icon-c" },
-      { text: "标签筛选", icon: " iconfont icon-tag" },
+      { text: "筛选类别", icon: " iconfont icon-tag" },
       { text: "选择卡片", icon: " iconfont icon-select" },
     ];
     // 弹框选项选中回调
@@ -166,7 +166,8 @@ export default defineComponent({
   background-color: #f4f3f5;
   min-height: calc(100vh - 106px);
   margin-bottom: 50px;
-  padding-top: 10px;
+  padding-top: 56px;
+  padding-bottom: 10px;
   .cell_item {
     margin-bottom: 10px;
     .content_item {
@@ -174,7 +175,7 @@ export default defineComponent({
       display: flex;
       flex-direction: column;
       margin-left: 15px;
-      .item-tag {
+      .item-category {
         display: flex;
         font-size: 8px;
       }

@@ -16,68 +16,43 @@ class User(Base):
     hashed_pwd = Column(String(64), unique=True, nullable=False, comment='哈希后的密文')
     phone_number = Column(String(11), unique=True, nullable=False, comment='手机号')
 
-    tag = relationship("Tag", backref="user")  # 标签子表
+    category = relationship("Category", backref="user")  # 类别子表
     card = relationship("Card", backref="user")  # 卡片子表
     plan = relationship("Plan", backref="user")  # 计划子表
-    current_plan = relationship("CurrentPlan", backref="user")  # 目前的计划子表
 
 
-class Tag(Base):
-    __tablename__ = 'Tag'  # 数据表的表名
+class Category(Base):
+    __tablename__ = 'Category'  # 卡片类别
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    uid = Column(Integer, ForeignKey("User.id"))
-    tag_name = Column(String(32), nullable=False, default="", comment='标签名')
-    icon = Column(String(32), nullable=False, default="", comment='标签图标的类名')
-    color = Column(String(7), nullable=False, default="#205580", comment='标签颜色')
-    card = relationship("Card", backref="tag")
+    uid = Column(Integer, ForeignKey("User.id"), comment='类别所属用户')
+    pid = Column(Integer, ForeignKey("Plan.id"), comment='类别的复习曲线')
+    name = Column(String(32), nullable=False, comment='类别名')
+    icon = Column(String(32), nullable=False, comment='类别图标的类名')
+    color = Column(String(7), nullable=False, comment='类别颜色')
     is_star = Column(Boolean, nullable=False, default=False, comment="是否星标")
-    # TODO: is_start 为迁移
 
-
-class TagClassName(Base):
-    __tablename__ = "TagClassName"  # 标签类名
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    class_name = Column(String(32), unique=True, nullable=False, comment='图标的类名')
-
-
-class TagColor(Base):
-    __tablename__ = "TagColor"  # 标签颜色
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    color = Column(String(7), unique=True, nullable=False, comment='图标的类名')
+    card = relationship("Card", backref="category")
 
 
 class Card(Base):
     __tablename__ = 'Card'  # 数据表的表名
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    uid = Column(Integer, ForeignKey("User.id"))
-    tid = Column(Integer, ForeignKey("Tag.id"))
+    uid = Column(Integer, ForeignKey("User.id"), comment="卡片所属用户")
+    cid = Column(Integer, ForeignKey("Category.id"), comment="卡片所属类别")
     title = Column(String(32), nullable=False, comment="卡片标题")
     created_at = Column(DateTime, server_default=func.now(), comment='创建时间')
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), comment='更新时间')
     summary = Column(String(64), default="", comment='卡片的概要信息(提示信息)')
     description = Column(Text, nullable=False, comment='卡片的详细内容')
     is_star = Column(Boolean, nullable=False, default=False, comment="是否星标")
-    # TODO: is_start 为迁移
-
-    current_plan = relationship("CurrentPlan", backref="card")  # 目前的计划子表
 
 
 class Plan(Base):
-    __tablename__ = 'Plan'  # 复习计划
+    __tablename__ = 'Plan'  # 复习计划/曲线
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    uid = Column(Integer, ForeignKey("User.id"))
+    uid = Column(Integer, ForeignKey("User.id"), default=None, comment="复习曲线所属用户")
 
-    title = Column(String(32), nullable=False, comment='复习记录的名称')
-    content = Column(String(1024), nullable=False, comment='复习计划内容')
-    current_plan = relationship("CurrentPlan", backref="plan")  # 目前的计划子表
+    title = Column(String(32), nullable=False, comment='复习曲线的名称')
+    content = Column(String(1024), nullable=False, comment='复习曲线内容, 以空格隔开, 单位s')
 
-
-class CurrentPlan(Base):
-    __tablename__ = 'CurrentPlan'  # 当前要复习的计划
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    uid = Column(Integer, ForeignKey("User.id"))
-    cid = Column(Integer, ForeignKey("Card.id"))
-    pid = Column(Integer, ForeignKey("Plan.id"))
-
-    review_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), comment='复习时间')
-    next_review_at = Column(DateTime, comment='下次复习时间')
+    category = relationship("Category", backref="plan")

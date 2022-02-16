@@ -1,6 +1,8 @@
 from fastapi import FastAPI
-from router import review_router, cards_router, category_router, analyse_router
+from router import review_router, cards_router, category_router, \
+    analyse_router, plans_router
 from fastapi.middleware.cors import CORSMiddleware
+import srcipts  # 执行自定义脚本
 
 app = FastAPI()
 
@@ -24,3 +26,4 @@ app.include_router(review_router)
 app.include_router(cards_router)
 app.include_router(category_router)
 app.include_router(analyse_router)
+app.include_router(plans_router)

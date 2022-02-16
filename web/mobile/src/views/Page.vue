@@ -10,8 +10,8 @@
     <van-tabbar-item replace to="/cards" name="cards" icon="more-o"
       >卡片</van-tabbar-item
     >
-    <van-tabbar-item replace to="/tags" name="tags" icon="label-o"
-      >标签</van-tabbar-item
+    <van-tabbar-item replace to="/category" name="category" icon="label-o"
+      >类别</van-tabbar-item
     >
     <van-tabbar-item replace to="/settings" name="settings" icon="setting-o"
       >设置</van-tabbar-item

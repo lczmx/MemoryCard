@@ -1,10 +1,11 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import Page from '../views/Page.vue'
+import AddPage from '../views/AddPage.vue'
 import Review from '@/components/review.vue'
 import Cards from '@/components/cards.vue'
-import Tags from '@/components/tags.vue'
+import Category from '@/components/category.vue'
 import Settings from '@/components/settings.vue'
-
+import AddCategory from '@/components/addCategory.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -14,12 +15,18 @@ const routes: Array<RouteRecordRaw> = [
     children: [
       { path: "", component: Review, name: "review" },
       { path: "/cards", component: Cards, name: "cards" },
-      { path: "/tags", component: Tags, name: "tags" },
-      { path: "/settings", component: Settings, name: "settings"},
+      { path: "/category", component: Category, name: "category" },
+      { path: "/settings", component: Settings, name: "settings" },
     ],
 
   },
-
+  {
+    path: "/add",
+    name: "AddPage", component: AddPage,
+    children: [{
+      path: "category", component: AddCategory, name: "addCategory"
+    }]
+  },
   {
     path: '/about',
     name: 'About',

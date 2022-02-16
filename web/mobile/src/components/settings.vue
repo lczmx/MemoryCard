@@ -1,5 +1,5 @@
 <template>
-  <van-nav-bar title="设置"> </van-nav-bar>
+  <van-nav-bar title="设置" :fixed="true"> </van-nav-bar>
   <div class="settings_body">
     <div class="user-info-wrap">
       <!-- 是否已经登录 -->

@@ -1,5 +1,10 @@
 <template>
-  <van-nav-bar title="卡片" @click-left="reload" @click-right="more">
+  <van-nav-bar
+    title="卡片"
+    :fixed="true"
+    @click-left="reload"
+    @click-right="more"
+  >
     <template #left>
       <van-icon name="replay" size="20" />
     </template>
@@ -20,76 +25,81 @@
     </template>
   </van-nav-bar>
 
-  <!-- 复习页面的主题 -->
+  <!-- 全部卡片 主体 -->
   <div class="cards_body">
-    <!-- 加载框 -->
-    <van-loading color="#1989fa" v-if="!data" />
+    <div class="data_wrap" v-if="data.length > 0">
+      <van-cell-group
+        inset
+        v-for="item in data"
+        :key="item.id"
+        class="cell_item"
+      >
+        <van-swipe-cell>
+          <van-cell
+            center
+            title-class="content_item"
+            label-class="content_date"
+          >
+            <template #icon>
+              <van-icon
+                :name="item.category.icon"
+                class="left-icon"
+                size="24"
+                :color="item.category.color"
+              />
+            </template>
+            <template #title>
+              <div class="van-ellipsis item-title">{{ item.title }}</div>
+            </template>
+            <template #label>
+              <span class="item-category">
+                <van-tag :color="item.category.color" text-color="#fff">{{
+                  item.category.name
+                }}</van-tag>
 
-    <van-cell-group
-      v-else
-      inset
-      v-for="item in data.data"
-      :key="item.id"
-      class="cell_item"
-    >
-      <van-swipe-cell>
-        <van-cell center title-class="content_item" label-class="content_date">
-          <template #icon>
-            <van-icon
-              :name="item.tag.icon"
-              class="left-icon"
-              size="24"
-              :color="item.tag.color"
-            />
+                {{ item.reviewDate }}
+              </span>
+            </template>
+          </van-cell>
+          <template #right>
+            <!-- 右边滑动区域 -->
+            <div class="swipe_right_wrap">
+              <van-button
+                class="swipe_right_btn"
+                icon="success"
+                size="small"
+                type="success"
+                @click="handlerSuccessBtn(item.id)"
+              />
+              <van-button
+                class="swipe_right_btn"
+                icon="edit"
+                size="small"
+                type="primary"
+                @click="handlerEditBtn(item.id)"
+                :cid="item.id"
+              />
+            </div>
           </template>
-          <template #title>
-            <div class="van-ellipsis item-title">{{ item.title }}</div>
-          </template>
-          <template #label>
-            <span class="item-tag">
-              <van-tag :color="item.tag.color" text-color="#fff">{{
-                item.tag.name
-              }}</van-tag>
-
-              {{ item.reviewDate }}
-            </span>
-          </template>
-        </van-cell>
-        <template #right>
-          <!-- 右边滑动区域 -->
-          <div class="swipe_right_wrap">
-            <van-button
-              class="swipe_right_btn"
-              icon="success"
-              size="small"
-              type="success"
-              @click="handlerSuccessBtn(item.id)"
-            />
-            <van-button
-              class="swipe_right_btn"
-              icon="edit"
-              size="small"
-              type="primary"
-              @click="handlerEditBtn(item.id)"
-              :cid="item.id"
-            />
-          </div>
-        </template>
-      </van-swipe-cell>
-    </van-cell-group>
+        </van-swipe-cell>
+      </van-cell-group>
+    </div>
+    <!-- 没有数据 -->
+    <van-empty v-if="!loading && data.length <= 0" description="暂无数据" />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
-import { PopoverAction } from "vant";
-import axios from "axios";
-
+import { defineComponent, ref, onMounted } from "vue";
+import { PopoverAction, Toast } from "vant";
+import { ICard } from "@/types";
+import { getDataOfPage } from "@/utils/request";
+import { Method } from "axios";
 export default defineComponent({
   name: "Cards",
 
   setup() {
-    const data = ref("");
+    const data = ref<ICard[]>([]);
     const showPopover = ref(false);
     // 弹框选项
     const actions = [
@@ -115,20 +125,36 @@ export default defineComponent({
     const more = () => {
       console.log("more");
     };
-
-    axios({
-      method: "get",
-      // TODO: 修改url
+    // ------------------- 获取数据
+    const loading = ref(true); // 表示正在加载中
+    let status = {
+      method: "GET" as Method,
+      limit: 10,
+      offset: 0,
+      hasMore: true,
+    };
+    const config = {
+      // TODO: URL和触底事件
       url: "http://localhost:8080/data/review/cards.json",
-    }).then((response) => {
-      data.value = response.data;
+    };
+    const getData = () => {
+      getDataOfPage<ICard>(status, config).then((response) => {
+        // 加上之间的
+        data.value = [...data.value, ...response];
+        loading.value = false;
+      });
+    };
+
+    onMounted(() => {
+      getData();
+      console.log(data);
     });
 
-    console.log(data);
     return {
       reload,
       more,
       data,
+      loading,
       handlerSuccessBtn,
       handlerEditBtn,
       showPopover,
@@ -139,13 +165,13 @@ export default defineComponent({
 });
 </script>
 
-
 <style lang="scss">
 .cards_body {
   background-color: #f4f3f5;
   min-height: calc(100vh - 106px);
   margin-bottom: 50px;
-  padding-top: 10px;
+  padding-top: 56px;
+  padding-bottom: 10px;
   .cell_item {
     margin-bottom: 10px;
     .content_item {
@@ -153,7 +179,7 @@ export default defineComponent({
       display: flex;
       flex-direction: column;
       margin-left: 15px;
-      .item-tag {
+      .item-category {
         display: flex;
         font-size: 8px;
       }

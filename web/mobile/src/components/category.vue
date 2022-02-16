@@ -1,6 +1,6 @@
 
 <template>
-  <van-nav-bar title="类别" @click-right="more">
+  <van-nav-bar :fixed="true" title="类别" @click-right="more">
     <template #right>
       <!-- 弹出层 -->
       <van-popover
@@ -19,7 +19,12 @@
   </van-nav-bar>
 
   <!-- 标签 -->
-  <div class="tag_body">
+  <div
+    class="category_body"
+    ref="container"
+    v-touch:swipe.bottom="handlerShowAddCategoryBtn"
+    v-touch:swipe.top="handlerHideAddCategoryBtn"
+  >
     <!-- 加载框 -->
     <van-loading color="#1989fa" v-if="!data" />
 
@@ -71,25 +76,36 @@
         </template>
       </van-cell>
     </van-cell-group>
+    <!-- 添加分类的btn -->
+    <!-- 上滑进入 -->
+    <transition name="van-slide-up">
+      <div class="addCategoryBtnWrap" v-show="showAddCategoryBtnState">
+
+        <van-button icon="plus" type="primary" round  to="/add/category"></van-button>
+
+      </div>
+    </transition>
   </div>
   <!-- 动作面板 -->
   <van-action-sheet
-    v-model:show="showTagActionSheet"
-    :actions="tagActions"
+    v-model:show="showCategoryActionSheet"
+    :actions="categoryActions"
     cancel-text="取消"
     close-on-click-action
-    @select="onSelectTagActionSheet"
-    @cancel="onCancelTagActionSheet"
+    @select="onSelectCategoryActionSheet"
+    @cancel="onCancelCategoryActionSheet"
   />
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import { PopoverAction, ActionSheetAction } from "vant";
+import { useToggle } from "@vant/use";
+
 import axios from "axios";
 
 export default defineComponent({
-  name: "Tags",
+  name: "Category",
 
   setup() {
     const data = ref("");
@@ -112,9 +128,9 @@ export default defineComponent({
     };
     /* ----- 更多结束 --------- */
     /* ----- 长按开始 --------- */
-    const showTagActionSheet = ref(false);
+    const showCategoryActionSheet = ref(false);
     let tid: number | null = null;
-    const tagActions = [
+    const categoryActions = [
       { name: "编辑" },
       { name: "删除", color: "red", subname: "删除后无法撤销" },
     ];
@@ -123,42 +139,59 @@ export default defineComponent({
       const targetElement = event.target as HTMLElement;
       tid = Number(targetElement.getAttribute("tid"));
 
-      showTagActionSheet.value = true;
+      showCategoryActionSheet.value = true;
       // 处理长按, 弹出提示
     };
-    const onCancelTagActionSheet = () => {
+    const onCancelCategoryActionSheet = () => {
       // 取消后, tid设置null
       tid = null;
     };
-    const onSelectTagActionSheet = (
+    const onSelectCategoryActionSheet = (
       action: ActionSheetAction,
       index: number
     ) => {
       if (typeof tid == "number") {
         switch (index) {
           case 0:
-            editTag(tid);
+            editCategory(tid);
             break;
           case 1:
-            deleteTag(tid);
+            deleteCategory(tid);
             break;
         }
       }
     };
-    const editTag = (id: number) => {
+    const editCategory = (id: number) => {
       // TODO
-      console.log("editTag", id);
+      console.log("editCategory", id);
     };
-    const deleteTag = (id: number) => {
+    const deleteCategory = (id: number) => {
       // TODO
-      console.log("deleteTag", id);
+      console.log("deleteCategory", id);
     };
 
     /* ----- 长按结束 --------- */
+    /* ----- 添加分类开始 --------- */
+    const container = ref(null);
+
+    const [showAddCategoryBtnState, toggleAddCategoryBtn] = useToggle(true);
+    const handlerShowAddCategoryBtn = () => {
+      // 显示
+      if (showAddCategoryBtnState.value == false) {
+        toggleAddCategoryBtn();
+      }
+    };
+    const handlerHideAddCategoryBtn = () => {
+      // 隐藏
+      if (showAddCategoryBtnState.value == true) {
+        toggleAddCategoryBtn();
+      }
+    };
+    /* ----- 添加分类结束 --------- */
 
     axios({
       method: "get",
-      url: "http://localhost:8080/data/tags/tags.json",
+      url: "http://localhost:8080/data/category/category.json",
     }).then((response) => {
       data.value = response.data;
     });
@@ -171,10 +204,14 @@ export default defineComponent({
       onSelect,
       actions,
       touchHoldHandler,
-      showTagActionSheet,
-      tagActions,
-      onSelectTagActionSheet,
-      onCancelTagActionSheet,
+      showCategoryActionSheet,
+      categoryActions,
+      onSelectCategoryActionSheet,
+      onCancelCategoryActionSheet,
+      container,
+      handlerShowAddCategoryBtn,
+      handlerHideAddCategoryBtn,
+      showAddCategoryBtnState,
     };
   },
 });
@@ -182,11 +219,13 @@ export default defineComponent({
 
 
 <style lang="scss">
-.tag_body {
+.category_body {
   background-color: #f4f3f5;
   min-height: calc(100vh - 106px);
   margin-bottom: 50px;
-  padding-top: 10px;
+  padding-top: 56px;
+  padding-bottom: 10px;
+  position: relative;
   .cell_item {
     margin-bottom: 10px;
     // 自动生成van-cell
@@ -198,7 +237,7 @@ export default defineComponent({
         display: flex;
         flex-direction: column;
         margin-left: 15px;
-        .item-tag {
+        .item-category {
           display: flex;
           font-size: 8px;
         }
@@ -227,6 +266,11 @@ export default defineComponent({
         margin-bottom: 5px;
       }
     }
+  }
+  .addCategoryBtnWrap {
+    position: fixed;
+    bottom: 80px;
+    right: 30px;
   }
 }
 </style>
