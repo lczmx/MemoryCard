@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "@caohenghu/vue-colorpicker": "github:caohenghu/vue-colorpicker",
-    "@vueuse/core": "^7.6.2",
     "axios": "^0.25.0",
     "core-js": "^3.6.5",
     "vant": "^3.4.3",

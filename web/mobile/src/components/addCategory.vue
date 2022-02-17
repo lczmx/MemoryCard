@@ -68,6 +68,7 @@
           label="复习曲线"
           placeholder="点击选择复习曲线"
           @click="showPlanPicker = true"
+          :rules="[{ required: true, message: '请先选择图标' }]"
         />
         <van-popup v-model:show="showPlanPicker" position="bottom">
           <van-picker
@@ -94,6 +95,8 @@ import IconPicker from "@/components/IconPicker.vue";
 import { IPlan, ICategory, IResponse, IPostCategory } from "@/types";
 import { getDataOfPage, postCreateData } from "@/utils/request";
 import { Toast } from "vant";
+import userIcons from "@/assets/data/icons";
+import useColors from "@/assets/data/colors";
 export default defineComponent({
   name: "AddCategory",
   components: { ColorPicker, IconPicker },
@@ -116,44 +119,11 @@ export default defineComponent({
       showColorPopup.value = false;
       color.value = pickedColor;
     };
-    const colorArray = reactive([
-      "#123",
-      "#fff",
-      "#ddd",
-      "#829",
-      "#125",
-      "#123",
-      "#fff",
-      "#ddd",
-      "#829",
-      "#125",
-      "#123",
-      "#fff",
-      "#ddd",
-      "#829",
-      "#125",
-      "#123",
-      "#fff",
-      "#ddd",
-      "#829",
-      "#125",
-    ]);
+    const colors = useColors();
+    const colorArray = reactive(colors);
     // ------------- 图标
-
-    const iconArray = reactive([
-      "icon-favor",
-      "icon-select",
-      "icon-sorting",
-      "icon-favor",
-      "icon-select",
-      "icon-sorting",
-      "icon-favor",
-      "icon-select",
-      "icon-sorting",
-      "icon-favor",
-      "icon-select",
-      "icon-sorting",
-    ]);
+    const icons = userIcons();
+    const iconArray = reactive(icons);
     const handlerIconPicked = (pickedIcon: string) => {
       showIconPopup.value = false;
       icon.value = pickedIcon;
@@ -244,7 +214,7 @@ export default defineComponent({
               };
 
               postCreateData<ICategory, IPostCategory>(postConfig, false).then(
-                (response) => {
+                () => {
                   // 成功创建了
                   Toast.success("已创建");
                   setTimeout(() => {

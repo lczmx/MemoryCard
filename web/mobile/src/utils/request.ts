@@ -43,7 +43,28 @@ export async function request<T, D>(
     });
 }
 
-export function getDataOfPage<R>(
+/* get多条数据 */
+/*
+// 一般例子
+const store = useStore();
+let status = {
+  method: "GET" as Method,
+  limit: 10,
+  offset: 0,
+  hasMore: true,
+};
+const config = {
+  url: `${store.state.serverHost}/category/`,
+};
+
+const getCategoryData = () => {
+  getDataOfPage<ICategory>(status, config).then((response) => {
+    data.value = response;
+  });
+};
+
+*/
+export async function getDataOfPage<R>(
   // 处理有分页的数据
   clientStatus: IGetClientStatus,
   config: AxiosRequestConfig,
@@ -51,7 +72,12 @@ export function getDataOfPage<R>(
 ): Promise<R[]> {
   const fake_res = [] as R[];
   // 判断有无下一页
-  if (!clientStatus.hasMore && typeof clientStatus.hasMore !== "undefined") {
+  // 只有在显示loading的情况下提示
+  if (
+    !clientStatus.hasMore &&
+    typeof clientStatus.hasMore !== "undefined" &&
+    loading
+  ) {
     Toast({
       message: "已经到底了",
       position: "bottom",
@@ -68,7 +94,76 @@ export function getDataOfPage<R>(
     },
   };
 
-  return request<IResponse<R[]>, undefined>(RequestConfig, loading).then((response) => {
+  return request<IResponse<R[]>, undefined>(RequestConfig, loading).then(
+    (response) => {
+      if (!response.data) {
+        // undefined
+        return Promise.resolve(fake_res);
+      }
+
+      if (response.status === 1) {
+        // status为1时, 为正常情况
+        if (response.data.length <= 0) {
+          // 没数据了
+          clientStatus.hasMore = false;
+          if (loading) {
+            Toast({
+              message: "已经到底了",
+              position: "bottom",
+            });
+          }
+        }
+        // 修改offset, 不能为undefined
+        if (
+          typeof clientStatus.offset !== "undefined" &&
+          typeof clientStatus.limit !== "undefined"
+        ) {
+          clientStatus.offset += clientStatus.limit;
+        }
+        return Promise.resolve(response.data);
+      } else {
+        Toast.fail(response.msg);
+        return Promise.resolve(fake_res);
+      }
+    }
+  );
+}
+
+/* post数据 */
+/* 
+// 一般例子
+const data = {
+  name: name.value,
+  icon: icon.value,
+  color: color.value,
+  plan: plan.value as number,
+};
+const postConfig = {
+  method: "post" as Method,
+  url: `${store.state.serverHost}/category/`,
+  data,
+};
+
+postCreateData<ICategory, IPostCategory>(postConfig, false).then(
+  (response) => {
+    // 成功创建了
+    Toast.success("已创建");
+    setTimeout(() => {
+      Toast.clear();
+      router.push({ name: "category" });
+    }, 1000);
+  }
+);
+
+
+*/
+export async function postCreateData<R, D>(
+  // post 创建数据
+  config: AxiosRequestConfig<D>,
+  loading = false
+): Promise<R> {
+  const fake_res = {} as R;
+  return request<IResponse<R>, D>(config, loading).then((response) => {
     if (!response.data) {
       // undefined
       return Promise.resolve(fake_res);
@@ -76,21 +171,6 @@ export function getDataOfPage<R>(
 
     if (response.status === 1) {
       // status为1时, 为正常情况
-      if (response.data.length <= 0) {
-        // 没数据了
-        clientStatus.hasMore = false;
-        Toast({
-          message: "已经到底了",
-          position: "bottom",
-        });
-      }
-      // 修改offset, 不能为undefined
-      if (
-        typeof clientStatus.offset !== "undefined" &&
-        typeof clientStatus.limit !== "undefined"
-      ) {
-        clientStatus.offset += clientStatus.limit;
-      }
       return Promise.resolve(response.data);
     } else {
       Toast.fail(response.msg);
@@ -99,13 +179,14 @@ export function getDataOfPage<R>(
   });
 }
 
-export function postCreateData<R, D>(
-  // post 创建数据
-  config: AxiosRequestConfig<D>,
-  loading = false
+/* get单条数据 */
+export async function getDataOfOne<R>(
+  config: AxiosRequestConfig,
+  loading = true
 ): Promise<R> {
   const fake_res = {} as R;
-  return request<IResponse<R>, D>(config, loading).then((response) => {
+
+  return request<IResponse<R>, undefined>(config, loading).then((response) => {
     if (!response.data) {
       // undefined
       return Promise.resolve(fake_res);

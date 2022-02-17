@@ -24,6 +24,10 @@ export interface ICategory {
   plan: IPlan;
 }
 
+export interface IStar {
+  isStar: boolean;
+}
+
 // ---------------- 记录请求
 export interface IGetClientStatus {
   method: Method;

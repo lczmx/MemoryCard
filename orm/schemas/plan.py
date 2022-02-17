@@ -11,7 +11,7 @@ class BasePlanModel(BaseModel):
     content: str
 
 
-class PramsPlanModel(BasePlanModel):
+class ParamsPlanModel(BasePlanModel):
     """
     可以作为请求体接收参数
     """

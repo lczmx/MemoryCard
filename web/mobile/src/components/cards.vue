@@ -26,7 +26,11 @@
   </van-nav-bar>
 
   <!-- 全部卡片 主体 -->
-  <div class="cards_body">
+  <div
+    class="cards_body"
+    v-touch:swipe.bottom="handlerShowAddCardBtn"
+    v-touch:swipe.top="handlerHideAddCardBtn"
+  >
     <div class="data_wrap" v-if="data.length > 0">
       <van-cell-group
         inset
@@ -87,11 +91,25 @@
     <!-- 没有数据 -->
     <van-empty v-if="!loading && data.length <= 0" description="暂无数据" />
   </div>
+  <!-- 添加卡片的btn -->
+  <!-- 上滑进入 -->
+  <transition name="van-slide-up">
+    <div class="addCardBtnWrap" v-show="showAddCardBtnState">
+      <van-button
+        icon="plus"
+        type="primary"
+        round
+        to="/add/card"
+        color="#41b883"
+      ></van-button>
+    </div>
+  </transition>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from "vue";
-import { PopoverAction, Toast } from "vant";
+import { PopoverAction } from "vant";
+import { useToggle } from "@vant/use";
 import { ICard } from "@/types";
 import { getDataOfPage } from "@/utils/request";
 import { Method } from "axios";
@@ -125,6 +143,16 @@ export default defineComponent({
     const more = () => {
       console.log("more");
     };
+    // ----------------------- 添加按钮显示与隐藏
+    const [showAddCardBtnState, toggleAddCardBtn] = useToggle(true);
+
+    const handlerShowAddCardBtn = () => {
+      toggleAddCardBtn(true);
+    };
+    const handlerHideAddCardBtn = () => {
+      toggleAddCardBtn(false);
+    };
+
     // ------------------- 获取数据
     const loading = ref(true); // 表示正在加载中
     let status = {
@@ -160,6 +188,9 @@ export default defineComponent({
       showPopover,
       onSelect,
       actions,
+      handlerShowAddCardBtn,
+      handlerHideAddCardBtn,
+      showAddCardBtnState,
     };
   },
 });
@@ -206,5 +237,10 @@ export default defineComponent({
       }
     }
   }
+}
+.addCardBtnWrap {
+  position: fixed;
+  bottom: 80px;
+  right: 30px;
 }
 </style>

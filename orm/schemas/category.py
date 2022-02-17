@@ -2,7 +2,7 @@
 定义分类数据模型
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator, Extra
 from orm.schemas.plan import ReadPlanModel
 
 
@@ -12,14 +12,22 @@ class BaseCategoryModel(BaseModel):
     color: str = Field(..., max_length=7)
 
 
-class PramsCategoryModel(BaseCategoryModel):
+class ParamsCategoryModel(BaseCategoryModel):
     """
     添加分类请求体
     """
     pid: int = Field(..., alias="plan")
 
 
-class ReadCategoryModel(BaseCategoryModel):
+class StarModel(BaseModel):
+    is_star: bool = Field(..., alias="isStar")
+
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True
+
+
+class ReadCategoryModel(BaseCategoryModel, StarModel):
     """
     返回的单个分类
     """
@@ -28,6 +36,7 @@ class ReadCategoryModel(BaseCategoryModel):
 
     class Config:
         orm_mode = True
+        allow_population_by_field_name = True
 
 
 class WriteCategoryModel(BaseCategoryModel):

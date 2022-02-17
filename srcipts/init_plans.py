@@ -32,7 +32,7 @@ def crate_plans():
 
     with SessionLocal() as session:
         # 跳过已经有的
-        exists_plans = query_plan_title_by_user(session=session, uid=None, query_prams=QueryLimit())
+        exists_plans = query_plan_title_by_user(session=session, uid=None, query_params=QueryLimit())
         plans = [WritePlanModel(**d) for d in data if d.get("title") not in exists_plans]
         if plans:
             # 正式初始化

@@ -1,4 +1,3 @@
-
 <template>
   <van-nav-bar :fixed="true" title="类别" @click-right="more">
     <template #right>
@@ -17,75 +16,94 @@
       </van-popover>
     </template>
   </van-nav-bar>
-
   <!-- 标签 -->
-  <div
-    class="category_body"
-    ref="container"
-    v-touch:swipe.bottom="handlerShowAddCategoryBtn"
-    v-touch:swipe.top="handlerHideAddCategoryBtn"
+  <van-list
+    v-model:loading="loading"
+    :finished="!status.hasMore"
+    @load="getCategoryData"
+    loading-text="加载中..."
   >
-    <!-- 加载框 -->
-    <van-loading color="#1989fa" v-if="!data" />
-
-    <van-cell-group
-      v-else
-      inset
-      v-for="item in data.data"
-      :key="item.id"
-      class="cell_item"
-      :style="{ 'background-color': item.color }"
-    >
-      <van-cell center title-class="content_item" label-class="content_date">
-        <template #icon>
-          <van-icon
-            :name="item.icon"
-            class="left-icon"
-            size="24"
-            color="#fff"
-          />
-        </template>
-        <template #title>
-          <div
-            class="van-ellipsis item-title"
-            :tid="item.id"
-            v-touch:hold="touchHoldHandler"
-          >
-            {{ item.name }}
-          </div>
-        </template>
-        <template #right-icon>
-          <!-- 右边图标 (星标) -->
-
-          <van-icon
-            v-if="item.isStar"
-            class="iconfont"
-            class-prefix="icon"
-            name="favorfill"
-            size="24"
-            color="#eefd6a"
-          />
-          <van-icon
-            v-else
-            class="iconfont"
-            class-prefix="icon"
-            name="favor"
-            size="24"
-            color="#fff"
-          />
-        </template>
-      </van-cell>
-    </van-cell-group>
-    <!-- 添加分类的btn -->
-    <!-- 上滑进入 -->
-    <transition name="van-slide-up">
-      <div class="addCategoryBtnWrap" v-show="showAddCategoryBtnState">
-
-        <van-button icon="plus" type="primary" round  to="/add/category"></van-button>
-
+    <template #finished>
+      <div class="finished-text-wrap">
+        <p>没有更多数据了</p>
       </div>
-    </transition>
-  </div>
+    </template>
+    <template #loading>
+      <div class="loading-text-wrap">
+        <van-loading  color="#1989fa" />
+      </div>
+    </template>
+    <div
+      class="category_body van-clearfix"
+      ref="container"
+      v-touch:swipe.bottom="handlerShowAddCategoryBtn"
+      v-touch:swipe.top="handlerHideAddCategoryBtn"
+    >
+      <van-cell-group
+        inset
+        v-for="(item, index) in data"
+        :key="item.id"
+        class="cell_item"
+        :style="{ 'background-color': item.color }"
+      >
+        <van-cell center title-class="content_item" label-class="content_date">
+          <template #icon>
+            <!-- 使用iconfont -->
+            <i
+              :class="`left-icon iconfont ${item.icon}`"
+              :style="{ 'font-size': 24, color: '#fff' }"
+            >
+            </i>
+          </template>
+          <template #title>
+            <div
+              class="van-ellipsis item-title"
+              :tid="item.id"
+              v-touch:hold="touchHoldHandler"
+            >
+              {{ item.name }}
+            </div>
+          </template>
+          <template #right-icon>
+            <!-- 右边图标 (星标) -->
+            <div
+              class="right-icon-wrap"
+              @click="handlerToggleStarStatus($event, index, item.id)"
+            >
+              <van-icon
+                v-show="item.isStar"
+                class="iconfont star_true"
+                class-prefix="icon"
+                name="favorfill"
+                size="24"
+              />
+              <van-icon
+                v-show="!item.isStar"
+                class="iconfont star_false"
+                class-prefix="icon"
+                name="favor"
+                size="24"
+              />
+            </div>
+          </template>
+        </van-cell>
+      </van-cell-group>
+    </div>
+  </van-list>
+  <!-- 添加分类的btn -->
+  <!-- 上滑进入 -->
+  <transition name="van-slide-up">
+    <div class="addCategoryBtnWrap" v-show="showAddCategoryBtnState">
+      <van-button
+        icon="plus"
+        type="primary"
+        round
+        to="/add/category"
+        color="#35495e"
+      ></van-button>
+    </div>
+  </transition>
+
   <!-- 动作面板 -->
   <van-action-sheet
     v-model:show="showCategoryActionSheet"
@@ -100,15 +118,17 @@
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import { PopoverAction, ActionSheetAction } from "vant";
+import { useStore } from "vuex";
 import { useToggle } from "@vant/use";
-
-import axios from "axios";
+import { getDataOfPage, postCreateData } from "@/utils/request";
+import { ICategory, IStar } from "@/types";
+import { Method } from "axios";
 
 export default defineComponent({
   name: "Category",
 
   setup() {
-    const data = ref("");
+    const data = ref<ICategory[]>([]);
     /* ----- 更多开始 --------- */
     const showPopover = ref(false);
     const more = () => {
@@ -188,15 +208,54 @@ export default defineComponent({
       }
     };
     /* ----- 添加分类结束 --------- */
+    /* ----- 获取分类数据 --------- */
+    const loading = ref(false);
+    const finished = ref(false);
+    const store = useStore();
+    let status = {
+      method: "GET" as Method,
+      limit: 10,
+      offset: 0,
+      hasMore: true,
+    };
+    const config = {
+      url: `${store.state.serverHost}/category/`,
+    };
 
-    axios({
-      method: "get",
-      url: "http://localhost:8080/data/category/category.json",
-    }).then((response) => {
-      data.value = response.data;
-    });
+    const getCategoryData = () => {
+      getDataOfPage<ICategory>(status, config, false).then((response) => {
+        data.value = [...data.value, ...response];
 
-    console.log(data);
+        loading.value = false;
+        if (!status.hasMore) {
+          finished.value = true;
+        }
+      });
+    };
+
+    // ---------- 点击星标后
+    const handlerToggleStarStatus = (
+      event: MouseEvent,
+      index: number,
+      cid: number
+    ) => {
+      const ele = event.target as HTMLElement;
+
+      let starStatus = ele.classList.contains("star_true") ? true : false;
+
+      const postConfig = {
+        method: "post" as Method,
+        url: `${store.state.serverHost}/category/${cid}/star`,
+        data: {
+          isStar: starStatus,
+        },
+      };
+
+      postCreateData<IStar, IStar>(postConfig, false).then((response) => {
+        data.value[index].isStar = response.isStar;
+      });
+    };
+
     return {
       more,
       showPopover,
@@ -211,23 +270,43 @@ export default defineComponent({
       container,
       handlerShowAddCategoryBtn,
       handlerHideAddCategoryBtn,
+      handlerToggleStarStatus,
       showAddCategoryBtnState,
+      loading,
+      status,
+      getCategoryData,
     };
   },
 });
 </script>
 
-
 <style lang="scss">
+.finished-text-wrap {
+  padding-bottom: 50px;
+  background-color: #f4f3f5;
+  p {
+    margin: 0;
+  }
+}
+.loading-text-wrap {
+  // 加载中...
+  background-color: #f4f3f5;
+  color: #fff;
+}
 .category_body {
   background-color: #f4f3f5;
-  min-height: calc(100vh - 106px);
-  margin-bottom: 50px;
+  min-height: calc(100vh - 156px);
   padding-top: 56px;
-  padding-bottom: 10px;
-  position: relative;
   .cell_item {
     margin-bottom: 10px;
+    .right-icon-wrap {
+      .star_true {
+        color: #eefd6a;
+      }
+      .star_false {
+        color: #fff;
+      }
+    }
     // 自动生成van-cell
     .van-cell {
       // 修改默认的白色背景
@@ -237,6 +316,7 @@ export default defineComponent({
         display: flex;
         flex-direction: column;
         margin-left: 15px;
+
         .item-category {
           display: flex;
           font-size: 8px;
@@ -267,10 +347,10 @@ export default defineComponent({
       }
     }
   }
-  .addCategoryBtnWrap {
-    position: fixed;
-    bottom: 80px;
-    right: 30px;
-  }
+}
+.addCategoryBtnWrap {
+  position: fixed;
+  bottom: 80px;
+  right: 30px;
 }
 </style>
