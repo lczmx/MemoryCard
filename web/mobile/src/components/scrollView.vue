@@ -12,7 +12,7 @@
 
 <script lang="ts">
 import { useIntersectionObserver } from "@vueuse/core";
-import { defineComponent, reactive, ref, watch, onMounted } from "vue";
+import { defineComponent, ref } from "vue";
 
 export default defineComponent({
   name: "ScrollView",

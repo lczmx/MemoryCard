@@ -89,7 +89,6 @@ import { useRouter } from "vue-router";
 import type { FormInstance } from "vant";
 import { Method } from "axios";
 
-import ScrollView from "@/components/scrollView.vue";
 import ColorPicker from "@/components/ColorPicker.vue";
 import IconPicker from "@/components/IconPicker.vue";
 import { IPlan, ICategory, IResponse, IPostCategory } from "@/types";
@@ -97,7 +96,7 @@ import { getDataOfPage, postCreateData } from "@/utils/request";
 import { Toast } from "vant";
 export default defineComponent({
   name: "AddCategory",
-  components: { ColorPicker, IconPicker, ScrollView },
+  components: { ColorPicker, IconPicker },
   setup() {
     const name = ref("");
     const color = ref("");
@@ -206,11 +205,7 @@ export default defineComponent({
     onMounted(() => {
       getPlanData();
     });
-    // 触底事件, 下一页
-    // TODO
-    const handlerPlanScrollToLower = () => {
-      "handlerPlanScrollToLower";
-    };
+    // TODO 触底事件, 下一页
 
     const onConfirmPlan = (value: string) => {
       planText.value = value;
@@ -285,7 +280,6 @@ export default defineComponent({
       showPlanPicker,
       onConfirmPlan,
       addCategoryForm,
-      handlerPlanScrollToLower,
     };
   },
 });

@@ -3,6 +3,7 @@ import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 import "./assets/font_3172792_vrhpj6dtw7i/iconfont.css";
+import "./assets/font_3188311_1wipkj1s0u8/iconfont.css"; // 分类图标
 
 import { Tabbar, TabbarItem } from "vant";
 import { Icon } from "vant"; // 图标
@@ -20,7 +21,7 @@ import { Col, Row } from "vant";
 import { Form, Field } from "vant"; // 表单
 import { Picker } from "vant"; // 选择器
 import { Toast } from "vant"; // 提示
-import { Empty } from 'vant';  // 空状态
+import { Empty } from "vant"; // 空状态
 import Vue3TouchEvents from "vue3-touch-events"; // 滑动事件
 // 文档: https://github.com/robinrodricks/vue3-touch-events
 
