@@ -42,9 +42,20 @@ export interface IPlan {
   content: string;
 }
 // ---------------- 卡片相关
+
 export interface ICard {
   id: number;
+  isStar: boolean;
   title: string;
-  reviewDate: string;
+  reviewAt: Date;
+  reviewTimes: number;
   category: ICategory;
+  summary?: string;
+  description?: string;
+}
+export interface IPostCard {
+  title: string;
+  category: number;
+  summary: string;
+  description: string;
 }

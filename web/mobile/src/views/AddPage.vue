@@ -2,7 +2,7 @@
 
 <template>
   <van-nav-bar
-    :title="addPageTitle"
+    :title="state.addPageTitle"
     left-text="返回"
     right-text="完成"
     left-arrow
@@ -21,8 +21,8 @@ import { Dialog } from "vant";
 export default defineComponent({
   name: "AddPage",
   setup() {
-    const addPageTitle = "title";
     const store = useStore();
+    const state = store.state;
 
     // 初始化submitData为false
     store.commit("changeSubmitData", false);
@@ -52,13 +52,13 @@ export default defineComponent({
     // 提交数据
     const toSubmitData = () => {
       // 修改vuex的数据, 让其提交
-      
+
       store.commit("changeSubmitData", true);
     };
     return {
       // 返回的数据
       backTopPage,
-      addPageTitle,
+      state,
       toSubmitData,
     };
   },

@@ -68,7 +68,7 @@
           label="复习曲线"
           placeholder="点击选择复习曲线"
           @click="showPlanPicker = true"
-          :rules="[{ required: true, message: '请先选择图标' }]"
+          :rules="[{ required: true, message: '请先选择复习曲线' }]"
         />
         <van-popup v-model:show="showPlanPicker" position="bottom">
           <van-picker
@@ -92,7 +92,7 @@ import { Method } from "axios";
 
 import ColorPicker from "@/components/ColorPicker.vue";
 import IconPicker from "@/components/IconPicker.vue";
-import { IPlan, ICategory, IResponse, IPostCategory } from "@/types";
+import { IPlan, ICategory, IPostCategory } from "@/types";
 import { getDataOfPage, postCreateData } from "@/utils/request";
 import { Toast } from "vant";
 import userIcons from "@/assets/data/icons";
@@ -101,12 +101,15 @@ export default defineComponent({
   name: "AddCategory",
   components: { ColorPicker, IconPicker },
   setup() {
+    const store = useStore();
+    // 修改标题
+    store.commit("changeAddPageTitle", "新增类别");
     const name = ref("");
     const color = ref("");
     const icon = ref("");
     const showColorPopup = ref(false);
     const showIconPopup = ref(false);
-    const store = useStore();
+
     // 监听本页面是否已经被修改
     watch([name, color, icon], () => {
       // 监视多个数据
@@ -143,7 +146,7 @@ export default defineComponent({
     // 请求复习曲线
     let status = {
       method: "GET" as Method,
-      limit: 10,
+      limit: 50,
       offset: 0,
       hasMore: true,
     };

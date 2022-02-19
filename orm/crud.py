@@ -16,13 +16,6 @@ ModelT = TypeVar("ModelT", bound=Base)
 DataT = TypeVar("DataT", bound=BaseModel)
 
 
-def create_category(session: Session, data: WriteCategoryModel) -> Type[Category]:
-    """创建分类"""
-    logging.info("创建category数据")
-    cate_obj = save_one_to_db(session=session, model_class=Category, data=data)
-    return cate_obj
-
-
 def save_one_to_db(session: Session, model_class: ModelT, data: DataT) -> ModelT:
     """
     保存一条到数据库

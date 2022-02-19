@@ -42,7 +42,9 @@ class Card(Base):
     title = Column(String(32), nullable=False, comment="卡片标题")
     created_at = Column(DateTime, server_default=func.now(), comment='创建时间')
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), comment='更新时间')
-    summary = Column(String(64), default="", comment='卡片的概要信息(提示信息)')
+    review_at = Column(DateTime, nullable=True, default=None, comment='次卡片这次复习时间')
+    review_times = Column(Integer, nullable=False, default=0, comment='次卡片这次复习的次数')
+    summary = Column(String(1024), default="", comment='卡片的概要信息(提示信息)')
     description = Column(Text, nullable=False, comment='卡片的详细内容')
     is_star = Column(Boolean, nullable=False, default=False, comment="是否星标")
 

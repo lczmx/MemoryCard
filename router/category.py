@@ -7,7 +7,7 @@ from fastapi import APIRouter, status, Depends
 from sqlalchemy.orm import Session
 from orm.schemas.category import ParamsCategoryModel, WriteCategoryModel, ReadCategoryModel, StarModel
 from orm.schemas.generic import GenericResponse, QueryLimit
-from orm.crud import create_category as create_category_to_db, query_all_data_by_user
+from orm.crud import save_one_to_db, query_all_data_by_user
 from orm.crud import toggle_star_status
 from orm.models import Category
 from dependencies.queryParams import get_limit_params
@@ -23,6 +23,7 @@ async def index(query_limit_params: QueryLimit = Depends(get_limit_params),
     """
     获取全部分类
     """
+
     uid = 1
 
     category_data = query_all_data_by_user(session, uid=uid, model_class=Category, query_params=query_limit_params)
@@ -47,7 +48,7 @@ async def create_category(category_prams: ParamsCategoryModel,
     })
     data = WriteCategoryModel(**prams)
 
-    category_obj = create_category_to_db(session, data)
+    category_obj = save_one_to_db(session=session, model_class=Category, data=data)
     return {
         "status": 1,
         "msg": "success",

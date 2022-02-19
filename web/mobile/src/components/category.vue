@@ -30,12 +30,11 @@
     </template>
     <template #loading>
       <div class="loading-text-wrap">
-        <van-loading  color="#1989fa" />
+        <van-loading color="#1989fa" />
       </div>
     </template>
     <div
       class="category_body van-clearfix"
-      ref="container"
       v-touch:swipe.bottom="handlerShowAddCategoryBtn"
       v-touch:swipe.top="handlerHideAddCategoryBtn"
     >
@@ -192,7 +191,6 @@ export default defineComponent({
 
     /* ----- 长按结束 --------- */
     /* ----- 添加分类开始 --------- */
-    const container = ref(null);
 
     const [showAddCategoryBtnState, toggleAddCategoryBtn] = useToggle(true);
     const handlerShowAddCategoryBtn = () => {
@@ -208,6 +206,7 @@ export default defineComponent({
       }
     };
     /* ----- 添加分类结束 --------- */
+
     /* ----- 获取分类数据 --------- */
     const loading = ref(false);
     const finished = ref(false);
@@ -267,7 +266,6 @@ export default defineComponent({
       categoryActions,
       onSelectCategoryActionSheet,
       onCancelCategoryActionSheet,
-      container,
       handlerShowAddCategoryBtn,
       handlerHideAddCategoryBtn,
       handlerToggleStarStatus,
@@ -316,6 +314,8 @@ export default defineComponent({
         display: flex;
         flex-direction: column;
         margin-left: 15px;
+        width: calc(100% - 65px);
+        padding-right: 10px;
 
         .item-category {
           display: flex;
