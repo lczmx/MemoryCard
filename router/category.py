@@ -4,10 +4,11 @@
 from typing import List, Dict
 
 from fastapi import APIRouter, status, Depends
+from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 from orm.schemas.category import ParamsCategoryModel, WriteCategoryModel, ReadCategoryModel, StarModel
 from orm.schemas.generic import GenericResponse, QueryLimit
-from orm.crud import save_one_to_db, query_all_data_by_user
+from orm.crud import save_one_to_db, query_all_data_by_user, query_one_data_by_user, update_data
 from orm.crud import toggle_star_status
 from orm.models import Category
 from dependencies.queryParams import get_limit_params
@@ -18,8 +19,8 @@ router = APIRouter(prefix="/category", tags=["分类相关"])
 
 @router.get("/",
             response_model=GenericResponse[List[ReadCategoryModel]])
-async def index(query_limit_params: QueryLimit = Depends(get_limit_params),
-                session: Session = Depends(get_session)):
+async def get_category(query_limit_params: QueryLimit = Depends(get_limit_params),
+                       session: Session = Depends(get_session)):
     """
     获取全部分类
     """
@@ -70,4 +71,42 @@ async def toggle_star(cid: int, star_status: StarModel, session: Session = Depen
             "is_star": now_status
         }
 
+    }
+
+
+@router.get("/{cid}", response_model=GenericResponse[ReadCategoryModel])
+async def retrieve_category(
+        cid: int,
+        session: Session = Depends(get_session)
+):
+    """
+    检索一条分类
+    """
+    uid = 1  # TODO: 替换
+    category_data = query_one_data_by_user(session=session, uid=uid, target_id=cid, model_class=Category)
+    if not category_data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的分类")
+    return {
+        "status": 1,
+        "msg": "获取成功",
+        "data": category_data
+    }
+
+
+@router.post("/{cid}", response_model=GenericResponse[ReadCategoryModel])
+async def update_category(
+        cid: int,
+        category_prams: ParamsCategoryModel,
+        session: Session = Depends(get_session)):
+    """
+    更新一条分类
+    """
+    uid = 1  # TODO: 替换
+
+    category_data = update_data(session=session, uid=uid, target_id=cid, model_class=Category, data=category_prams)
+
+    return {
+        "status": 1,
+        "msg": "更新成功",
+        "data": category_data
     }

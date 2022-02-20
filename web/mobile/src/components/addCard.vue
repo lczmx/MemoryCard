@@ -160,7 +160,7 @@ export default defineComponent({
   setup() {
     const store = useStore();
     // 修改标题
-    store.commit("changeAddPageTitle", "新增卡片");
+    store.commit("changePageTitle", "新增卡片");
     // ------------ 名称
     const title = ref("");
     // --------------------- 类别

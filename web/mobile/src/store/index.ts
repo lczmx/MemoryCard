@@ -8,8 +8,8 @@ export default createStore({
     changeState: false,
     // 是否被提交
     submitData: false,
-    // 添加页面标题
-    addPageTitle: "title",
+    // 添加/修改页面的标题
+    pageTitle: "title",
   },
   mutations: {
     // 切换
@@ -19,8 +19,8 @@ export default createStore({
     changeSubmitData(state, status) {
       state.submitData = status;
     },
-    changeAddPageTitle(state, title) {
-      state.addPageTitle = title;
+    changePageTitle(state, title) {
+      state.pageTitle = title;
     },
   },
   actions: {},

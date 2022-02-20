@@ -3,10 +3,9 @@
 """
 import logging
 from typing import List, TypeVar, Type, Optional, NoReturn
-from datetime import datetime
 
 from sqlalchemy.orm import Session
-from sqlalchemy import select, or_, not_, update, func
+from sqlalchemy import select, or_, not_, update
 from pydantic import BaseModel
 from orm.database import Base
 from orm.models import Category, Plan, Card
@@ -67,14 +66,14 @@ def query_all_data_by_user(session: Session, uid: int,
                            allow_none=False
                            ) -> list[ModelT]:
     """
-    通过uid, 查询用户的数据
+    通过uid, 查询用户的数据, 多条数据
 
     :param session: 数据连接
     :param uid: 用户id
     :param model_class: sqlalchemy模型类
     :param query_params: limit offset 参数
     :param allow_none: 是否将uid为null的情况纳入
-    :return: 对应sqlalchemy模型类的对象
+    :return: 对应sqlalchemy模型类的对象 列表
     :return:
     """
     # 判断是否allow_none, 选择对应的语句
@@ -85,6 +84,29 @@ def query_all_data_by_user(session: Session, uid: int,
     res = session.execute(stmt.limit(query_params.limit).offset(query_params.offset))
 
     return res.scalars().all()  # 对应之前的.all()
+
+
+def query_one_data_by_user(session: Session,
+                           uid: int,
+                           target_id: int,
+                           model_class: ModelT,
+                           ) -> ModelT:
+    """
+    通过uid, 查询用户的数据, 一条数据
+
+    :param session: 数据连接
+    :param uid: 用户id
+    :param target_id: model_class的主键id值
+    :param model_class: sqlalchemy模型类
+    :return: 对应sqlalchemy模型类的对象
+    :return:
+    """
+    # 判断是否allow_none, 选择对应的语句
+    # Statement
+    stmt = select(model_class).where(model_class.uid == uid, model_class.id == target_id).limit(1)
+    res = session.scalars(stmt)
+
+    return res.first()  # 对应之前的.all()
 
 
 def query_plan_title_by_user(session: Session, *, uid: Optional[int] = None,
@@ -139,3 +161,21 @@ def query_need_review_card(session: Session, uid: int, query_params: Optional[Qu
     )
     temp = [i for i in res.scalars().all() if i.is_review_date]
     return temp
+
+
+def update_data(session: Session, uid: int, target_id: int, model_class: ModelT, data: DataT) -> ModelT:
+    """
+      通过uid, target_id, 根更新一条数据
+
+    :param session: 数据连接
+    :param uid: 用户id
+    :param target_id: model_class的主键id值
+    :param model_class: sqlalchemy模型类
+    :param data: pydantic数据模型类
+    :return: 对应sqlalchemy模型类的对象
+    """
+    session.execute(
+        update(model_class).where(model_class.id == target_id, model_class.uid == uid
+                                  ).values(**data.dict()))
+    session.commit()
+    return query_one_data_by_user(session, uid, target_id, model_class)

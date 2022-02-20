@@ -118,6 +118,7 @@
 import { defineComponent, ref } from "vue";
 import { PopoverAction, ActionSheetAction } from "vant";
 import { useStore } from "vuex";
+import { useRouter } from "vue-router";
 import { useToggle } from "@vant/use";
 import { getDataOfPage, postCreateData } from "@/utils/request";
 import { ICategory, IStar } from "@/types";
@@ -145,6 +146,7 @@ export default defineComponent({
       console.log(action, index);
     };
     /* ----- 更多结束 --------- */
+
     /* ----- 长按开始 --------- */
     const showCategoryActionSheet = ref(false);
     let tid: number | null = null;
@@ -164,6 +166,7 @@ export default defineComponent({
       // 取消后, tid设置null
       tid = null;
     };
+    // 执行长按选项
     const onSelectCategoryActionSheet = (
       action: ActionSheetAction,
       index: number
@@ -179,8 +182,9 @@ export default defineComponent({
         }
       }
     };
+    const router = useRouter();
     const editCategory = (id: number) => {
-      // TODO
+      router.push({ name: "editorCategory", params: { cid: id } });
       console.log("editCategory", id);
     };
     const deleteCategory = (id: number) => {

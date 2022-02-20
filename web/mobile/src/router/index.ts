@@ -1,12 +1,14 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import Page from "../views/Page.vue";
-import AddPage from "../views/AddPage.vue";
+import EditorPage from "../views/EditorPage.vue";
 import Review from "@/components/review.vue";
 import Cards from "@/components/cards.vue";
 import Category from "@/components/category.vue";
 import Settings from "@/components/settings.vue";
 import AddCategory from "@/components/addCategory.vue";
 import AddCard from "@/components/addCard.vue";
+import EditorCategory from "@/components/EditorCategory.vue";
+import EditorCard from "@/components/addCard.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -23,10 +25,19 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/add",
     name: "AddPage",
-    component: AddPage,
+    component: EditorPage,
     children: [
       { path: "category", component: AddCategory, name: "addCategory" },
       { path: "card", component: AddCard, name: "addCard" },
+    ],
+  },
+  {
+    path: "/editor",
+    name: "EditorPage",
+    component: EditorPage,
+    children: [
+      { path: "category/:cid", component: EditorCategory, name: "editorCategory" },
+      { path: "card/:cid", component: EditorCard, name: "editorCard" },
     ],
   },
   {
