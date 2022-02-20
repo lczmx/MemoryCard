@@ -6,7 +6,9 @@
     @click-right="more"
   >
     <template #left>
-      <van-icon name="replay" size="20" />
+      <van-icon name="replay" size="20" v-show="!loading" />
+
+      <van-loading color="#1989fa" size="20" v-show="loading" />
     </template>
     <template #right>
       <!-- 弹出层 -->
@@ -24,73 +26,116 @@
       </van-popover>
     </template>
   </van-nav-bar>
-
-  <!-- 全部卡片 主体 -->
-  <div
-    class="cards_body"
-    v-touch:swipe.bottom="handlerShowAddCardBtn"
-    v-touch:swipe.top="handlerHideAddCardBtn"
+  <van-list
+    v-model:loading="loading"
+    :finished="!status.hasMore"
+    @load="getCardData"
+    loading-text="加载中..."
   >
-    <div class="data_wrap" v-if="data.length > 0">
-      <van-cell-group
-        inset
-        v-for="item in data"
-        :key="item.id"
-        class="cell_item"
-      >
-        <van-swipe-cell>
-          <van-cell
-            center
-            title-class="content_item"
-            label-class="content_date"
-          >
-            <template #icon>
-              <van-icon
-                :name="item.category.icon"
-                class="left-icon"
-                size="24"
-                :color="item.category.color"
-              />
+    <template #finished>
+      <div class="finished-text-wrap">
+        <p>没有更多数据了</p>
+      </div>
+    </template>
+    <template #loading>
+      <div class="loading-text-wrap">
+        <van-loading color="#1989fa" />
+      </div>
+    </template>
+    <!-- 全部卡片 主体 -->
+    <div
+      class="cards_body van-clearfix"
+      v-touch:swipe.bottom="handlerShowAddCardBtn"
+      v-touch:swipe.top="handlerHideAddCardBtn"
+    >
+      <div class="data_wrap">
+        <van-cell-group
+          inset
+          v-for="(item, index) in data"
+          :key="item.id"
+          class="cell_item"
+        >
+          <van-swipe-cell>
+            <van-cell
+              center
+              title-class="content_item"
+              label-class="content_date"
+            >
+              <template #icon>
+                <!-- 使用iconfont -->
+                <i
+                  :class="`left-icon iconfont ${item.category.icon}`"
+                  :style="{ 'font-size': '24px', color: item.category.color }"
+                  class="left-icon"
+                >
+                </i>
+              </template>
+              <template #title>
+                <div class="van-ellipsis item-title">{{ item.title }}</div>
+              </template>
+              <template #label>
+                <div class="van-ellipsis item-category">
+                  <van-tag :color="item.category.color" text-color="#fff">{{
+                    item.category.name
+                  }}</van-tag>
+                </div>
+              </template>
+            </van-cell>
+            <template #right>
+              <!-- 右边滑动区域 -->
+              <div class="swipe_right_wrap">
+                <van-button
+                  class="swipe_right_btn"
+                  icon="edit"
+                  type="primary"
+                  round
+                  :block="true"
+                  @click="handlerEditBtn(item.id)"
+                  :cid="item.id"
+                />
+                <van-button
+                  class="swipe_right_btn"
+                  icon="delete-o"
+                  type="danger"
+                  round
+                  :block="true"
+                  @click="handlerDeleteBtn(item.id)"
+                  :cid="item.id"
+                />
+                <van-button
+                  color="#f08300"
+                  class="swipe_right_btn"
+                  round
+                  plain
+                  :block="true"
+                  @click="handlerToggleStarStatus($event, index, item.id)"
+                >
+                  <template #icon>
+                    <van-icon
+                      v-show="item.isStar"
+                      class="iconfont star_true"
+                      color="#f08300"
+                      class-prefix="icon"
+                      name="favorfill"
+                      size="24"
+                    />
+                    <van-icon
+                      v-show="!item.isStar"
+                      class="iconfont star_false"
+                      class-prefix="icon"
+                      name="favor"
+                      size="24"
+                    />
+                  </template>
+                </van-button>
+              </div>
             </template>
-            <template #title>
-              <div class="van-ellipsis item-title">{{ item.title }}</div>
-            </template>
-            <template #label>
-              <span class="item-category">
-                <van-tag :color="item.category.color" text-color="#fff">{{
-                  item.category.name
-                }}</van-tag>
-
-                {{ item.reviewDate }}
-              </span>
-            </template>
-          </van-cell>
-          <template #right>
-            <!-- 右边滑动区域 -->
-            <div class="swipe_right_wrap">
-              <van-button
-                class="swipe_right_btn"
-                icon="success"
-                size="small"
-                type="success"
-                @click="handlerSuccessBtn(item.id)"
-              />
-              <van-button
-                class="swipe_right_btn"
-                icon="edit"
-                size="small"
-                type="primary"
-                @click="handlerEditBtn(item.id)"
-                :cid="item.id"
-              />
-            </div>
-          </template>
-        </van-swipe-cell>
-      </van-cell-group>
+          </van-swipe-cell>
+          <show-plan :card="item"></show-plan>
+        </van-cell-group>
+      </div>
     </div>
-    <!-- 没有数据 -->
-    <van-empty v-if="!loading && data.length <= 0" description="暂无数据" />
-  </div>
+  </van-list>
   <!-- 添加卡片的btn -->
   <!-- 上滑进入 -->
   <transition name="van-slide-up">
@@ -108,14 +153,16 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from "vue";
+import { useStore } from "vuex";
 import { PopoverAction } from "vant";
 import { useToggle } from "@vant/use";
-import { ICard } from "@/types";
-import { getDataOfPage } from "@/utils/request";
+import { ICard, IStar } from "@/types";
+import { getDataOfPage, postCreateData } from "@/utils/request";
+import ShowPlan from "@/components/showPlan.vue";
 import { Method } from "axios";
 export default defineComponent({
   name: "Cards",
-
+  components: { ShowPlan },
   setup() {
     const data = ref<ICard[]>([]);
     const showPopover = ref(false);
@@ -130,16 +177,24 @@ export default defineComponent({
       console.log(action, index);
     };
 
-    const handlerSuccessBtn = (cid: number) => {
-      console.log(`handlerSuccessBtn: ${cid}`);
+    const handlerDeleteBtn = (cid: number) => {
+      console.log(`handlerDeleteBtn: ${cid}`);
     };
     const handlerEditBtn = (cid: number) => {
       console.log(`handlerEditBtn: ${cid}`);
     };
 
     const reload = () => {
-      console.log("log");
+      // 重新加载 卡片数据
+      loading.value = true;
+      data.value = [];
+      status.hasMore = true;
+      status.limit = 10;
+      status.offset = 0;
+      getCardData();
+      console.log(loading.value);
     };
+
     const more = () => {
       console.log("more");
     };
@@ -154,7 +209,8 @@ export default defineComponent({
     };
 
     // ------------------- 获取数据
-    const loading = ref(true); // 表示正在加载中
+    const loading = ref(false);
+    const store = useStore();
     let status = {
       method: "GET" as Method,
       limit: 10,
@@ -162,29 +218,50 @@ export default defineComponent({
       hasMore: true,
     };
     const config = {
-      // TODO: URL和触底事件
-      url: "http://localhost:8080/data/review/cards.json",
+      url: `${store.state.serverHost}/cards/`,
     };
-    const getData = () => {
-      getDataOfPage<ICard>(status, config).then((response) => {
-        // 加上之间的
+
+    const getCardData = () => {
+      getDataOfPage<ICard>(status, config, false).then((response) => {
         data.value = [...data.value, ...response];
+
         loading.value = false;
       });
     };
+    // ---------- 点击星标后
+    const handlerToggleStarStatus = (
+      event: MouseEvent,
+      index: number,
+      cid: number
+    ) => {
+      const ele = event.target as HTMLElement;
 
-    onMounted(() => {
-      getData();
-      console.log(data);
-    });
+      let starStatus = ele.classList.contains("star_true") ? true : false;
+
+      const postConfig = {
+        method: "post" as Method,
+        url: `${store.state.serverHost}/cards/${cid}/star`,
+        data: {
+          isStar: starStatus,
+        },
+      };
+
+      postCreateData<IStar, IStar>(postConfig, false).then((response) => {
+        data.value[index].isStar = response.isStar;
+      });
+    };
+    // 限制category的width
 
     return {
       reload,
       more,
       data,
       loading,
-      handlerSuccessBtn,
+      status,
+      getCardData,
+      handlerDeleteBtn,
       handlerEditBtn,
+      handlerToggleStarStatus,
       showPopover,
       onSelect,
       actions,
@@ -197,12 +274,22 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+.finished-text-wrap {
+  padding-bottom: 50px;
+  background-color: #f4f3f5;
+  p {
+    margin: 0;
+  }
+}
+.loading-text-wrap {
+  // 加载中...
+  background-color: #f4f3f5;
+  color: #fff;
+}
 .cards_body {
   background-color: #f4f3f5;
-  min-height: calc(100vh - 106px);
-  margin-bottom: 50px;
+  min-height: calc(100vh - 156px);
   padding-top: 56px;
-  padding-bottom: 10px;
   .cell_item {
     margin-bottom: 10px;
     .content_item {
@@ -226,14 +313,15 @@ export default defineComponent({
     }
     .swipe_right_wrap {
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
 
-      // height: 90px;
+      height: 64px;
       margin-right: 5px;
       .swipe_right_btn {
-        margin-bottom: 5px;
+        // margin-bottom: 5px;
+        width: 44px;
+        margin-right: 5px;
       }
     }
   }

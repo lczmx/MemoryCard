@@ -41,6 +41,14 @@ export interface IPlan {
   title: string;
   content: string;
 }
+
+// 卡片复习计划数据
+export interface ICardPlan {
+  reviewAt: string; // 上一次的复习时间
+  reviewAtNext: string; // 本次的复习时间
+  reviewTimes: number; // 已经复习的次数
+  allReviewTimes: number; // 全部复习的次数
+}
 // ---------------- 卡片相关
 
 export interface ICard {

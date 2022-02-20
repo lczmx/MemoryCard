@@ -1,5 +1,10 @@
 <template>
-  <van-nav-bar title="复习" :fixed="true" @click-left="calendar" @click-right="more">
+  <van-nav-bar
+    title="复习"
+    :fixed="true"
+    @click-left="calendar"
+    @click-right="more"
+  >
     <template #left>
       <van-icon name="calendar-o" size="20" />
     </template>
@@ -32,76 +37,98 @@
     v-model:show="showCal"
     @confirm="handlerConfirmCal"
   />
-  <!-- 复习页面的主题 -->
-  <div class="review_body">
-    <!-- 加载框 -->
-    <van-loading color="#1989fa" v-if="!data" />
 
-    <van-cell-group
-      v-else
-      inset
-      v-for="item in data.data"
-      :key="item.id"
-      class="cell_item"
-    >
-      <van-swipe-cell>
-        <van-cell center title-class="content_item" label-class="content_date">
-          <template #icon>
-            <van-icon
-              :name="item.category.icon"
-              class="left-icon"
-              size="24"
-              :color="item.category.color"
-            />
+  <van-list
+    v-model:loading="loading"
+    :finished="!status.hasMore"
+    @load="getReviewData"
+    loading-text="加载中..."
+  >
+    <template #finished>
+      <div class="finished-text-wrap">
+        <p>没有更多数据了</p>
+      </div>
+    </template>
+    <template #loading>
+      <div class="loading-text-wrap">
+        <van-loading color="#1989fa" />
+      </div>
+    </template>
+    <!-- 复习页面的主体 -->
+    <div class="review_body van-clearfix">
+      <van-cell-group
+        inset
+        v-for="item in data"
+        :key="item.id"
+        class="cell_item"
+      >
+        <van-swipe-cell>
+          <van-cell
+            center
+            title-class="content_item"
+            label-class="content_date"
+          >
+            <template #icon>
+              <!-- 使用iconfont -->
+              <i
+                :class="`left-icon iconfont ${item.category.icon}`"
+                :style="{ 'font-size': '24px', color: item.category.color }"
+                class="left-icon"
+              >
+              </i>
+            </template>
+            <template #title>
+              <div class="van-ellipsis item-title">{{ item.title }}</div>
+            </template>
+            <template #label>
+              <span class="van-ellipsis item-category">
+                <van-tag :color="item.category.color" text-color="#fff">{{
+                  item.category.name
+                }}</van-tag>
+              </span>
+            </template>
+          </van-cell>
+          <template #right>
+            <!-- 右边滑动区域 -->
+            <div class="swipe_right_wrap">
+              <van-button
+                class="swipe_right_btn"
+                icon="success"
+                type="success"
+                round
+                :block="true"
+                @click="handlerSuccessBtn(item.id)"
+                :cid="item.id"
+              />
+              <van-button
+                class="swipe_right_btn"
+                icon="edit"
+                type="primary"
+                round
+                :block="true"
+                @click="handlerEditBtn(item.id)"
+                :cid="item.id"
+              />
+            </div>
           </template>
-          <template #title>
-            <div class="van-ellipsis item-title">{{ item.title }}</div>
-          </template>
-          <template #label>
-            <span class="item-category">
-              <van-tag :color="item.category.color" text-color="#fff">{{
-                item.category.name
-              }}</van-tag>
-
-              {{ item.reviewDate }}
-            </span>
-          </template>
-        </van-cell>
-        <template #right>
-          <!-- 右边滑动区域 -->
-          <div class="swipe_right_wrap">
-            <van-button
-              class="swipe_right_btn"
-              icon="success"
-              size="small"
-              type="success"
-              @click="handlerSuccessBtn(item.id)"
-            />
-            <van-button
-              class="swipe_right_btn"
-              icon="edit"
-              size="small"
-              type="primary"
-              @click="handlerEditBtn(item.id)"
-              :cid="item.id"
-            />
-          </div>
-        </template>
-      </van-swipe-cell>
-    </van-cell-group>
-  </div>
+        </van-swipe-cell>
+      </van-cell-group>
+    </div>
+  </van-list>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import { PopoverAction } from "vant";
-import axios from "axios";
+import { useStore } from "vuex";
+import { Method } from "axios";
+import { ICard } from "@/types";
+import { getDataOfPage } from "@/utils/request";
 
 export default defineComponent({
   name: "Review",
 
   setup() {
-    const data = ref("");
     const showPopover = ref(false);
     const showCal = ref(false); // 显示日历
     // 弹框选项
@@ -135,18 +162,33 @@ export default defineComponent({
       console.log("handlerConfirmCal", value);
       showCal.value = false;
     };
+    // ----------------------- 获取复习卡片
+    const loading = ref(false);
+    const data = ref<ICard[]>([]);
+    const store = useStore();
+    let status = {
+      method: "GET" as Method,
+      limit: 10,
+      offset: 0,
+      hasMore: true,
+    };
+    const config = {
+      url: `${store.state.serverHost}/review/`,
+    };
 
-    axios({
-      method: "get",
-      url: "http://localhost:8080/data/review/cards.json",
-    }).then((response) => {
-      data.value = response.data;
-    });
+    const getReviewData = () => {
+      getDataOfPage<ICard>(status, config, false).then((response) => {
+        data.value = [...data.value, ...response];
+        loading.value = false;
+      });
+    };
 
-    console.log(data);
     return {
       calendar,
       more,
+      loading,
+      status,
+      getReviewData,
       data,
       handlerSuccessBtn,
       handlerEditBtn,
@@ -160,14 +202,24 @@ export default defineComponent({
 });
 </script>
 
+<style lang="scss">
+.finished-text-wrap {
+  padding-bottom: 50px;
+  background-color: #f4f3f5;
+  p {
+    margin: 0;
+  }
+}
+.loading-text-wrap {
+  // 加载中...
+  background-color: #f4f3f5;
+  color: #fff;
+}
 
-<style lang="scss" >
 .review_body {
   background-color: #f4f3f5;
-  min-height: calc(100vh - 106px);
-  margin-bottom: 50px;
+  min-height: calc(100vh - 156px);
   padding-top: 56px;
-  padding-bottom: 10px;
   .cell_item {
     margin-bottom: 10px;
     .content_item {
@@ -191,14 +243,15 @@ export default defineComponent({
     }
     .swipe_right_wrap {
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
 
-      // height: 66px;
+      height: 64px;
       margin-right: 5px;
       .swipe_right_btn {
-        margin-bottom: 5px;
+        // margin-bottom: 5px;
+        width: 44px;
+        margin-right: 5px;
       }
     }
   }

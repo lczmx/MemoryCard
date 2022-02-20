@@ -3,12 +3,13 @@
 """
 import logging
 from typing import List, TypeVar, Type, Optional, NoReturn
+from datetime import datetime
 
 from sqlalchemy.orm import Session
-from sqlalchemy import select, or_, not_, update
+from sqlalchemy import select, or_, not_, update, func
 from pydantic import BaseModel
 from orm.database import Base
-from orm.models import Category, Plan
+from orm.models import Category, Plan, Card
 from orm.schemas.category import WriteCategoryModel
 from orm.schemas.generic import QueryLimit
 
@@ -116,3 +117,25 @@ def toggle_star_status(session: Session, model_class: ModelT, target_id: int, st
         logging.error(str(e))
         # 返回原来的
         return star_status
+
+
+def query_need_review_card(session: Session, uid: int, query_params: Optional[QueryLimit]) -> List[Card]:
+    """
+    查询所有需要复习的卡片
+    :param session: 数据连接
+    :param uid: 用户id
+    :param query_params: limit offset 参数
+    :return: 卡片模型类的对象列表
+    """
+
+    stmt = select(Card).where(
+        Card.cid == Category.id,
+        Category.pid == Plan.id,
+        Card.uid == uid
+    )
+
+    res = session.execute(
+        stmt.limit(query_params.limit).offset(query_params.offset)
+    )
+    temp = [i for i in res.scalars().all() if i.is_review_date]
+    return temp

@@ -4,7 +4,8 @@
 
 from sqlalchemy import Column, String, Integer, DateTime, Text, Boolean, ForeignKey, func
 from sqlalchemy.orm import relationship
-
+from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
+from datetime import datetime, timedelta
 from orm import Base
 
 
@@ -42,11 +43,20 @@ class Card(Base):
     title = Column(String(32), nullable=False, comment="卡片标题")
     created_at = Column(DateTime, server_default=func.now(), comment='创建时间')
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), comment='更新时间')
-    review_at = Column(DateTime, nullable=True, default=None, comment='次卡片这次复习时间')
-    review_times = Column(Integer, nullable=False, default=0, comment='次卡片这次复习的次数')
+    review_at = Column(DateTime, nullable=False, server_default=func.now(), comment='卡片这次复习时间')
+    review_times = Column(Integer, nullable=False, default=0, comment='卡片这次复习的次数')
     summary = Column(String(1024), default="", comment='卡片的概要信息(提示信息)')
     description = Column(Text, nullable=False, comment='卡片的详细内容')
     is_star = Column(Boolean, nullable=False, default=False, comment="是否星标")
+
+    @hybrid_property
+    def is_review_date(self):
+        content = self.category.plan.content
+        plan_sec = content.split('-')
+        sec = int(plan_sec[self.review_times]) if self.review_times < len(plan_sec) else 0
+        res_date = self.review_at + timedelta(seconds=sec)
+
+        return res_date <= datetime.now()
 
 
 class Plan(Base):

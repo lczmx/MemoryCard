@@ -125,7 +125,6 @@ import { Method } from "axios";
 
 export default defineComponent({
   name: "Category",
-
   setup() {
     const data = ref<ICategory[]>([]);
     /* ----- 更多开始 --------- */

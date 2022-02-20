@@ -23,6 +23,8 @@ import { Picker } from "vant"; // 选择器
 import { Toast } from "vant"; // 提示
 import { Empty } from "vant"; // 空状态
 import { List } from "vant"; // 列表, 用于触底事件
+import { Step, Steps } from "vant"; // 步骤条
+import { Progress } from 'vant';  // 进度条
 import { Loading } from "vant";
 import Vue3TouchEvents from "vue3-touch-events"; // 滑动事件
 // 文档: https://github.com/robinrodricks/vue3-touch-events
@@ -53,5 +55,8 @@ app.use(Toast);
 app.use(Empty);
 app.use(List);
 app.use(Loading);
+app.use(Step);
+app.use(Steps);
+app.use(Progress);
 
 app.use(store).use(router).mount("#app");

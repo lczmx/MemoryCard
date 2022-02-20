@@ -1,9 +1,6 @@
 """
 建立数据库连接
 """
-# !/usr/bin/python3
-# -*- coding:utf-8 -*-
-# __author__ = '__Jack__'
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
