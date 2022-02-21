@@ -26,6 +26,9 @@ import { List } from "vant"; // 列表, 用于触底事件
 import { Step, Steps } from "vant"; // 步骤条
 import { Progress } from 'vant';  // 进度条
 import { Loading } from "vant";
+import { Skeleton } from 'vant';  // 骨架
+import { Switch } from 'vant';  // 开关
+
 import Vue3TouchEvents from "vue3-touch-events"; // 滑动事件
 // 文档: https://github.com/robinrodricks/vue3-touch-events
 
@@ -58,5 +61,7 @@ app.use(Loading);
 app.use(Step);
 app.use(Steps);
 app.use(Progress);
+app.use(Skeleton);
+app.use(Switch);
 
 app.use(store).use(router).mount("#app");

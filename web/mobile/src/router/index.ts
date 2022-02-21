@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
-import Page from "../views/Page.vue";
-import EditorPage from "../views/EditorPage.vue";
+import Page from "@/views/Page.vue";
+import EditorPage from "@/views/EditorPage.vue";
+import CardReview from "@/views/cardReview.vue";
+
 import Review from "@/components/review.vue";
 import Cards from "@/components/cards.vue";
 import Category from "@/components/category.vue";
@@ -36,9 +38,18 @@ const routes: Array<RouteRecordRaw> = [
     name: "EditorPage",
     component: EditorPage,
     children: [
-      { path: "category/:cid", component: EditorCategory, name: "editorCategory" },
+      {
+        path: "category/:cid",
+        component: EditorCategory,
+        name: "editorCategory",
+      },
       { path: "card/:cid", component: EditorCard, name: "editorCard" },
     ],
+  },
+  {
+    path: "/review/:cid",
+    name: "CardReview",
+    component: CardReview,
   },
   {
     path: "/about",

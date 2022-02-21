@@ -67,3 +67,17 @@ export interface IPostCard {
   summary: string;
   description: string;
 }
+
+export interface ICardDragObject {
+  // 拖动卡片时的事件的回调数据
+  distance: number;
+  left: number;
+  top: number;
+}
+
+export interface IReviewCard {
+  // 用于存放复习卡片
+  prevCard: ICard | null; // 上一个卡片
+  currentCard: ICard; // 当前卡片
+  nextCard: ICard | null; // 下一个卡片
+}

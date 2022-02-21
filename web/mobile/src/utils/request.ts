@@ -123,7 +123,7 @@ export async function getDataOfPage<R>(
         return Promise.resolve(response.data);
       } else {
         Toast.fail(response.msg);
-        return Promise.resolve(fake_res);
+        return Promise.reject(response.msg);
       }
     }
   );
@@ -174,7 +174,7 @@ export async function postCreateData<R, D>(
       return Promise.resolve(response.data);
     } else {
       Toast.fail(response.msg);
-      return Promise.resolve(fake_res);
+      return Promise.reject(response.msg);
     }
   });
 }
@@ -197,7 +197,7 @@ export async function getDataOfOne<R>(
       return Promise.resolve(response.data);
     } else {
       Toast.fail(response.msg);
-      return Promise.resolve(fake_res);
+      return Promise.reject(response.msg);
     }
   });
 }
