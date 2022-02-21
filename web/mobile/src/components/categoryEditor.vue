@@ -77,6 +77,7 @@
             @confirm="onConfirmPlan"
             @cancel="showPlanPicker = false"
             :loading="loadingPlanData"
+            :default-index="defaultPlanIndex"
           />
         </van-popup>
       </van-cell-group>
@@ -138,8 +139,7 @@ export default defineComponent({
     // 修改标题
     store.commit("changePageTitle", props.propTitle);
     // ------------- 分类名
-    console.log("props.propName", props.propName);
-    
+
     const name = ref(props.propName);
 
     // ----------- 颜色
@@ -165,6 +165,7 @@ export default defineComponent({
     };
 
     // ------------ 复习计划
+    const defaultPlanIndex = ref(0); // 默认选中的索引
     const loadingPlanData = ref(true);
 
     const plan = ref<number | undefined>(props.propPlan); // 选中的ID
@@ -190,10 +191,18 @@ export default defineComponent({
       loadingPlanData.value = true;
       getDataOfPage<IPlan>(status, config, false).then((response) => {
         // 加上之前的
-        response.forEach((item) => {
+        response.forEach((item, index) => {
           // 选项
           planColumns.value.push(item.title);
           planData[item.title] = item.id;
+          // 修改默认选中值
+          if (
+            defaultPlanIndex.value === 0 &&
+            item.title === planText.value &&
+            item.id === plan.value
+          ) {
+            defaultPlanIndex.value = index
+          }
         });
         loadingPlanData.value = false;
 
@@ -262,7 +271,6 @@ export default defineComponent({
                 }
               );
 
-              console.log(data);
             })
             .catch((error) => {
               console.log(error);
@@ -295,6 +303,7 @@ export default defineComponent({
       showPlanPicker,
       onConfirmPlan,
       addCategoryForm,
+      defaultPlanIndex,
     };
   },
 });

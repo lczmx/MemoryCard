@@ -61,6 +61,7 @@
         v-for="item in data"
         :key="item.id"
         class="cell_item"
+        @click="handlerClickReviewBody(item.id)"
       >
         <van-swipe-cell>
           <van-cell
@@ -209,6 +210,11 @@ export default defineComponent({
     watch([width, height], resetFiledWidth);
     // 有新数据时
     watch([data], resetFiledWidth);
+
+    // ---------- 点击跳转到复习页面
+    const handlerClickReviewBody = (cid: number) => {
+      console.log("handlerClickReviewBody", cid);
+    };
     return {
       calendar,
       more,
@@ -223,6 +229,7 @@ export default defineComponent({
       onSelect,
       actions,
       handlerConfirmCal,
+      handlerClickReviewBody,
     };
   },
 });

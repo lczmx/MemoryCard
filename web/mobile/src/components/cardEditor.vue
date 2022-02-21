@@ -56,6 +56,7 @@
             @confirm="onConfirmCategory"
             @cancel="showCategoryPicker = false"
             :loading="loadingCategoryData"
+            :default-index="defaultCategoryIndex"
           />
         </van-popup>
         <!-- 编辑概要 -->
@@ -232,6 +233,7 @@ export default defineComponent({
     const getCategoryConfig = {
       url: `${store.state.serverHost}/category/`,
     };
+    const defaultCategoryIndex = ref(0); // 默认选中项索引
     // TODO: 分页
     const getCategoryData = () => {
       loadingCategoryData.value = true;
@@ -241,10 +243,18 @@ export default defineComponent({
         getCategoryConfig,
         false
       ).then((response) => {
-        response.forEach((item) => {
+        response.forEach((item, index) => {
           // 选项
           categoryColumns.value.push(item.name);
           categoryData[item.name] = item;
+
+          // 修改选中值
+          if (
+            defaultCategoryIndex.value === 0 &&
+            category.value.id === item.id
+          ) {
+            defaultCategoryIndex.value = index;
+          }
         });
         loadingCategoryData.value = false;
       });
@@ -384,6 +394,7 @@ export default defineComponent({
       descriptionText,
       descriptionEle,
       descriptionEditorTitle,
+      defaultCategoryIndex,
     };
   },
 });
