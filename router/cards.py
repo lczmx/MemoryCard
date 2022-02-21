@@ -5,10 +5,11 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from fastapi import APIRouter, status, Depends
+from fastapi.exceptions import HTTPException
 from orm.schemas.card import ParamsCardModel, ReadSummaryCardModel, ReadDescriptionCardModel, WriteCardModel, StarModel
 from orm.schemas.generic import GenericResponse, QueryLimit
 
-from orm.crud import save_one_to_db, query_all_data_by_user, toggle_star_status
+from orm.crud import save_one_to_db, query_all_data_by_user, toggle_star_status, query_one_data_by_user, update_data
 from orm.models import Card
 from dependencies.orm import get_session
 from dependencies.queryParams import get_limit_params
@@ -63,5 +64,42 @@ async def toggle_star(cid: int, star_status: StarModel, session: Session = Depen
         "data": {
             "is_star": now_status
         }
+
+    }
+
+
+@router.get("/{cid}", response_model=GenericResponse[ReadDescriptionCardModel])
+async def retrieve_card(cid: int, session: Session = Depends(get_session)):
+    """
+    获取一条卡片的数据
+    """
+    # TODO
+    uid = 1
+    card_data = query_one_data_by_user(session=session,
+                                       uid=uid, target_id=cid, model_class=Card)
+    if not card_data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
+
+    return {
+        "status": 1,
+        "msg": "获取成功",
+        "data": card_data
+
+    }
+
+
+@router.post("/{cid}", response_model=GenericResponse[ReadDescriptionCardModel])
+async def retrieve_card(cid: int, data: ParamsCardModel, session: Session = Depends(get_session)):
+    """
+    修改一条卡片的数据
+    """
+    # TODO
+    uid = 1
+
+    card_data = update_data(session=session, uid=uid, target_id=cid, model_class=Card, data=data)
+    return {
+        "status": 1,
+        "msg": "更新成功",
+        "data": card_data
 
     }

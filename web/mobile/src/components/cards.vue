@@ -71,7 +71,9 @@
                 </i>
               </template>
               <template #title>
-                <div class="van-ellipsis item-title">{{ item.title }}</div>
+                <div class="van-ellipsis item-title">
+                  {{ item.title }}
+                </div>
               </template>
               <template #label>
                 <div class="van-ellipsis item-category">
@@ -152,14 +154,15 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from "vue";
+import { defineComponent, ref, watch } from "vue";
 import { useStore } from "vuex";
 import { PopoverAction } from "vant";
-import { useToggle } from "@vant/use";
+import { useToggle, useWindowSize } from "@vant/use";
 import { ICard, IStar } from "@/types";
 import { getDataOfPage, postCreateData } from "@/utils/request";
 import ShowPlan from "@/components/showPlan.vue";
 import { Method } from "axios";
+import { useRouter } from "vue-router";
 export default defineComponent({
   name: "Cards",
   components: { ShowPlan },
@@ -180,8 +183,10 @@ export default defineComponent({
     const handlerDeleteBtn = (cid: number) => {
       console.log(`handlerDeleteBtn: ${cid}`);
     };
+    // ----- 编辑按钮
+    const router = useRouter();
     const handlerEditBtn = (cid: number) => {
-      console.log(`handlerEditBtn: ${cid}`);
+      router.push({ name: "editorCard", params: { cid } });
     };
 
     const reload = () => {
@@ -250,7 +255,31 @@ export default defineComponent({
         data.value[index].isStar = response.isStar;
       });
     };
-    // 限制category的width
+    // ----------------------- 限制category和title的width
+    const resetFiledWidth = () => {
+      const field = document.querySelector(".van-swipe-cell") as HTMLElement;
+      if (!field) return;
+      const { width: fieldWidth } = field.getBoundingClientRect();
+      const titleNodes = document.querySelectorAll(".item-title")
+      const categoryNodes = document.querySelectorAll(".item-category")
+      // 30 - 24 - 15
+      // 代表 图标的两边margin - 图标大小 - 右边的空白
+      titleNodes.forEach((titleNode)=>{
+        const ele = titleNode as HTMLElement;
+        ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
+      })
+      categoryNodes.forEach((titleNode)=>{
+        const ele = titleNode as HTMLElement;
+        ele.style.width = String(fieldWidth - 30 - 24 -15) + "px";
+      })
+
+    };
+
+    const { width, height } = useWindowSize();
+    // 窗口大小改变时
+    watch([width, height], resetFiledWidth);
+    // 有新数据时
+    watch([data], resetFiledWidth);
 
     return {
       reload,
@@ -268,6 +297,7 @@ export default defineComponent({
       handlerShowAddCardBtn,
       handlerHideAddCardBtn,
       showAddCardBtnState,
+
     };
   },
 });

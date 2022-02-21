@@ -43,7 +43,7 @@ export default defineComponent({
     const plan = ref<number>();
     const planText = ref<string>();
     const url = ref(`${store.state.serverHost}/category/${cid}`);
-    // ------------- 获取当前标签的数据
+    // ------------- 获取当前类别的数据
     const config = {
       url: url.value,
     };

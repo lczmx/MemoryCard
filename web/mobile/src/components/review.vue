@@ -118,9 +118,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, watch } from "vue";
 import { PopoverAction } from "vant";
+import { useWindowSize } from "@vant/use";
 import { useStore } from "vuex";
+import { useRouter } from "vue-router";
 import { Method } from "axios";
 import { ICard } from "@/types";
 import { getDataOfPage } from "@/utils/request";
@@ -145,8 +147,9 @@ export default defineComponent({
     const handlerSuccessBtn = (cid: number) => {
       console.log(`handlerSuccessBtn: ${cid}`);
     };
+    const router = useRouter();
     const handlerEditBtn = (cid: number) => {
-      console.log(`handlerEditBtn: ${cid}`);
+      router.push({ name: "editorCard", params: { cid } });
     };
 
     const calendar = () => {
@@ -182,7 +185,30 @@ export default defineComponent({
         loading.value = false;
       });
     };
+    // ----------------------- 限制category和title的width
+    const resetFiledWidth = () => {
+      const field = document.querySelector(".van-swipe-cell") as HTMLElement;
+      if (!field) return;
+      const { width: fieldWidth } = field.getBoundingClientRect();
+      const titleNodes = document.querySelectorAll(".item-title");
+      const categoryNodes = document.querySelectorAll(".item-category");
+      // 30 - 24 - 15
+      // 代表 图标的两边margin - 图标大小 - 右边的空白
+      titleNodes.forEach((titleNode) => {
+        const ele = titleNode as HTMLElement;
+        ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
+      });
+      categoryNodes.forEach((titleNode) => {
+        const ele = titleNode as HTMLElement;
+        ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
+      });
+    };
 
+    const { width, height } = useWindowSize();
+    // 窗口大小改变时
+    watch([width, height], resetFiledWidth);
+    // 有新数据时
+    watch([data], resetFiledWidth);
     return {
       calendar,
       more,

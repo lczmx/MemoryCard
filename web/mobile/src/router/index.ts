@@ -8,7 +8,7 @@ import Settings from "@/components/settings.vue";
 import AddCategory from "@/components/addCategory.vue";
 import AddCard from "@/components/addCard.vue";
 import EditorCategory from "@/components/EditorCategory.vue";
-import EditorCard from "@/components/addCard.vue";
+import EditorCard from "@/components/EditorCard.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {

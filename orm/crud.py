@@ -98,7 +98,7 @@ def query_one_data_by_user(session: Session,
     :param uid: 用户id
     :param target_id: model_class的主键id值
     :param model_class: sqlalchemy模型类
-    :return: 对应sqlalchemy模型类的对象
+    :return: 对应sqlalchemy模型类的对象, 没有值时为None
     :return:
     """
     # 判断是否allow_none, 选择对应的语句
@@ -106,7 +106,7 @@ def query_one_data_by_user(session: Session,
     stmt = select(model_class).where(model_class.uid == uid, model_class.id == target_id).limit(1)
     res = session.scalars(stmt)
 
-    return res.first()  # 对应之前的.all()
+    return res.first()
 
 
 def query_plan_title_by_user(session: Session, *, uid: Optional[int] = None,

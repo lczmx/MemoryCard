@@ -185,7 +185,6 @@ export default defineComponent({
     const router = useRouter();
     const editCategory = (id: number) => {
       router.push({ name: "editorCategory", params: { cid: id } });
-      console.log("editCategory", id);
     };
     const deleteCategory = (id: number) => {
       // TODO
