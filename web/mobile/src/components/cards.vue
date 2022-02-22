@@ -175,9 +175,34 @@ export default defineComponent({
       { text: "只看星标", icon: " iconfont icon-star" },
       { text: "选择卡片", icon: " iconfont icon-select" },
     ];
-    // 弹框选项选中回调
+    // ------ 弹框选项选中回调
     const onSelect = (action: PopoverAction, index: number) => {
+      switch (index) {
+        case 1:
+          onlyShowStarCard(action);
+          break;
+      }
       console.log(action, index);
+    };
+    // ------------- 只看星标
+    let dataBak: ICard[]; // 用于备份
+    const onlyShowStarCard = (action: PopoverAction) => {
+      if (action.text === "只看星标") {
+        if (typeof data.value !== "undefined") {
+          dataBak = data.value as ICard[];
+        }
+
+        data.value = data.value.filter((value) => value.isStar);
+        actions[1].text = "显示全部";
+      } else {
+        if (typeof dataBak !== "undefined") {
+          data.value = dataBak;
+        }
+
+        actions[1].text = "只看星标";
+      }
+
+      console.log("onlyShowStarCard");
     };
 
     const handlerDeleteBtn = (cid: number) => {
