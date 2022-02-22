@@ -9,7 +9,8 @@ from fastapi.exceptions import HTTPException
 from orm.schemas.card import ParamsCardModel, ReadSummaryCardModel, ReadDescriptionCardModel, WriteCardModel, StarModel
 from orm.schemas.generic import GenericResponse, QueryLimit
 
-from orm.crud import save_one_to_db, query_all_data_by_user, toggle_star_status, query_one_data_by_user, update_data
+from orm.crud import save_one_to_db, query_all_data_by_user, toggle_star_status, \
+    query_one_data_by_user, update_data, delete_data_by_user
 from orm.models import Card
 from dependencies.orm import get_session
 from dependencies.queryParams import get_limit_params
@@ -104,5 +105,27 @@ async def retrieve_card(cid: int, data: ParamsCardModel, session: Session = Depe
         "status": 1,
         "msg": "更新成功",
         "data": card_data
+
+    }
+
+
+@router.delete("/{cid}", response_model=GenericResponse, response_model_exclude_unset=True)
+async def retrieve_card(cid: int, session: Session = Depends(get_session)):
+    """
+    删除一条卡片的数据
+    """
+    # TODO
+    uid = 1
+    rowcount = delete_data_by_user(session=session, uid=uid, target_id=cid, model_class=Card)
+    # rowcount = 0 时
+    if not rowcount:
+        return {
+            "status": 0,
+            "msg": "删除失败",
+        }
+
+    return {
+        "status": 1,
+        "msg": "删除成功",
 
     }
