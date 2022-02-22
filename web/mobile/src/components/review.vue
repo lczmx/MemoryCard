@@ -213,7 +213,7 @@ export default defineComponent({
 
     // ---------- 点击跳转到复习页面
     const handlerClickReviewBody = (cid: number) => {
-      router.push({ name: "CardReview", params: { cid } });
+      router.push({ name: "CardReview", query: { cid } });
     };
     return {
       calendar,

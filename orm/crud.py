@@ -1,6 +1,7 @@
 """
 增删改查数据库 数据
 """
+import datetime
 import logging
 from typing import List, TypeVar, Type, Optional, NoReturn
 
@@ -163,9 +164,6 @@ def query_need_review_card(session: Session, uid: int, query_params: Optional[Qu
     return temp
 
 
-
-
-
 def update_data(session: Session, uid: int, target_id: int, model_class: ModelT, data: DataT) -> ModelT:
     """
       通过uid, target_id, 根更新一条数据
@@ -182,3 +180,25 @@ def update_data(session: Session, uid: int, target_id: int, model_class: ModelT,
                                   ).values(**data.dict()))
     session.commit()
     return query_one_data_by_user(session, uid, target_id, model_class)
+
+
+def update_review_times(session: Session, cid: int, review_times: int, review_at: datetime
+                        ):
+    """
+    更新卡片复习
+    :param session: 数据连接
+    :param cid: 卡片ID
+    :param review_times: 新的复习次数
+    :param review_at: 更新时间
+    :return:
+    """
+
+    # 需要更新review_at 和 review_times
+
+    session.execute(
+        update(Card).where(Card.id == cid).values(
+            review_at=review_at,
+            review_times=review_times
+        )
+    )
+    # session.commit()

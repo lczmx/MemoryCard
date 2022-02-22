@@ -1,7 +1,6 @@
 <template>
   <div class="card-review-wrap">
     <!-- 拖拽提示 -->
-    <div class="show_drag_text">提示</div>
     <fly-card
       @onDragMove="onCardDragMove"
       @onThrowDone="onCardThrowDone"
@@ -12,8 +11,19 @@
       :hasShadow="true"
     >
       <template #firstCard>
-        <van-loading color="#1989fa" v-show="loading" />
-        <div class="card-review-container" v-show="!loading">
+        <van-loading
+          color="#1989fa"
+          v-show="loading"
+          :style="{
+            top: `${Math.round(cardHeight / 2) - 10}px`,
+            left: `${Math.round(cardWidth / 2) - 10}px`,
+          }"
+        />
+        <div
+          class="card-review-container"
+          v-show="!loading"
+          id="description_teleport"
+        >
           <div class="card-info van-ellipsis">
             <!-- 图标和标题 -->
             <div class="card-category-icon">
@@ -30,47 +40,186 @@
           </div>
           <!-- 概要信息 -->
           <div
-            class="card-summary"
-            v-html="reviewCard.currentCard.summary"
+            class="card-summary-wrap"
+            @touchstart.stop="null"
+            @touchmove.stop="null"
+            @touchcancel.stop="null"
+            @touchend.stop="null"
             ref="summaryEle"
-          ></div>
+          >
+            <van-cell title="卡片概要信息">
+              <template #label>
+                <div
+                  class="card-summary"
+                  :style="{
+                    width: cardWidth - 52 + 'px',
+                    height: cardHeight - 144 - 24 - 60 - 16 - 20 + 'px',
+                  }"
+                  v-html="reviewCard.currentCard.summary"
+                ></div>
+              </template>
+            </van-cell>
+          </div>
+
           <!-- 详细信息 -->
-          <div class="card-description-wrap">
+          <div class="card-desc-skeleton-wrap">
             <!-- 显示信息按钮 -->
             <div class="show-desc-btn">
-              <van-switch v-model="showDescBtn" />
+              <van-cell center title="显示卡片详细信息">
+                <template #right-icon>
+                  <van-switch v-model="showDescBtn" />
+                </template>
+              </van-cell>
             </div>
-            <!-- <div
-              
-              v-html="reviewCard.currentCard.description"
-            ></div> -->
 
-            <van-skeleton
-              class="card-desc-content"
-              title
-              :row="3"
-              :loading="!showDescBtn"
-            >
-              <div>实际内容</div>
+            <van-skeleton title :row="3" :loading="!showDescBtn">
             </van-skeleton>
+          </div>
+          <!-- 显示进度 -->
+
+          <div
+            class="progress-wrap"
+            v-show="!isNaN(currentCardIndex) && needReview.length > 0"
+          >
+            <div class="progress-now">{{ currentCardIndex + 1 }}</div>
+            <div class="progress-char">/</div>
+            <div class="progress-all">{{ needReview.length }}</div>
+            <!-- 占位符 -->
+            <div :style="{ width: '50px' }"></div>
+          </div>
+        </div>
+      </template>
+      <!-- 底部展示的卡片 -->
+      <template #secondCard>
+        <div v-if="bottomShowReviewCard" class="card-review-container">
+          <div class="card-info van-ellipsis">
+            <!-- 图标和标题 -->
+            <div class="card-category-icon">
+              <!-- 使用iconfont -->
+              <i
+                :class="`category-icon iconfont ${bottomShowReviewCard.category.icon}`"
+                :style="{ color: bottomShowReviewCard.category.color }"
+              >
+              </i>
+            </div>
+            <div
+              class="card-title"
+              :style="{
+                width: cardWidth - 30 + 'px',
+              }"
+            >
+              {{ bottomShowReviewCard.title }}
+            </div>
+          </div>
+          <!-- 概要信息 -->
+          <div
+            class="card-summary-wrap"
+            :style="{
+              width: cardWidth - 30 + 'px',
+              height: cardHeight - 144 - 24 - 60 + 'px',
+            }"
+          >
+            <van-cell title="卡片概要信息">
+              <template #label>
+                <div
+                  class="card-summary"
+                  :style="{
+                    width: cardWidth - 52 + 'px',
+                    height: cardHeight - 144 - 24 - 60 - 16 - 20 + 'px',
+                  }"
+                  v-html="bottomShowReviewCard.summary"
+                ></div>
+              </template>
+            </van-cell>
+          </div>
+
+          <!-- 详细信息 -->
+          <div class="card-desc-skeleton-wrap">
+            <!-- 显示信息按钮 -->
+            <div class="show-desc-btn">
+              <van-cell center title="显示卡片详细信息">
+                <template #right-icon>
+                  <van-switch v-model="showDescBtn" />
+                </template>
+              </van-cell>
+            </div>
+            <van-skeleton title :row="3" :loading="true"> </van-skeleton>
           </div>
         </div>
       </template>
     </fly-card>
+
     <!-- 卡片工具栏 -->
-    <div class="card-tool-bar">tool bar</div>
+    <div class="card-tool-bar">
+      <div class="card-tool-item">
+        <van-icon
+          class="iconfont"
+          class-prefix="icon"
+          name="bianji"
+          size="24"
+          @click="handlerClickEditor"
+        />
+      </div>
+      <div class="card-tool-item">
+        <van-icon
+          v-show="reviewCard.currentCard.isStar"
+          class="iconfont"
+          class-prefix="icon"
+          name="favorfill"
+          color="#f08300"
+          size="24"
+          @click="handlerClickStar"
+        />
+        <van-icon
+          v-show="!reviewCard.currentCard.isStar"
+          class="iconfont"
+          class-prefix="icon"
+          name="favor"
+          size="24"
+          @click="handlerClickStar"
+        />
+      </div>
+      <div class="card-tool-item">
+        <van-icon
+          class="iconfont"
+          class-prefix="icon"
+          name="fanhui"
+          size="24"
+          @click="handlerClickBack"
+        />
+      </div>
+    </div>
   </div>
+  <van-popup
+    @touchstart.stop="null"
+    @touchmove.stop="null"
+    @touchcancel.stop="null"
+    @touchend.stop="null"
+    v-model:show="showDescBtn"
+    round
+    duration=".5"
+    :overlay-style="{ backgroundColor: '#fff', opacity: 0 }"
+    :style="{ width: cardWidth + 'px', height: cardHeight + 'px' }"
+    teleport="#description_teleport"
+    class="popup-desc-wrap"
+  >
+    <div
+      class="card-review-desc-wrap"
+      v-html="reviewCard.currentCard.description"
+    ></div>
+  </van-popup>
 </template>
 
 <script lang="ts">
 import { defineComponent, watch, ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
+import { Notify, Dialog } from "vant";
 
 import { useWindowSize } from "@vant/use";
 import FlyCard from "@/components/FlyCard.vue";
-import { ICardDragObject, ICard, IReviewCard, ICategory } from "@/types";
-import { getDataOfOne, getDataOfPage } from "@/utils/request";
+import { ICardDragObject, ICard, IReviewCard, ICategory, IStar } from "@/types";
+import { getDataOfOne, getDataOfPage, postCreateData } from "@/utils/request";
 import { Method } from "axios";
 
 export default defineComponent({
@@ -95,7 +244,6 @@ export default defineComponent({
 
     const titleEle = ref<HTMLElement>();
     const summaryEle = ref<HTMLElement>();
-    // const descriptionEle = ref<HTMLElement>();
 
     const resetSDStyle = (w: number, h: number) => {
       // summary和description样式
@@ -103,36 +251,164 @@ export default defineComponent({
         titleEle.value.style.width = w - 30 + "px";
       }
       if (summaryEle.value) {
-        summaryEle.value.style.width = Math.round(h * 0.5) + "px";
+        summaryEle.value.style.width = w - 30 + "px";
+        // 卡片高度 - desc骨架高度 - title高度 - 所有margin/
+        summaryEle.value.style.height = h - 144 - 24 - 60 + "px";
       }
     };
     // ---------- 处理的函数
-    const dragLeft = () => {
-      console.log("dragLeft", reviewCard);
-      console.log(currentCardIndex);
+    const dragLeft = async () => {
+      // 下张
+
+      if (reviewCard.nextCard) {
+        loading.value = true;
+        /*
+          p  c  n
+             p  c  n (获取)
+
+        */
+        if (typeof currentCardIndex.value !== "undefined") {
+          currentCardIndex.value += 1;
+        }
+
+        reviewCard.prevCard = reviewCard.currentCard;
+        reviewCard.currentCard = reviewCard.nextCard;
+        await getNextCard();
+        Object.assign(currentCardCategory, reviewCard.currentCard.category);
+        loading.value = false;
+      } else {
+        Notify({ type: "warning", message: "已经是最后一张了" });
+      }
     };
-    const dragRight = () => {
-      console.log("dragRight");
+    const dragRight = async () => {
+      // 上张
+      if (reviewCard.prevCard) {
+        loading.value = true;
+        /*
+                   p  c  n
+         (获取) p  c  n
+
+        */
+        if (typeof currentCardIndex.value !== "undefined") {
+          currentCardIndex.value -= 1;
+        }
+
+        reviewCard.nextCard = reviewCard.currentCard;
+        reviewCard.currentCard = reviewCard.prevCard;
+        await getPrevCard();
+        Object.assign(currentCardCategory, reviewCard.currentCard.category);
+        loading.value = false;
+      } else {
+        Notify({ type: "warning", message: "已经是第一张了" });
+      }
     };
     const dragTop = () => {
-      console.log("dragTop");
+      // 完成复习
+
+      // 发送请求 -> 移除当前卡片
+      const cid = reviewCard.currentCard.id;
+
+      const postConfig = {
+        method: "post" as Method,
+        url: `${store.state.serverHost}/review/${cid}`,
+      };
+
+      postCreateData<null, null>(postConfig, false).then(() => {
+        // 调用移除
+        dragBottom();
+      });
     };
-    const dragBottom = () => {
-      console.log("dragBottom");
+    const dragBottom = async () => {
+      // 移除
+      if (typeof currentCardIndex.value !== "undefined") {
+        needReview.value.splice(currentCardIndex.value, 1);
+      }
+
+      // 判断那边有值
+
+      if (reviewCard.nextCard) {
+        loading.value = true;
+        /*
+        1 2 3 4 5
+        1 3 4 5
+
+        不需要修改index
+        */
+        reviewCard.currentCard = reviewCard.nextCard;
+        await getPrevAndNextCard();
+        Object.assign(currentCardCategory, reviewCard.currentCard.category);
+        loading.value = false;
+      } else if (reviewCard.prevCard) {
+        loading.value = true;
+        /*
+        1 2 3 4
+        1 2 3
+        */
+        if (typeof currentCardIndex.value !== "undefined") {
+          currentCardIndex.value -= 1;
+        }
+
+        reviewCard.currentCard = reviewCard.prevCard;
+        await getPrevAndNextCard();
+        Object.assign(currentCardCategory, reviewCard.currentCard.category);
+        loading.value = false;
+      } else {
+        // 复习完毕
+        reviewDone();
+      }
     };
+    const reviewDone = () => {
+      Dialog.alert({
+        message: "已复习完毕",
+      }).then(() => {
+        // on close
+        handlerClickBack();
+      });
+    };
+
     let direction = "";
     const onCardDragMove = (obj: ICardDragObject) => {
       // 1. 判断方向
       if (Math.abs(obj.left) > Math.abs(obj.top)) {
         // 左右滑动
         direction = obj.left < 0 ? "left" : "right";
+        // 拖动提示
+        if (direction == "left") {
+          Notify({ type: "primary", message: "下一张卡片" });
+
+          // 拖动卡片时, 底部的卡片
+
+          if (reviewCard.nextCard) {
+            bottomShowReviewCard.value = reviewCard.nextCard as ICard;
+          } else {
+            bottomShowReviewCard.value = reviewCard.currentCard as ICard;
+          }
+        } else {
+          Notify({ type: "primary", message: "上一张卡片" });
+          // 拖动卡片时, 底部的卡片
+          if (reviewCard.prevCard) {
+            bottomShowReviewCard.value = reviewCard.prevCard as ICard;
+          } else {
+            bottomShowReviewCard.value = reviewCard.currentCard as ICard;
+          }
+        }
       } else {
         // 上下滑动
         direction = obj.top < 0 ? "top" : "bottom";
+        if (direction == "top") {
+          Notify({ type: "success", message: "完成复习" });
+        } else {
+          Notify({ type: "danger", message: "忽略本卡片" });
+        }
       }
     };
 
     const onCardThrowDone = () => {
+      // 清空 bottomShowReviewCard.value
+      bottomShowReviewCard.value = null;
+      // 关闭提示
+      Notify.clear();
+
       // 执行处理函数
       switch (direction) {
         case "left":
@@ -153,6 +429,10 @@ export default defineComponent({
       }
     };
     const onCardThrowFail = () => {
+      // 清空 bottomShowReviewCard.value
+      bottomShowReviewCard.value = null;
+      // 关闭提示
+      Notify.clear();
       // 清空方向
       direction = "";
     };
@@ -163,8 +443,9 @@ export default defineComponent({
       nextCard: null,
     }); // 卡片数据, 有三个卡片
     const currentCardCategory = reactive<ICategory>({} as ICategory); // 类别
-    let currentCardIndex: number;
+    let currentCardIndex = ref<number>();
     let needReview = ref<number[]>([]); // 需要复习的卡片ID
+    const bottomShowReviewCard = ref<ICard | null>(); // 用于滑动时 在当前卡片底部显示
     const loading = ref(true);
 
     const store = useStore();
@@ -203,7 +484,7 @@ export default defineComponent({
           // 获取当前id的索引
           response.forEach((cardID, index) => {
             if (reviewCard.currentCard.id === cardID) {
-              currentCardIndex = index;
+              currentCardIndex.value = index;
             }
           });
 
@@ -217,10 +498,13 @@ export default defineComponent({
     };
 
     watch([needReview], () => {
-      // 同步获取
       if (status.hasMore) {
         getNeedReviewCardID();
-      } else {
+      } else if (
+        typeof currentCardIndex.value !== "undefined" &&
+        0 <= currentCardIndex.value &&
+        currentCardIndex.value < needReview.value.length
+      ) {
         // 已经全部获取完了
         getPrevAndNextCard(); // 上下两张卡
         resetSDStyle(cardWidth.value, cardHeight.value);
@@ -228,10 +512,16 @@ export default defineComponent({
     });
 
     // ----------- 获取其余两张卡片
-    const getPrevAndNextCard = () => {
-      if (currentCardIndex > 0) {
+    const getPrevAndNextCard = async () => {
+      getPrevCard();
+      getNextCard();
+    };
+    const getPrevCard = async () => {
+      if (typeof currentCardIndex.value === "undefined") return;
+      // 获取上一张卡片
+      if (currentCardIndex.value > 0) {
         // 有上一张
-        const prevCardID = needReview.value[currentCardIndex - 1];
+        const prevCardID = needReview.value[currentCardIndex.value - 1];
 
         const config = {
           url: `${store.state.serverHost}/review/${prevCardID}`,
@@ -245,10 +535,13 @@ export default defineComponent({
         // 没有上一卡片了
         reviewCard.prevCard = null;
       }
-
-      if (currentCardIndex < needReview.value.length - 1) {
+    };
+    const getNextCard = async () => {
+      if (typeof currentCardIndex.value === "undefined") return;
+      // 获取下一张卡片
+      if (currentCardIndex.value < needReview.value.length - 1) {
         // 有下一卡片
-        const nextCardID = needReview.value[currentCardIndex + 1];
+        const nextCardID = needReview.value[currentCardIndex.value + 1];
         const config = {
           url: `${store.state.serverHost}/review/${nextCardID}`,
         };
@@ -261,12 +554,49 @@ export default defineComponent({
         reviewCard.nextCard = null;
       }
     };
-
     onMounted(() => {
-      const cid = Number(router.currentRoute.value.params.cid);
-      getCardData(cid); // 获取本页面的卡片数据
-      getNeedReviewCardID(); // 获取所有ID, 内部获取上下卡片
+      const cid = Number(router.currentRoute.value.query.cid);
+      console.log(router.currentRoute.value.query.cid);
+
+      if (!isNaN(cid)) {
+        getCardData(cid); // 获取本页面的卡片数据
+        getNeedReviewCardID(); // 获取所有ID, 内部获取上下卡片
+      } else {
+        Dialog.alert({
+          message: "需要卡牌的ID",
+        }).then(() => {
+          // on close
+          handlerClickBack();
+        });
+      }
     });
+    // -------------- 处理toolbar按钮
+    const handlerClickBack = () => {
+      router.go(-1);
+    };
+    const handlerClickEditor = () => {
+      router.push({
+        name: "editorCard",
+        params: { cid: reviewCard.currentCard.id },
+      });
+    };
+
+    const handlerClickStar = () => {
+      const starStatus = reviewCard.currentCard.isStar;
+      const cid = reviewCard.currentCard.id;
+
+      const postConfig = {
+        method: "post" as Method,
+        url: `${store.state.serverHost}/cards/${cid}/star`,
+        data: {
+          isStar: starStatus,
+        },
+      };
+
+      postCreateData<IStar, IStar>(postConfig, false).then((response) => {
+        reviewCard.currentCard.isStar = response.isStar;
+      });
+    };
 
     // ----------- 显示/隐藏 详细信息
     const showDescBtn = ref(false);
@@ -279,15 +609,21 @@ export default defineComponent({
       onCardThrowDone,
       onCardThrowFail,
       reviewCard,
+      needReview,
+      currentCardIndex,
+      bottomShowReviewCard,
       currentCardCategory,
       loading,
       showDescBtn,
+      handlerClickBack,
+      handlerClickEditor,
+      handlerClickStar,
     };
   },
 });
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .card-review-wrap {
   .show_drag_text {
     background-color: #f4f3f5;
@@ -300,6 +636,7 @@ export default defineComponent({
       height: 24px;
       justify-content: center;
       align-items: center;
+      padding: 0 16px;
       .card-category-icon {
         margin-right: 20px;
         i {
@@ -313,20 +650,48 @@ export default defineComponent({
         text-overflow: ellipsis;
       }
     }
-    .card-summary {
-      padding: 10px 0;
-      height: 300px;
+    .card-summary-wrap {
+      .card-summary {
+        padding-bottom: 10px;
+        word-wrap: break-word;
+        overflow: scroll;
+      }
     }
+    .progress-wrap {
+      position: absolute;
+      bottom: 0;
+      display: flex;
+      width: 100%;
+      justify-content: flex-end;
+      .progress-now {
+        font-size: 16px;
+      }
 
-    .card-description-wrap {
-      .card-desc-content {
-        margin-top: 10px;
-        padding: 0;
+      .progress-char {
+        font-size: 30px;
+      }
+
+      .progress-all {
+        font-size: 24px;
       }
     }
   }
 
   .card-tool-bar {
+    position: fixed;
+    bottom: 0;
+    display: flex;
+    height: 10%; // 卡片是80%
+    min-height: 24px;
+    width: 80%;
+    justify-content: center;
+    align-items: center;
+    .card-tool-item {
+      width: 33.33%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
   }
 }
 
@@ -336,5 +701,19 @@ export default defineComponent({
   align-items: center;
   height: 100vh;
   widows: 100vw;
+}
+.popup-desc-wrap {
+  position: absolute;
+  .card-review-desc-wrap {
+    // 展示详细页面
+    padding: 10px;
+    overflow: scroll;
+    height: calc(100% - 20px);
+  }
+  .card-review-desc-wrap > * {
+    // 修改子标签默认样式
+    padding: 0;
+    margin: 0;
+  }
 }
 </style>

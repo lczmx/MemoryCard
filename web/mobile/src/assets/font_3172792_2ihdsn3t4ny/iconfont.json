@@ -6,6 +6,20 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "2076325",
+      "name": "返回",
+      "font_class": "fanhui",
+      "unicode": "e8a4",
+      "unicode_decimal": 59556
+    },
+    {
+      "icon_id": "17605466",
+      "name": "编辑",
+      "font_class": "bianji",
+      "unicode": "e816",
+      "unicode_decimal": 59414
+    },
+    {
       "icon_id": "5669333",
       "name": "fsux_图表_分布曲线图",
       "font_class": "fsux_tubiao_fenbuquxiantu",

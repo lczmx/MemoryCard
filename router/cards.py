@@ -97,6 +97,9 @@ async def retrieve_card(cid: int, data: ParamsCardModel, session: Session = Depe
     uid = 1
 
     card_data = update_data(session=session, uid=uid, target_id=cid, model_class=Card, data=data)
+    if not card_data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
+
     return {
         "status": 1,
         "msg": "更新成功",

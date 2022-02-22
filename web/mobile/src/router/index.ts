@@ -47,7 +47,7 @@ const routes: Array<RouteRecordRaw> = [
     ],
   },
   {
-    path: "/review/:cid",
+    path: "/review/review-mode",
     name: "CardReview",
     component: CardReview,
   },

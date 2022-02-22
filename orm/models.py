@@ -53,7 +53,9 @@ class Card(Base):
     def is_review_date(self):
         content = self.category.plan.content
         plan_sec = content.split('-')
-        sec = int(plan_sec[self.review_times]) if self.review_times < len(plan_sec) else 0
+        if self.review_times >= len(plan_sec):
+            return False
+        sec = int(plan_sec[self.review_times])
         res_date = self.review_at + timedelta(seconds=sec)
 
         return res_date <= datetime.now()

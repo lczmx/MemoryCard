@@ -327,7 +327,7 @@ export default defineComponent({
                 Toast.success(props.successText);
                 setTimeout(() => {
                   Toast.clear();
-                  router.push({ name: "cards" });
+                  router.go(-1)
                 }, 1000);
               });
             })

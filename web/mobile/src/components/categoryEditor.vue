@@ -201,7 +201,7 @@ export default defineComponent({
             item.title === planText.value &&
             item.id === plan.value
           ) {
-            defaultPlanIndex.value = index
+            defaultPlanIndex.value = index;
           }
         });
         loadingPlanData.value = false;
@@ -266,11 +266,10 @@ export default defineComponent({
                   Toast.success(props.successText);
                   setTimeout(() => {
                     Toast.clear();
-                    router.push({ name: "category" });
+                    router.go(-1);
                   }, 1000);
                 }
               );
-
             })
             .catch((error) => {
               console.log(error);

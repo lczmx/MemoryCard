@@ -102,7 +102,7 @@ async def update_category(
     更新一条分类
     """
     uid = 1  # TODO: 替换
-
+    # TODO: 修改plan时 重置 review_at和review_times
     category_data = update_data(session=session, uid=uid, target_id=cid, model_class=Category, data=category_prams)
 
     return {
