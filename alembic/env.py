@@ -46,6 +46,7 @@ def run_migrations_offline():
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        render_as_batch=True  # SQLLite: No support for ALTER of constraints in SQLite dialect
     )
 
     with context.begin_transaction():

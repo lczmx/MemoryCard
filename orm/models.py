@@ -25,8 +25,9 @@ class User(Base):
 class Category(Base):
     __tablename__ = 'Category'  # 卡片类别
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    uid = Column(Integer, ForeignKey("User.id"), comment='类别所属用户')
-    pid = Column(Integer, ForeignKey("Plan.id"), comment='类别的复习曲线')
+    uid = Column(Integer, ForeignKey("User.id", ondelete="CASCADE"), comment='类别所属用户')
+    # !!! 删除plan时 pid默认为1
+    pid = Column(Integer, ForeignKey("Plan.id", ondelete="SET NULL"), comment='类别的复习曲线')
     name = Column(String(32), nullable=False, comment='类别名')
     icon = Column(String(32), nullable=False, comment='类别图标的类名')
     color = Column(String(7), nullable=False, comment='类别颜色')
@@ -38,8 +39,8 @@ class Category(Base):
 class Card(Base):
     __tablename__ = 'Card'  # 数据表的表名
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    uid = Column(Integer, ForeignKey("User.id"), comment="卡片所属用户")
-    cid = Column(Integer, ForeignKey("Category.id"), comment="卡片所属类别")
+    uid = Column(Integer, ForeignKey("User.id", ondelete="CASCADE"), comment="卡片所属用户")
+    cid = Column(Integer, ForeignKey("Category.id", ondelete="CASCADE"), comment="卡片所属类别")
     title = Column(String(32), nullable=False, comment="卡片标题")
     created_at = Column(DateTime, server_default=func.now(), comment='创建时间')
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), comment='更新时间')
@@ -64,7 +65,7 @@ class Card(Base):
 class Plan(Base):
     __tablename__ = 'Plan'  # 复习计划/曲线
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    uid = Column(Integer, ForeignKey("User.id"), default=None, comment="复习曲线所属用户")
+    uid = Column(Integer, ForeignKey("User.id", ondelete="CASCADE"), default=None, comment="复习曲线所属用户")
 
     title = Column(String(32), nullable=False, comment='复习曲线的名称')
     content = Column(String(1024), nullable=False, comment='复习曲线内容, 以空格隔开, 单位s')

@@ -116,11 +116,11 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { PopoverAction, ActionSheetAction } from "vant";
+import { PopoverAction, ActionSheetAction, Toast } from "vant";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { useToggle } from "@vant/use";
-import { getDataOfPage, postCreateData } from "@/utils/request";
+import { getDataOfPage, postCreateData, deleteData } from "@/utils/request";
 import { ICategory, IStar } from "@/types";
 import { Method } from "axios";
 
@@ -187,8 +187,24 @@ export default defineComponent({
       router.push({ name: "editorCategory", params: { cid: id } });
     };
     const deleteCategory = (id: number) => {
-      // TODO
-      console.log("deleteCategory", id);
+      // 删除标签
+      const config = {
+        method: "delete" as Method,
+        url: `${store.state.serverHost}/category/${id}`,
+      };
+      deleteData(config, false).then(() => {
+        // 提示
+        Toast.success("已删除");
+        // 移除
+        for (let index in data.value) {
+          // index 为string
+          const numIndex = Number(index);
+          if (data.value[numIndex].id === id) {
+            data.value.splice(numIndex, 1);
+            break;
+          }
+        }
+      });
     };
 
     /* ----- 长按结束 --------- */
