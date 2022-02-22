@@ -78,7 +78,7 @@
           <span class="custom-title">帮助中心</span>
         </template>
       </van-cell>
-      <van-cell value="" is-link>
+      <van-cell value="" is-link @click="handlerClickAbout">
         <template #icon>
           <van-icon
             class="iconfont"
@@ -117,15 +117,22 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref } from "vue";
+import { useRouter } from "vue-router";
 
 export default defineComponent({
   name: "Settings",
   setup() {
     /* 用户相关 */
     const user = ref({});
+    // ------------- 跳转到About页面
+    const router = useRouter();
+    const handlerClickAbout = () => {
+      router.push({"name": "About"})
+    };
     return {
       // 返回的数据
       user,
+      handlerClickAbout,
     };
   },
 });
@@ -137,6 +144,7 @@ export default defineComponent({
   padding-top: 10px;
   min-height: calc(100vh - 106px);
   margin-bottom: 50px;
+  margin-top: 47px;
   .user-info-wrap {
     .uer-login {
     }

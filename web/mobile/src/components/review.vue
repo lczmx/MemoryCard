@@ -34,6 +34,7 @@
           6 * 30 * 24 * 3600 * 1000
       )
     "
+    :max-date="new Date()"
     v-model:show="showCal"
     @confirm="handlerConfirmCal"
   />
