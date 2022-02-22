@@ -201,3 +201,24 @@ export async function getDataOfOne<R>(
     }
   });
 }
+
+/* 删除数据 */
+/* 
+可以有请求提
+但没有响应体
+*/
+export async function deleteData<D>(
+  // post 创建数据
+  config: AxiosRequestConfig<D>,
+  loading = false
+): Promise<string> {
+  return request<IResponse<null>, D>(config, loading).then((response) => {
+    if (response.status === 1) {
+      // status为1时, 为正常情况
+      return Promise.resolve(response.msg);
+    } else {
+      Toast.fail(response.msg);
+      return Promise.reject(response.msg);
+    }
+  });
+}

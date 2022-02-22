@@ -156,10 +156,10 @@
 <script lang="ts">
 import { defineComponent, ref, watch } from "vue";
 import { useStore } from "vuex";
-import { PopoverAction } from "vant";
+import { PopoverAction, Toast } from "vant";
 import { useToggle, useWindowSize } from "@vant/use";
 import { ICard, IStar } from "@/types";
-import { getDataOfPage, postCreateData } from "@/utils/request";
+import { getDataOfPage, postCreateData, deleteData } from "@/utils/request";
 import ShowPlan from "@/components/showPlan.vue";
 import { Method } from "axios";
 import { useRouter } from "vue-router";
@@ -181,7 +181,24 @@ export default defineComponent({
     };
 
     const handlerDeleteBtn = (cid: number) => {
-      console.log(`handlerDeleteBtn: ${cid}`);
+      // 删除卡片
+      const config = {
+        method: "delete" as Method,
+        url: `${store.state.serverHost}/cards/${cid}`,
+      };
+      deleteData(config, false).then(() => {
+        // 提示
+        Toast.success("已删除");
+        // 移除
+        for (let index in data.value) {
+          // index 为string
+          const numIndex = Number(index);
+          if (data.value[numIndex].id === cid) {
+            data.value.splice(numIndex, 1);
+            break;
+          }
+        }
+      });
     };
     // ----- 编辑按钮
     const router = useRouter();
@@ -260,19 +277,18 @@ export default defineComponent({
       const field = document.querySelector(".van-swipe-cell") as HTMLElement;
       if (!field) return;
       const { width: fieldWidth } = field.getBoundingClientRect();
-      const titleNodes = document.querySelectorAll(".item-title")
-      const categoryNodes = document.querySelectorAll(".item-category")
+      const titleNodes = document.querySelectorAll(".item-title");
+      const categoryNodes = document.querySelectorAll(".item-category");
       // 30 - 24 - 15
       // 代表 图标的两边margin - 图标大小 - 右边的空白
-      titleNodes.forEach((titleNode)=>{
+      titleNodes.forEach((titleNode) => {
         const ele = titleNode as HTMLElement;
         ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
-      })
-      categoryNodes.forEach((titleNode)=>{
+      });
+      categoryNodes.forEach((titleNode) => {
         const ele = titleNode as HTMLElement;
-        ele.style.width = String(fieldWidth - 30 - 24 -15) + "px";
-      })
-
+        ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
+      });
     };
 
     const { width, height } = useWindowSize();
@@ -297,7 +313,6 @@ export default defineComponent({
       handlerShowAddCardBtn,
       handlerHideAddCardBtn,
       showAddCardBtnState,
-
     };
   },
 });
