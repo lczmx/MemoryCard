@@ -120,13 +120,13 @@
 
 <script lang="ts">
 import { defineComponent, ref, watch } from "vue";
-import { PopoverAction } from "vant";
+import { PopoverAction, Toast } from "vant";
 import { useWindowSize } from "@vant/use";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { Method } from "axios";
 import { ICard } from "@/types";
-import { getDataOfPage } from "@/utils/request";
+import { getDataOfPage, postCreateData } from "@/utils/request";
 
 export default defineComponent({
   name: "Review",
@@ -146,7 +146,26 @@ export default defineComponent({
     };
 
     const handlerSuccessBtn = (cid: number) => {
-      console.log(`handlerSuccessBtn: ${cid}`);
+      // 完成复习
+
+      const postConfig = {
+        method: "post" as Method,
+        url: `${store.state.serverHost}/review/${cid}`,
+      };
+
+      postCreateData<null, null>(postConfig, false).then(() => {
+        // 提示
+        Toast.success("已跳过");
+        // 移除
+        for (let index in data.value) {
+          // index 为string
+          const numIndex = Number(index);
+          if (data.value[numIndex].id === cid) {
+            data.value.splice(numIndex, 1);
+            break;
+          }
+        }
+      });
     };
     const router = useRouter();
     const handlerEditBtn = (cid: number) => {
