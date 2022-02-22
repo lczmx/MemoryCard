@@ -8,7 +8,7 @@ from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 from orm.schemas.category import ParamsCategoryModel, WriteCategoryModel, ReadCategoryModel, StarModel
 from orm.schemas.generic import GenericResponse, QueryLimit
-from orm.crud import save_one_to_db, query_all_data_by_user, query_one_data_by_user, update_data
+from orm.crud import save_one_to_db, query_all_data_by_user, query_one_data_by_user, update_data, delete_data_by_user
 from orm.crud import toggle_star_status
 from orm.models import Category
 from dependencies.queryParams import get_limit_params
@@ -109,4 +109,25 @@ async def update_category(
         "status": 1,
         "msg": "更新成功",
         "data": category_data
+    }
+
+
+@router.delete("/{cid}", response_model=GenericResponse, response_model_exclude_unset=True)
+async def delete_category(
+        cid: int,
+        session: Session = Depends(get_session)
+):
+    """
+    删除一条分类
+    """
+    uid = 1  # TODO: 替换
+    rowcount = delete_data_by_user(session=session, uid=uid, target_id=cid, model_class=Category)
+    if not rowcount:
+        return {
+            "status": 0,
+            "msg": "删除失败",
+        }
+    return {
+        "status": 1,
+        "msg": "删除成功",
     }
