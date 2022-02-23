@@ -10,6 +10,7 @@ from sqlalchemy import select, or_, not_, update, delete
 from pydantic import BaseModel
 from orm.database import Base
 from orm.models import Category, Plan, Card
+
 from orm.schemas.generic import QueryLimit
 
 ModelT = TypeVar("ModelT", bound=Base)
@@ -249,6 +250,33 @@ def delete_data_by_user(session: Session,
     try:
         result = session.execute(
             delete(model_class).where(model_class.id == target_id, model_class.uid == uid)
+        )
+        session.commit()
+        return result.rowcount
+    except Exception as e:
+        logging.error(str(e))
+        session.rollback()
+        return 0
+
+
+def delete_category_data(session: Session,
+                         uid: int,
+                         cid: int,
+                         ) -> int:
+    """
+    根据用户删除类别数据
+    :param session: 数据库链接
+    :param uid: 用户ID
+    :param cid: CategoryID
+    :return: 所影响的行数
+    """
+    try:
+        # TODO: 优化
+        result = session.execute(
+            delete(Category).where(Category.id == cid, Category.uid == uid)
+        )
+        session.execute(
+            delete(Card).where(Card.uid == uid, Card.cid == cid)
         )
         session.commit()
         return result.rowcount

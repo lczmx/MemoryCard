@@ -1,8 +1,8 @@
 """
 路由分发页面
 """
-from .review import router as review_router
-from .cards import router as cards_router
-from .analyse import router as analyse_router
-from .category import router as category_router
-from .plans import router as plans_router
+from router.review import router as review_router
+from router.cards import router as cards_router
+from router.analyse import router as analyse_router
+from router.category import router as category_router
+from router.plans import router as plans_router

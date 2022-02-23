@@ -9,10 +9,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     # 允许跨域请求的源列表
-    allow_origins=[
-        "http://localhost",
-        "http://localhost:8080"
-    ],
+    allow_origins=["*"],
     # 指示跨域请求支持 cookies。默认是 False
     # 为True时, allow_origins 不能设定为 ['*']，必须指定源。
     allow_credentials=True,

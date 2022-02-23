@@ -265,8 +265,9 @@ export default defineComponent({
 
 .review_body {
   background-color: #f4f3f5;
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - 50px);
   padding-top: 56px;
+  padding-bottom: 50px;
   .cell_item {
     margin-bottom: 10px;
     .content_item {
