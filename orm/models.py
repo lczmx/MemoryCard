@@ -1,10 +1,11 @@
 """
 定义表结构
 """
+from datetime import date
 
 from sqlalchemy import Column, String, Integer, DateTime, Text, Boolean, ForeignKey, func
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from datetime import datetime, timedelta
 from orm import Base
 
@@ -61,6 +62,20 @@ class Card(Base):
         res_date = self.review_at + timedelta(seconds=sec)
 
         return res_date <= datetime.now()
+
+    @hybrid_method
+    def is_review_by_date(self, query_date: date):
+        """
+        复习日期为指定日期
+        :return:
+        """
+        content = self.category.plan.content
+        plan_sec = content.split('-')
+        if self.review_times >= len(plan_sec):
+            return False
+        sec = int(plan_sec[self.review_times])
+        res_date = self.review_at + timedelta(seconds=sec)
+        return query_date == res_date.date()
 
 
 class Plan(Base):

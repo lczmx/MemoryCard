@@ -7,11 +7,11 @@ from datetime import datetime
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from orm.schemas.generic import QueryLimit, GenericResponse
+from orm.schemas.generic import QueryLimit, GenericResponse, CardDateQueryLimit
 from orm.schemas.card import ReadSummaryCardModel, ReadDescriptionCardModel
-from orm.crud import query_need_review_card, query_one_data_by_user, update_review_times
+from orm.crud import query_need_review_card, query_one_data_by_user, update_review_times, query_review_card_by_date
 from orm.models import Card
-from dependencies.queryParams import get_limit_params
+from dependencies.queryParams import get_limit_params, get_card_by_date_limit_params
 from dependencies.orm import get_session
 
 router = APIRouter(prefix="/review", tags=["复习相关"])
@@ -54,6 +54,23 @@ async def get_need_card_id(session: Session = Depends(get_session),
         "status": 1,
         "msg": "获取成功",
         "data": data
+    }
+
+
+@router.get("/date", response_model=GenericResponse[List[ReadSummaryCardModel]])
+async def get_card_by_date(session: Session = Depends(get_session),
+                           query_params: CardDateQueryLimit = Depends(get_card_by_date_limit_params)):
+    """
+    根据日期获取需要复习的卡片
+    """
+    # TODO: 替换uid
+    uid = 1
+    card_data = query_review_card_by_date(session=session, uid=uid, query_params=query_params)
+
+    return {
+        "status": 1,
+        "msg": "获取成功",
+        "data": card_data
     }
 
 

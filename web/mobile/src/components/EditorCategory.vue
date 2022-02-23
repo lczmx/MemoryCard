@@ -6,7 +6,7 @@
 
   <category-editor
     v-else
-    propTitle="修改类别"
+    propTitle="编辑类别"
     successText="已修改类别"
     :postUrl="url"
     :propName="name"

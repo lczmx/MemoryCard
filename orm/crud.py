@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from orm.database import Base
 from orm.models import Category, Plan, Card
 
-from orm.schemas.generic import QueryLimit
+from orm.schemas.generic import QueryLimit, CardDateQueryLimit
 
 ModelT = TypeVar("ModelT", bound=Base)
 DataT = TypeVar("DataT", bound=BaseModel)
@@ -174,6 +174,29 @@ def query_need_review_card(session: Session, uid: int, query_params: Optional[Qu
 
         res = session.execute(stmt)
         temp = [i for i in res.scalars().all() if i.is_review_date]
+        # TODO: 优化一下
+        return temp[query_params.offset: query_params.offset + query_params.limit]
+    except Exception as e:
+        logging.error(str(e))
+        session.rollback()
+        return []
+
+
+def query_review_card_by_date(session: Session, uid: int, query_params: CardDateQueryLimit) -> List[Card]:
+    """
+    查询所有需要复习的卡片
+    :param session: 数据连接
+    :param uid: 用户id
+    :param query_params: limit offset date 参数
+    :return: 卡片模型类的对象列表
+    """
+    try:
+        stmt = select(Card).where(Card.uid == uid)
+
+        res = session.execute(stmt)
+        # 首先是可以复习, 然后才是指定日期
+        temp = [i for i in res.scalars().all() if
+                i.is_review_date and i.is_review_by_date(query_date=query_params.date)]
         # TODO: 优化一下
         return temp[query_params.offset: query_params.offset + query_params.limit]
     except Exception as e:

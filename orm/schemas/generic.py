@@ -1,3 +1,4 @@
+from datetime import date as datetime_date
 from typing import List, Optional, Generic, TypeVar
 from pydantic.generics import GenericModel
 from pydantic import BaseModel, Field
@@ -21,3 +22,7 @@ class GenericResponse(GenericModel, Generic[DataT]):
 class QueryLimit(BaseModel):
     limit: int = Field(10, ge=0, le=50, description="查询条数")  # 最多可以查询50条
     offset: int = Field(0, ge=0, description="跳过多少条")
+
+
+class CardDateQueryLimit(QueryLimit):
+    date: datetime_date
