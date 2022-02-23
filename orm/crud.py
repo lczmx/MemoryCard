@@ -171,11 +171,10 @@ def query_need_review_card(session: Session, uid: int, query_params: Optional[Qu
             Card.uid == uid
         )
 
-        res = session.execute(
-            stmt.limit(query_params.limit).offset(query_params.offset)
-        )
+        res = session.execute(stmt)
         temp = [i for i in res.scalars().all() if i.is_review_date]
-        return temp
+        # TODO: 优化一下
+        return temp[query_params.offset: query_params.offset + query_params.limit]
     except Exception as e:
         logging.error(str(e))
         session.rollback()
