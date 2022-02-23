@@ -80,7 +80,7 @@ async def batch_review_card(review_cards: BatchReviewCard, session: Session = De
     # 返回
     return {
         "status": 1,
-        "msg": f"成功复习次数: {status.get('success_count')}, 失败复习次数{status.get('fail_count')}",
+        "msg": f"成功复习次数: {status.get('success_count')}, 失败复习次数: {status.get('fail_count')}",
     }
 
 

@@ -90,3 +90,8 @@ export interface IGetReviewByDateClientStatus {
   hasMore?: boolean;
   date: string;
 }
+
+export interface IBatchReviewPostData {
+  // 批量复习
+  cards: number[];
+}

@@ -178,7 +178,7 @@ import type { CheckboxInstance, CheckboxGroupInstance } from "vant";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { Method } from "axios";
-import { ICard } from "@/types";
+import { ICard, IBatchReviewPostData } from "@/types";
 import dayjs from "dayjs";
 import {
   getDataOfPage,
@@ -302,7 +302,7 @@ export default defineComponent({
       finished.value = true;
     };
     // 复选框
-    const checkedCard = ref([]);
+    const checkedCard = ref<number[]>([]);
     const checkboxRefs = ref<CheckboxInstance[]>([]);
     const checkboxGroupRef = ref<CheckboxGroupInstance>();
     // 点击卡片切换
@@ -338,7 +338,41 @@ export default defineComponent({
     };
     // 批量完成复习
     const handlerClickSuccessReview = () => {
-      console.log("handlerClickSuccessReview");
+      if (!checkedCard.value || checkedCard.value.length <= 0) {
+        // 提示先选择
+        Toast("请先选择卡片");
+        return;
+      }
+      const postConfig = {
+        method: "post" as Method,
+        url: `${store.state.serverHost}/review/batch-review`,
+        data: {
+          cards: checkedCard.value,
+        },
+      };
+
+      postCreateData<null, IBatchReviewPostData>(postConfig, false).then(() => {
+        // 提示
+        Toast.success("选中卡片已复习完成");
+        // 删除选中
+        const shouldDeleteCount = checkedCard.value.length;
+        let currentDeleteCount = 0;
+        // 需要倒序遍历, 否则后面元素将往前移动
+
+        for (let index = data.value.length - 1; index >= 0; index--) {
+          const item = data.value[index];
+          if (checkedCard.value.includes(item.id)) {
+            // 符合要求, 删除
+            data.value.splice(index, 1);
+            currentDeleteCount += 1;
+
+            // 检测是否已经判断完了
+            if (currentDeleteCount === shouldDeleteCount) break;
+          }
+        }
+        // 关闭选择模式
+        handlerClickCancel();
+      });
     };
 
     // --------- 选择卡片 结束
