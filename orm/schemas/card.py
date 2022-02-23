@@ -1,5 +1,5 @@
 # 卡片
-from typing import Optional
+from typing import List
 from datetime import datetime
 
 from pydantic import BaseModel, Field
@@ -53,3 +53,7 @@ class ReadDescriptionCardModel(ReadSummaryCardModel):
     class Config:
         orm_mode = True
         allow_population_by_field_name = True
+
+
+class BatchReviewCard(BaseModel):
+    cards: List[int]

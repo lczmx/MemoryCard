@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from orm.schemas.generic import QueryLimit, GenericResponse, CardDateQueryLimit
-from orm.schemas.card import ReadSummaryCardModel, ReadDescriptionCardModel
+from orm.schemas.card import ReadSummaryCardModel, ReadDescriptionCardModel, BatchReviewCard
 from orm.crud import query_need_review_card, query_one_data_by_user, update_review_times, query_review_card_by_date
 from orm.models import Card
 from dependencies.queryParams import get_limit_params, get_card_by_date_limit_params
@@ -33,6 +33,54 @@ async def get_review(
         "status": 1,
         "msg": "获取成功",
         "data": review_data
+    }
+
+
+@router.post("/batch-review", response_model=GenericResponse, response_model_exclude_unset=True)
+async def batch_review_card(review_cards: BatchReviewCard, session: Session = Depends(get_session)):
+    """
+    批量复习卡片
+    """
+    # TODO: 替换uid
+
+    uid = 1
+
+    status = {
+        "success_count": 0,
+        "fail_count": 0,
+    }
+    plans = {}  # key: plan ID  value: plan分割后的列表
+    for cid in review_cards.cards:
+        card_data = query_one_data_by_user(session=session, uid=uid, target_id=cid, model_class=Card)
+        if not card_data:
+            status["fail_count"] += 1
+            continue
+
+        # 必须是需要复习的
+        if not card_data.is_review_date:
+            status["fail_count"] += 1
+            continue
+
+        # 可以完成复习
+        plan_lst = plans.setdefault(card_data.category.plan.id,
+                                    [i for i in card_data.category.plan.content.split("-") if i])
+
+        old_times = card_data.review_times
+        if old_times >= len(plan_lst):
+            # times == len 时, 已经全部复习完了
+            status["fail_count"] += 1
+            continue
+        new_times = old_times + 1
+        # 0 时, 失败
+        if not update_review_times(session=session, cid=cid, review_at=datetime.now(), review_times=new_times):
+            status["fail_count"] += 1
+            continue
+        status["success_count"] += 1
+
+    # 返回
+    return {
+        "status": 1,
+        "msg": f"成功复习次数: {status.get('success_count')}, 失败复习次数{status.get('fail_count')}",
     }
 
 
