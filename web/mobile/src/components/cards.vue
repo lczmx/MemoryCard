@@ -32,18 +32,20 @@
     @load="getCardData"
     loading-text="加载中..."
   >
-    <template #finished>
-      <div class="finished-text-wrap">
-        <p>没有更多数据了</p>
-      </div>
-    </template>
     <template #loading>
       <div class="loading-text-wrap">
         <van-loading color="#1989fa" />
       </div>
     </template>
+    <van-empty
+      description="请先添加卡片"
+      :style="{ backgroundColor: '#f4f3f5' }"
+      v-if="!loading && data.length <= 0"
+      class="cards_body_empty"
+    />
     <!-- 全部卡片 主体 -->
     <div
+      v-else
       class="cards_body van-clearfix"
       v-touch:swipe.bottom="handlerShowAddCardBtn"
       v-touch:swipe.top="handlerHideAddCardBtn"
@@ -288,7 +290,10 @@ export default defineComponent({
           // 1. 备份全部
           dataBak = [...dataBak, ...response];
           // 2. 过滤星标
-          data.value = [...data.value, ...response.filter((value) => value.isStar)];
+          data.value = [
+            ...data.value,
+            ...response.filter((value) => value.isStar),
+          ];
         } else {
           // 要显示全部 (默认)
           data.value = [...data.value, ...response];
@@ -366,22 +371,23 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-.finished-text-wrap {
-  padding-bottom: 50px;
-  background-color: #f4f3f5;
-  p {
-    margin: 0;
-  }
-}
 .loading-text-wrap {
   // 加载中...
   background-color: #f4f3f5;
   color: #fff;
 }
+
+.cards_body_empty {
+  background-color: #f4f3f5;
+  min-height: calc(100vh - 56px);
+  padding-top: 56px;
+  padding-bottom: 50px;
+}
 .cards_body {
   background-color: #f4f3f5;
-  min-height: calc(100vh - 156px);
+  min-height: calc(100vh - 106px);
   padding-top: 56px;
+  padding-bottom: 50px;
   .cell_item {
     margin-bottom: 10px;
     .content_item {

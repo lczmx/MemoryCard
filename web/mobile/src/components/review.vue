@@ -54,7 +54,7 @@
       description="没有需要复习的卡片"
       :style="{ backgroundColor: '#f4f3f5' }"
       v-if="!loading && data.length <= 0"
-      class="review_body"
+      class="review_body_empty"
     />
     <!-- 复习页面的主体 -->
     <div class="review_body van-clearfix" v-else>
@@ -262,12 +262,18 @@ export default defineComponent({
   background-color: #f4f3f5;
   color: #fff;
 }
-
-.review_body {
+.review_body_empty {
   background-color: #f4f3f5;
-  min-height: calc(100vh - 50px);
+  min-height: calc(100vh - 56px);
   padding-top: 56px;
   padding-bottom: 50px;
+}
+.review_body {
+  background-color: #f4f3f5;
+  min-height: calc(100vh - 106px);
+  padding-top: 56px;
+  padding-bottom: 50px;
+
   .cell_item {
     margin-bottom: 10px;
     .content_item {

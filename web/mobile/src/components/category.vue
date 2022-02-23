@@ -23,17 +23,20 @@
     @load="getCategoryData"
     loading-text="加载中..."
   >
-    <template #finished>
-      <div class="finished-text-wrap">
-        <p>没有更多数据了</p>
-      </div>
-    </template>
     <template #loading>
       <div class="loading-text-wrap">
         <van-loading color="#1989fa" />
       </div>
     </template>
+    <van-empty
+      description="请先添加类别"
+      :style="{ backgroundColor: '#f4f3f5' }"
+      v-if="!loading && data.length <= 0"
+      class="category_body_empty"
+    />
+    <!-- 标签主体 -->
     <div
+      v-else
       class="category_body van-clearfix"
       v-touch:swipe.bottom="handlerShowAddCategoryBtn"
       v-touch:swipe.top="handlerHideAddCategoryBtn"
@@ -321,22 +324,23 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-.finished-text-wrap {
-  padding-bottom: 50px;
-  background-color: #f4f3f5;
-  p {
-    margin: 0;
-  }
-}
 .loading-text-wrap {
   // 加载中...
   background-color: #f4f3f5;
   color: #fff;
 }
+.category_body_empty {
+  background-color: #f4f3f5;
+  min-height: calc(100vh - 56px);
+  padding-top: 56px;
+  padding-bottom: 50px;
+}
+
 .category_body {
   background-color: #f4f3f5;
-  min-height: calc(100vh - 156px);
+  min-height: calc(100vh - 106px);
   padding-top: 56px;
+  padding-bottom: 50px;
   .cell_item {
     margin-bottom: 10px;
     .right-icon-wrap {
