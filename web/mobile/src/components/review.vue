@@ -45,18 +45,19 @@
     @load="getReviewData"
     loading-text="加载中..."
   >
-    <template #finished>
-      <div class="finished-text-wrap">
-        <p>没有更多数据了</p>
-      </div>
-    </template>
     <template #loading>
       <div class="loading-text-wrap">
         <van-loading color="#1989fa" />
       </div>
     </template>
+    <van-empty
+      description="没有需要复习的卡片"
+      :style="{ backgroundColor: '#f4f3f5' }"
+      v-if="!loading && data.length <= 0"
+      class="review_body"
+    />
     <!-- 复习页面的主体 -->
-    <div class="review_body van-clearfix">
+    <div class="review_body van-clearfix" v-else>
       <van-cell-group
         inset
         v-for="item in data"
@@ -256,13 +257,6 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-.finished-text-wrap {
-  padding-bottom: 50px;
-  background-color: #f4f3f5;
-  p {
-    margin: 0;
-  }
-}
 .loading-text-wrap {
   // 加载中...
   background-color: #f4f3f5;
@@ -271,7 +265,7 @@ export default defineComponent({
 
 .review_body {
   background-color: #f4f3f5;
-  min-height: calc(100vh - 156px);
+  min-height: calc(100vh - 60px);
   padding-top: 56px;
   .cell_item {
     margin-bottom: 10px;
