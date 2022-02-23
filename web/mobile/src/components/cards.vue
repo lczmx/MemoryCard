@@ -188,21 +188,32 @@ export default defineComponent({
     let dataBak: ICard[]; // 用于备份
     const onlyShowStarCard = (action: PopoverAction) => {
       if (action.text === "只看星标") {
-        if (typeof data.value !== "undefined") {
-          dataBak = data.value as ICard[];
-        }
+        // 1. 查看是否有下一页, 继续获取
+        // 2. 备份
+        // 3 . 修改选项内容
 
-        data.value = data.value.filter((value) => value.isStar);
         actions[1].text = "显示全部";
-      } else {
-        if (typeof dataBak !== "undefined") {
-          data.value = dataBak;
+
+        if (status.hasMore) {
+          // 假如还有的话, 需要继续获取星标, 因为 星标数据不是全部的
+          // 内部函数将备份dataBak
+          dataBak = [];
+          reload();
+        } else {
+          dataBak = data.value as ICard[];
+          data.value = data.value.filter((value) => value.isStar);
         }
+      } else {
+        // 显示全部
+
+        // 1. 恢复备份
+        // 2. 清空备份
+        // 3. 修改选项内容
+        data.value = dataBak as ICard[];
+        dataBak = [];
 
         actions[1].text = "只看星标";
       }
-
-      console.log("onlyShowStarCard");
     };
 
     const handlerDeleteBtn = (cid: number) => {
@@ -235,11 +246,11 @@ export default defineComponent({
       // 重新加载 卡片数据
       loading.value = true;
       data.value = [];
+      dataBak = [];
       status.hasMore = true;
       status.limit = 10;
       status.offset = 0;
       getCardData();
-      console.log(loading.value);
     };
 
     const more = () => {
@@ -270,7 +281,18 @@ export default defineComponent({
 
     const getCardData = () => {
       getDataOfPage<ICard>(status, config, false).then((response) => {
-        data.value = [...data.value, ...response];
+        // 判断是否为只看星标
+
+        if (actions[1].text === "显示全部") {
+          // 只看星标状态
+          // 1. 备份全部
+          dataBak = [...dataBak, ...response];
+          // 2. 过滤星标
+          data.value = [...data.value, ...response.filter((value) => value.isStar)];
+        } else {
+          // 要显示全部 (默认)
+          data.value = [...data.value, ...response];
+        }
 
         loading.value = false;
       });
