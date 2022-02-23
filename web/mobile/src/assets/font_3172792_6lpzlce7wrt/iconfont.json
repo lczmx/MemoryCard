@@ -6,6 +6,118 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "5974400",
+      "name": "复习",
+      "font_class": "fuxi",
+      "unicode": "e678",
+      "unicode_decimal": 59000
+    },
+    {
+      "icon_id": "15550775",
+      "name": "set-up-dot",
+      "font_class": "set-up-dot",
+      "unicode": "e61d",
+      "unicode_decimal": 58909
+    },
+    {
+      "icon_id": "16647794",
+      "name": "卡片",
+      "font_class": "142",
+      "unicode": "e71e",
+      "unicode_decimal": 59166
+    },
+    {
+      "icon_id": "18004845",
+      "name": "卡片-",
+      "font_class": "kapian-01",
+      "unicode": "e60c",
+      "unicode_decimal": 58892
+    },
+    {
+      "icon_id": "5974402",
+      "name": "复习-2",
+      "font_class": "fuxi-",
+      "unicode": "e679",
+      "unicode_decimal": 59001
+    },
+    {
+      "icon_id": "5532881",
+      "name": "分类",
+      "font_class": "fenlei",
+      "unicode": "e622",
+      "unicode_decimal": 58914
+    },
+    {
+      "icon_id": "11539703",
+      "name": "分类-1",
+      "font_class": "fenlei-",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "17605436",
+      "name": "分类",
+      "font_class": "fenlei1",
+      "unicode": "e811",
+      "unicode_decimal": 59409
+    },
+    {
+      "icon_id": "11992562",
+      "name": "ellipsis-v-solid",
+      "font_class": "ellipsis-v-solid",
+      "unicode": "e67f",
+      "unicode_decimal": 59007
+    },
+    {
+      "icon_id": "11992585",
+      "name": "ellipsis-h-solid",
+      "font_class": "ellipsis-h-solid",
+      "unicode": "e684",
+      "unicode_decimal": 59012
+    },
+    {
+      "icon_id": "8827258",
+      "name": "reload",
+      "font_class": "reload",
+      "unicode": "e944",
+      "unicode_decimal": 59716
+    },
+    {
+      "icon_id": "929259",
+      "name": "ellipsis-h",
+      "font_class": "ellipsish",
+      "unicode": "e6ce",
+      "unicode_decimal": 59086
+    },
+    {
+      "icon_id": "1261566",
+      "name": "ellipsis-v",
+      "font_class": "ellipsis-v",
+      "unicode": "e66d",
+      "unicode_decimal": 58989
+    },
+    {
+      "icon_id": "2077532",
+      "name": "日历",
+      "font_class": "rili",
+      "unicode": "e63b",
+      "unicode_decimal": 58939
+    },
+    {
+      "icon_id": "7684985",
+      "name": "all",
+      "font_class": "all",
+      "unicode": "e6d5",
+      "unicode_decimal": 59093
+    },
+    {
+      "icon_id": "11811080",
+      "name": "今日",
+      "font_class": "jinri",
+      "unicode": "e681",
+      "unicode_decimal": 59009
+    },
+    {
       "icon_id": "2076325",
       "name": "返回",
       "font_class": "fanhui",

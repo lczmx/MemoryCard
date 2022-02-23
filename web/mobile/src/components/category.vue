@@ -11,7 +11,20 @@
         @select="onSelect"
       >
         <template #reference>
-          <van-icon name="ellipsis" size="20" />
+          <van-icon
+            v-show="!showPopover"
+            size="20"
+            class="iconfont"
+            class-prefix="icon"
+            name="ellipsis-h-solid"
+          />
+          <van-icon
+            v-show="showPopover"
+            size="20"
+            class="iconfont"
+            class-prefix="icon"
+            name="ellipsis-v-solid"
+          />
         </template>
       </van-popover>
     </template>

@@ -6,7 +6,12 @@
     @click-right="more"
   >
     <template #left>
-      <van-icon name="replay" size="20" v-show="!loading" />
+      <van-icon
+        v-show="!loading"
+        class="iconfont"
+        class-prefix="icon"
+        name="reload"
+      />
 
       <van-loading color="#1989fa" size="20" v-show="loading" />
     </template>
@@ -21,7 +26,20 @@
         @select="onSelect"
       >
         <template #reference>
-          <van-icon name="ellipsis" size="20" />
+          <van-icon
+            v-show="!showPopover"
+            size="20"
+            class="iconfont"
+            class-prefix="icon"
+            name="ellipsis-h-solid"
+          />
+          <van-icon
+            v-show="showPopover"
+            size="20"
+            class="iconfont"
+            class-prefix="icon"
+            name="ellipsis-v-solid"
+          />
         </template>
       </van-popover>
     </template>

@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 3172792 */
-  src: url('iconfont.woff2?t=1645515939104') format('woff2'),
-       url('iconfont.woff?t=1645515939104') format('woff'),
-       url('iconfont.ttf?t=1645515939104') format('truetype');
+  src: url('iconfont.woff2?t=1645622036369') format('woff2'),
+       url('iconfont.woff?t=1645622036369') format('woff'),
+       url('iconfont.ttf?t=1645622036369') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,70 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-fuxi:before {
+  content: "\e678";
+}
+
+.icon-set-up-dot:before {
+  content: "\e61d";
+}
+
+.icon-142:before {
+  content: "\e71e";
+}
+
+.icon-kapian-01:before {
+  content: "\e60c";
+}
+
+.icon-fuxi-:before {
+  content: "\e679";
+}
+
+.icon-fenlei:before {
+  content: "\e622";
+}
+
+.icon-fenlei-:before {
+  content: "\e602";
+}
+
+.icon-fenlei1:before {
+  content: "\e811";
+}
+
+.icon-ellipsis-v-solid:before {
+  content: "\e67f";
+}
+
+.icon-ellipsis-h-solid:before {
+  content: "\e684";
+}
+
+.icon-reload:before {
+  content: "\e944";
+}
+
+.icon-ellipsish:before {
+  content: "\e6ce";
+}
+
+.icon-ellipsis-v:before {
+  content: "\e66d";
+}
+
+.icon-rili:before {
+  content: "\e63b";
+}
+
+.icon-all:before {
+  content: "\e6d5";
+}
+
+.icon-jinri:before {
+  content: "\e681";
 }
 
 .icon-fanhui:before {

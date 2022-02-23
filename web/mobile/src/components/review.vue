@@ -2,11 +2,11 @@
   <van-nav-bar
     title="复习"
     :fixed="true"
-    @click-left="showCal=true"
+    @click-left="showCal = true"
     @click-right="showPopover = true"
   >
     <template #left>
-      <van-icon name="calendar-o" size="20" />
+      <van-icon class="iconfont" class-prefix="icon" name="rili" size="16" />
     </template>
     <template #right>
       <!-- 弹出层 -->
@@ -19,7 +19,20 @@
         @select="onSelect"
       >
         <template #reference>
-          <van-icon name="ellipsis" size="20" />
+          <van-icon
+            v-show="!showPopover"
+            size="20"
+            class="iconfont"
+            class-prefix="icon"
+            name="ellipsis-h-solid"
+          />
+          <van-icon
+            v-show="showPopover"
+            size="20"
+            class="iconfont"
+            class-prefix="icon"
+            name="ellipsis-v-solid"
+          />
         </template>
       </van-popover>
     </template>
@@ -143,9 +156,10 @@ export default defineComponent({
     const showPopover = ref(false);
     const showCal = ref(false); // 显示日历
     // 弹框选项
+
     const actions = [
-      { text: "今日卡片", icon: " iconfont icon-c" },
-      { text: "筛选类别", icon: " iconfont icon-tag" },
+      { text: "今日卡片", icon: " iconfont icon-jinri" },
+      { text: "筛选类别", icon: " iconfont icon-fenlei" },
       { text: "选择卡片", icon: " iconfont icon-select" },
     ];
     // 弹框选项选中回调
@@ -171,12 +185,14 @@ export default defineComponent({
       data.value = [];
       if (action.text === "今日卡片") {
         action.text = "显示全部";
+        action.icon = " iconfont icon-all";
         getReviewDataStatus.date = dayjs().format("YYYY-MM-DD");
         // 只修改日期
         // 在getReviewData中获取数据
         getReviewData();
       } else {
         action.text = "今日卡片";
+        action.icon = " iconfont icon-jinri";
         getReviewData();
       }
     };
@@ -253,6 +269,7 @@ export default defineComponent({
       getReviewDataStatus.date = dayjs(value).format("YYYY-MM-DD");
       data.value = [];
       actions[0].text = "显示全部";
+      actions[0].icon = " iconfont icon-all";
       finished.value = false;
       getReviewData();
     };
