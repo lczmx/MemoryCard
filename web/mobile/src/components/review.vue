@@ -2,8 +2,8 @@
   <van-nav-bar
     title="复习"
     :fixed="true"
-    @click-left="calendar"
-    @click-right="more"
+    @click-left="showCal=true"
+    @click-right="showPopover = true"
   >
     <template #left>
       <van-icon name="calendar-o" size="20" />
@@ -41,7 +41,7 @@
 
   <van-list
     v-model:loading="loading"
-    :finished="!status.hasMore"
+    :finished="finished"
     @load="getReviewData"
     loading-text="加载中..."
   >
@@ -128,12 +128,18 @@ import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { Method } from "axios";
 import { ICard } from "@/types";
-import { getDataOfPage, postCreateData } from "@/utils/request";
+import dayjs from "dayjs";
+import {
+  getDataOfPage,
+  postCreateData,
+  getReviewCardByDateData,
+} from "@/utils/request";
 
 export default defineComponent({
   name: "Review",
 
   setup() {
+    const store = useStore();
     const showPopover = ref(false);
     const showCal = ref(false); // 显示日历
     // 弹框选项
@@ -144,9 +150,72 @@ export default defineComponent({
     ];
     // 弹框选项选中回调
     const onSelect = (action: PopoverAction, index: number) => {
-      console.log(action, index);
+      switch (index) {
+        case 0:
+          showTodayReviewCard(action);
+          break;
+        case 1:
+          filterCardByCategory();
+          break;
+        case 2:
+          selectMode();
+          break;
+      }
+    };
+    // ------- 今日卡片
+    const showTodayReviewCard = (action: PopoverAction) => {
+      // 初始化状态
+      getReviewDataStatus.hasMore = true;
+      getReviewDataStatus.limit = 10;
+      getReviewDataStatus.offset = 0;
+      data.value = [];
+      if (action.text === "今日卡片") {
+        action.text = "显示全部";
+        getReviewDataStatus.date = dayjs().format("YYYY-MM-DD");
+        // 只修改日期
+        // 在getReviewData中获取数据
+        getReviewData();
+      } else {
+        action.text = "今日卡片";
+        getReviewData();
+      }
     };
 
+    let getReviewDataStatus = {
+      method: "GET" as Method,
+      limit: 10,
+      offset: 0,
+      hasMore: true,
+      date: "",
+    };
+    const getReviewCardByDateConfig = {
+      url: `${store.state.serverHost}/review/date`,
+    };
+
+    // ------- 根据日期查询卡片
+    const getReviewCardByDate = () => {
+      loading.value = true;
+      getReviewCardByDateData<ICard>(
+        getReviewDataStatus,
+        getReviewCardByDateConfig,
+        false
+      ).then((response) => {
+        data.value = [...data.value, ...response];
+        loading.value = false;
+        if (!getReviewDataStatus.hasMore) {
+          finished.value = true;
+        }
+      });
+    };
+
+    // ----------- 筛选类别
+    const filterCardByCategory = () => {
+      console.log("filterCardByCategory");
+    };
+    // --------- 选择卡片
+    const selectMode = () => {
+      console.log("selectMode");
+    };
     const handlerSuccessBtn = (cid: number) => {
       // 完成复习
 
@@ -174,23 +243,23 @@ export default defineComponent({
       router.push({ name: "editorCard", params: { cid } });
     };
 
-    const calendar = () => {
-      // 点击日历的事件
-      showCal.value = true;
-      console.log("点击了日历");
-    };
-    const more = () => {
-      showPopover.value = true;
-      console.log("点击了更多");
-    };
     const handlerConfirmCal = (value: Date) => {
-      console.log("handlerConfirmCal", value);
       showCal.value = false;
+      // 修改配置
+      // 初始化状态
+      getReviewDataStatus.hasMore = true;
+      getReviewDataStatus.limit = 10;
+      getReviewDataStatus.offset = 0;
+      getReviewDataStatus.date = dayjs(value).format("YYYY-MM-DD");
+      data.value = [];
+      actions[0].text = "显示全部";
+      finished.value = false;
+      getReviewData();
     };
     // ----------------------- 获取复习卡片
     const loading = ref(false);
     const data = ref<ICard[]>([]);
-    const store = useStore();
+    const finished = ref(false);
     let status = {
       method: "GET" as Method,
       limit: 10,
@@ -202,10 +271,22 @@ export default defineComponent({
     };
 
     const getReviewData = () => {
-      getDataOfPage<ICard>(status, config, false).then((response) => {
-        data.value = [...data.value, ...response];
-        loading.value = false;
-      });
+      // 1. 判断是否为根据日期查看
+      // 2. 直接获取, 日期在其他函数中获取
+      finished.value = false;
+      if (actions[0].text === "今日卡片") {
+        loading.value = true;
+        getDataOfPage<ICard>(status, config, false).then((response) => {
+          data.value = [...data.value, ...response];
+          loading.value = false;
+          // 判断是否完成
+          if (!status.hasMore) {
+            finished.value = true;
+          }
+        });
+      } else {
+        getReviewCardByDate();
+      }
     };
     // ----------------------- 限制category和title的width
     const resetFiledWidth = () => {
@@ -237,10 +318,8 @@ export default defineComponent({
       router.push({ name: "CardReview", query: { cid } });
     };
     return {
-      calendar,
-      more,
       loading,
-      status,
+      finished,
       getReviewData,
       data,
       handlerSuccessBtn,

@@ -81,3 +81,12 @@ export interface IReviewCard {
   currentCard: ICard; // 当前卡片
   nextCard: ICard | null; // 下一个卡片
 }
+
+export interface IGetReviewByDateClientStatus {
+  // 根据日期查询
+  method: Method;
+  limit?: number;
+  offset?: number;
+  hasMore?: boolean;
+  date: string;
+}
