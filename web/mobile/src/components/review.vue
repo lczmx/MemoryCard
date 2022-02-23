@@ -1,16 +1,36 @@
 <template>
   <van-nav-bar
-    title="复习"
+    :title="selectMode ? '' : '复习'"
     :fixed="true"
     @click-left="showCal = true"
-    @click-right="showPopover = true"
+    @click-right="
+      () => (selectMode ? handlerClickSuccessReview() : (showPopover = true))
+    "
   >
     <template #left>
-      <van-icon class="iconfont" class-prefix="icon" name="rili" size="16" />
+      <div class="select-mode-tool-wrap" v-if="selectMode">
+        <div class="tool-item" @click.stop="handlerClickCancel">取消</div>
+        <div class="tool-item" @click.stop="handlerClickSelectInverse">
+          反选
+        </div>
+        <div class="tool-item" @click.stop="handlerClickSelectAll">全选</div>
+      </div>
+      <van-icon
+        v-else
+        Inverse
+        class="iconfont"
+        class-prefix="icon"
+        name="rili"
+        size="16"
+      />
     </template>
     <template #right>
+      <div v-if="selectMode" class="select-mode-tool-success-review">
+        完成复习
+      </div>
       <!-- 弹出层 -->
       <van-popover
+        v-else
         v-model:show="showPopover"
         :actions="actions"
         :show-arrow="false"
@@ -71,64 +91,81 @@
     />
     <!-- 复习页面的主体 -->
     <div class="review_body van-clearfix" v-else>
-      <van-cell-group
-        inset
-        v-for="item in data"
-        :key="item.id"
-        class="cell_item"
-        @click="handlerClickReviewBody(item.id)"
-      >
-        <van-swipe-cell>
-          <van-cell
-            center
-            title-class="content_item"
-            label-class="content_date"
-          >
-            <template #icon>
-              <!-- 使用iconfont -->
-              <i
-                :class="`left-icon iconfont ${item.category.icon}`"
-                :style="{ 'font-size': '24px', color: item.category.color }"
-                class="left-icon"
-              >
-              </i>
+      <van-checkbox-group v-model="checkedCard" ref="checkboxGroupRef">
+        <van-cell-group
+          inset
+          v-for="(item, index) in data"
+          :key="item.id"
+          class="cell_item"
+          @click="
+            () =>
+              selectMode
+                ? toggleCardCheckboxStatus(index)
+                : handlerClickReviewBody(item.id)
+          "
+        >
+          <!-- 选择模式禁用滑动 -->
+          <van-swipe-cell :disabled="selectMode">
+            <van-cell
+              center
+              title-class="content_item"
+              label-class="content_date"
+            >
+              <template #icon>
+                <!-- 使用iconfont -->
+                <i
+                  :class="`left-icon iconfont ${item.category.icon}`"
+                  :style="{ 'font-size': '24px', color: item.category.color }"
+                  class="left-icon"
+                >
+                </i>
+              </template>
+              <template #title>
+                <div class="van-ellipsis item-title">{{ item.title }}</div>
+              </template>
+              <template #label>
+                <span class="van-ellipsis item-category">
+                  <van-tag :color="item.category.color" text-color="#fff">{{
+                    item.category.name
+                  }}</van-tag>
+                </span>
+              </template>
+              <!-- 右边复选框 -->
+              <template #right-icon>
+                <van-checkbox
+                  v-show="selectMode"
+                  :name="item.id"
+                  :ref="(el) => (checkboxRefs[index] = el)"
+                  @click.stop
+                />
+              </template>
+            </van-cell>
+            <template #right>
+              <!-- 右边滑动区域 -->
+              <div class="swipe_right_wrap">
+                <van-button
+                  class="swipe_right_btn"
+                  icon="success"
+                  type="success"
+                  round
+                  :block="true"
+                  @click="handlerSuccessBtn(item.id)"
+                  :cid="item.id"
+                />
+                <van-button
+                  class="swipe_right_btn"
+                  icon="edit"
+                  type="primary"
+                  round
+                  :block="true"
+                  @click="handlerEditBtn(item.id)"
+                  :cid="item.id"
+                />
+              </div>
             </template>
-            <template #title>
-              <div class="van-ellipsis item-title">{{ item.title }}</div>
-            </template>
-            <template #label>
-              <span class="van-ellipsis item-category">
-                <van-tag :color="item.category.color" text-color="#fff">{{
-                  item.category.name
-                }}</van-tag>
-              </span>
-            </template>
-          </van-cell>
-          <template #right>
-            <!-- 右边滑动区域 -->
-            <div class="swipe_right_wrap">
-              <van-button
-                class="swipe_right_btn"
-                icon="success"
-                type="success"
-                round
-                :block="true"
-                @click="handlerSuccessBtn(item.id)"
-                :cid="item.id"
-              />
-              <van-button
-                class="swipe_right_btn"
-                icon="edit"
-                type="primary"
-                round
-                :block="true"
-                @click="handlerEditBtn(item.id)"
-                :cid="item.id"
-              />
-            </div>
-          </template>
-        </van-swipe-cell>
-      </van-cell-group>
+          </van-swipe-cell>
+        </van-cell-group>
+      </van-checkbox-group>
     </div>
   </van-list>
 </template>
@@ -137,6 +174,7 @@
 import { defineComponent, ref, watch } from "vue";
 import { PopoverAction, Toast } from "vant";
 import { useWindowSize } from "@vant/use";
+import type { CheckboxInstance, CheckboxGroupInstance } from "vant";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { Method } from "axios";
@@ -172,7 +210,7 @@ export default defineComponent({
           filterCardByCategory();
           break;
         case 2:
-          selectMode();
+          handlerClickSelectBtn();
           break;
       }
     };
@@ -228,13 +266,85 @@ export default defineComponent({
     const filterCardByCategory = () => {
       console.log("filterCardByCategory");
     };
-    // --------- 选择卡片
-    const selectMode = () => {
-      console.log("selectMode");
-    };
-    const handlerSuccessBtn = (cid: number) => {
-      // 完成复习
+    // --------- 选择卡片 开始
+    const selectMode = ref(false); // 是否为选择模式
+    let hasMoreBak: boolean; // 备份是否还有下一页, 原数据将会被修改
+    const handlerClickSelectBtn = () => {
+      selectMode.value = true;
+      // 默认的宽度会将CheckBox挤到外部
+      // 需要重新设置宽度
+      // --- copy from resetFiledWidth
+      const field = document.querySelector(".van-swipe-cell") as HTMLElement;
+      if (!field) return;
+      const { width: fieldWidth } = field.getBoundingClientRect();
 
+      const contentItem = document.querySelectorAll(".content_item");
+      const titleNodes = document.querySelectorAll(".item-title");
+      const categoryNodes = document.querySelectorAll(".item-category");
+
+      contentItem.forEach((titleNode) => {
+        const ele = titleNode as HTMLElement;
+        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 30) + "px";
+      });
+      titleNodes.forEach((titleNode) => {
+        const ele = titleNode as HTMLElement;
+        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 40) + "px";
+      });
+      categoryNodes.forEach((titleNode) => {
+        const ele = titleNode as HTMLElement;
+        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 40) + "px";
+      });
+      // 禁止, 触底获取数据
+      // 免得, 新获取的数据与原来的数据样式不一样
+      // finished也要修改, 防止多一次触底
+      hasMoreBak = status.hasMore;
+      status.hasMore = false;
+      finished.value = true;
+    };
+    // 复选框
+    const checkedCard = ref([]);
+    const checkboxRefs = ref<CheckboxInstance[]>([]);
+    const checkboxGroupRef = ref<CheckboxGroupInstance>();
+    // 点击卡片切换
+    const toggleCardCheckboxStatus = (index: number) => {
+      if (checkboxRefs.value) {
+        checkboxRefs.value[index].toggle();
+      }
+    };
+    // 取消
+    const handlerClickCancel = () => {
+      selectMode.value = false;
+      // 恢复宽度
+      resetFiledWidth();
+      // 恢复hasMore
+      status.hasMore = hasMoreBak;
+      finished.value = !status.hasMore;
+      // 全部取消选择
+      if (checkboxGroupRef.value) {
+        checkboxGroupRef.value.toggleAll(false);
+      }
+    };
+    // 反选
+    const handlerClickSelectInverse = () => {
+      if (checkboxGroupRef.value) {
+        checkboxGroupRef.value.toggleAll();
+      }
+    };
+    // 全选
+    const handlerClickSelectAll = () => {
+      if (checkboxGroupRef.value) {
+        checkboxGroupRef.value.toggleAll(true);
+      }
+    };
+    // 批量完成复习
+    const handlerClickSuccessReview = () => {
+      console.log("handlerClickSuccessReview");
+    };
+
+    // --------- 选择卡片 结束
+
+    // ------- 滑动-完成复习
+    const handlerSuccessBtn = (cid: number) => {
       const postConfig = {
         method: "post" as Method,
         url: `${store.state.serverHost}/review/${cid}`,
@@ -310,10 +420,16 @@ export default defineComponent({
       const field = document.querySelector(".van-swipe-cell") as HTMLElement;
       if (!field) return;
       const { width: fieldWidth } = field.getBoundingClientRect();
+
+      const contentItem = document.querySelectorAll(".content_item");
       const titleNodes = document.querySelectorAll(".item-title");
       const categoryNodes = document.querySelectorAll(".item-category");
       // 30 - 24 - 15
       // 代表 图标的两边margin - 图标大小 - 右边的空白
+      contentItem.forEach((titleNode) => {
+        const ele = titleNode as HTMLElement;
+        ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
+      });
       titleNodes.forEach((titleNode) => {
         const ele = titleNode as HTMLElement;
         ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
@@ -326,14 +442,23 @@ export default defineComponent({
 
     const { width, height } = useWindowSize();
     // 窗口大小改变时
-    watch([width, height], resetFiledWidth);
+    watch([width, height], () => {
+      // 选择模式下, 不应该重新设置宽度
+      if (selectMode.value) return;
+      resetFiledWidth;
+    });
     // 有新数据时
-    watch([data], resetFiledWidth);
+    watch([data], () => {
+      // 选择模式下, 不应该重新设置宽度
+      if (selectMode.value) return;
+      resetFiledWidth;
+    });
 
     // ---------- 点击跳转到复习页面
     const handlerClickReviewBody = (cid: number) => {
       router.push({ name: "CardReview", query: { cid } });
     };
+
     return {
       loading,
       finished,
@@ -347,12 +472,34 @@ export default defineComponent({
       actions,
       handlerConfirmCal,
       handlerClickReviewBody,
+      checkedCard,
+      checkboxRefs,
+      checkboxGroupRef,
+      selectMode,
+      toggleCardCheckboxStatus,
+      handlerClickCancel,
+      handlerClickSelectInverse,
+      handlerClickSelectAll,
+      handlerClickSuccessReview,
     };
   },
 });
 </script>
 
 <style lang="scss">
+// 选择模式样式
+.select-mode-tool-wrap {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  .tool-item {
+    margin-right: 20px;
+    color: #35495e;
+  }
+}
+.select-mode-tool-success-review {
+  color: #53bb86;
+}
 .loading-text-wrap {
   // 加载中...
   background-color: #f4f3f5;

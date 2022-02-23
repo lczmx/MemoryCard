@@ -7,10 +7,12 @@
   >
     <template #left>
       <van-icon
+        size="20"
         v-show="!loading"
         class="iconfont"
         class-prefix="icon"
         name="reload"
+        color="#1989fa"
       />
 
       <van-loading color="#1989fa" size="20" v-show="loading" />
