@@ -169,7 +169,7 @@
     </div>
   </transition>
 
-  <!-- 动作面板 -->
+  <!-- 长按动作面板 -->
   <van-action-sheet
     v-model:show="showCategoryActionSheet"
     :actions="categoryActions"
@@ -178,6 +178,30 @@
     @select="onSelectCategoryActionSheet"
     @cancel="onCancelCategoryActionSheet"
   />
+  <!-- 排序选项 动作面板 -->
+  <van-action-sheet
+    v-model:show="showSortActionSheet"
+    :actions="sortActions"
+    cancel-text="取消"
+    close-on-click-action
+    @cancel="showSortActionSheet = false"
+    @select="onSelectSort"
+  >
+    <template #action="{ action }">
+      <van-cell :title="action.name" :style="{ margin: 0, padding: 0 }">
+        <!-- 使用 right-icon 插槽来自定义右侧图标 -->
+        <template #right-icon>
+          <van-icon
+            :color="action.active ? '#1989fa' : ''"
+            class="iconfont"
+            class-prefix="icon"
+            :name="action.icon"
+            size="20"
+          />
+        </template>
+      </van-cell>
+    </template>
+  </van-action-sheet>
 </template>
 
 <script lang="ts">
@@ -211,6 +235,10 @@ export default defineComponent({
     // ------ 弹框选项选中回调
     const onSelect = (action: PopoverAction, index: number) => {
       switch (index) {
+        case 0:
+          // 显示排序动作面板
+          showSortActionSheet.value = true;
+          break;
         case 1:
           onlyShowStarCard(action);
           break;
@@ -461,6 +489,7 @@ export default defineComponent({
       limit: 10,
       offset: 0,
       hasMore: true,
+      order: "createAt", 
     };
     const config = {
       url: `${store.state.serverHost}/category/`,
@@ -499,7 +528,62 @@ export default defineComponent({
         data.value[index].isStar = response.isStar;
       });
     };
+    // ---------------------------- 排序开始
+    const showSortActionSheet = ref(false);
+    // 默认正序
+    // icon-
+    const sortActions = [
+      { name: "创建时间", icon: "zhengxu1", active: true },
+      { name: "类别名称", icon: "zhengxu1", active: false },
+      { name: "卡片数量", icon: "zhengxu1", active: false },
+    ];
+    const onSelectSort = (action: ActionSheetAction, index: number) => {
+      const item = sortActions[index];
+      // 假如active为true, 互换
+      if (item.active) {
+        item.icon = item.icon === "zhengxu1" ? "daoxu-" : "zhengxu1";
+      } else {
+        // 正序, 并将之前的选项设为false
+        for (let iString in sortActions) {
+          const i = Number(iString);
+          if (i === index) {
+            // 设置为true
+            sortActions[i].active = true;
+          } else if (sortActions[i].active) {
+            sortActions[i].active = false;
+            sortActions[i].icon = "zhengxu1";
+          } else {
+            sortActions[i].active = false;
+          }
+        }
+      }
+      // 判断是否为正序, 已经以什么排序
+      const char = item.icon === "zhengxu1" ? "" : "-";
+      let order = "";
+      switch (index) {
+        case 0:
+          order = "createAt";
+          break;
+        case 1:
+          order = "name";
+          break;
+        case 2:
+          order = "cardCount";
+          break;
+      }
+      // 发起请求
+      // 1. 重置状态
 
+      status.hasMore = true;
+      status.limit = 10;
+      status.offset = 0;
+      status.order = `${char}${order}`;
+      data.value = [];
+
+      // 2. 调用函数
+      getCategoryData();
+    };
+    // ---------------------------- 排序结束
     return {
       more,
       showPopover,
@@ -528,6 +612,9 @@ export default defineComponent({
       handlerClickSelectAll,
       handlerClickBatchStar,
       handlerClickBatchDelete,
+      showSortActionSheet, // 排序开始
+      sortActions,
+      onSelectSort,
     };
   },
 });
