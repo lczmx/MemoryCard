@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from orm.schemas.generic import QueryLimit, GenericResponse, CardDateQueryLimit
-from orm.schemas.card import ReadSummaryCardModel, ReadDescriptionCardModel, BatchReviewCard
+from orm.schemas.card import ReadSummaryCardModel, ReadDescriptionCardModel, BatchCard
 from orm.crud import query_need_review_card, query_one_data_by_user, update_review_times, query_review_card_by_date
 from orm.models import Card
 from dependencies.queryParams import get_limit_params, get_card_by_date_limit_params
@@ -37,7 +37,7 @@ async def get_review(
 
 
 @router.post("/batch-review", response_model=GenericResponse, response_model_exclude_unset=True)
-async def batch_review_card(review_cards: BatchReviewCard, session: Session = Depends(get_session)):
+async def batch_review_card(review_cards: BatchCard, session: Session = Depends(get_session)):
     """
     批量复习卡片
     """

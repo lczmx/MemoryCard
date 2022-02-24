@@ -62,8 +62,12 @@ async def toggle_star(cid: int, star_status: StarModel, session: Session = Depen
     """
     切换分类星标状态
     """
-    now_status = toggle_star_status(session, model_class=Category, target_id=cid, star_status=star_status.is_star)
-    msg = "切换成功" if star_status.is_star != now_status else "切换失败"
+    uid = 1
+
+    rowcount = toggle_star_status(session, model_class=Category, target_id=cid, uid=uid,
+                                  star_status=star_status.is_star)
+    msg = "切换成功" if rowcount else "切换失败"
+    now_status = not star_status.is_star if rowcount else star_status.is_star
     return {
         "status": 1,
         "msg": msg,

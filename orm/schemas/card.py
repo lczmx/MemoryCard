@@ -55,5 +55,6 @@ class ReadDescriptionCardModel(ReadSummaryCardModel):
         allow_population_by_field_name = True
 
 
-class BatchReviewCard(BaseModel):
+class BatchCard(BaseModel):
+    # 批量处理卡片
     cards: List[int]

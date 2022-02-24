@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 
 from fastapi import APIRouter, status, Depends
 from fastapi.exceptions import HTTPException
-from orm.schemas.card import ParamsCardModel, ReadSummaryCardModel, ReadDescriptionCardModel, WriteCardModel, StarModel
+from orm.schemas.card import ParamsCardModel, ReadSummaryCardModel, \
+    ReadDescriptionCardModel, WriteCardModel, StarModel, BatchCard
 from orm.schemas.generic import GenericResponse, QueryLimit
 
 from orm.crud import save_one_to_db, query_all_data_by_user, toggle_star_status, \
@@ -52,13 +53,64 @@ async def create_card(card_data: ParamsCardModel, session: Session = Depends(get
     }
 
 
+@router.post("/batch-star", response_model=GenericResponse, response_model_exclude_unset=True)
+async def batch_star_card(batch_data: BatchCard, session: Session = Depends(get_session)):
+    """
+    批量星标卡片
+    """
+    # TODO: 修改uid
+    uid = 1
+    batch_status = {
+        "success_count": 0,
+        "fail_count": 0,
+    }
+    for cid in batch_data.cards:
+        rowcount = toggle_star_status(session, model_class=Card, target_id=cid, uid=uid, star_status=False)
+        if not rowcount:  # 0时, 星标失败
+            batch_status["fail_count"] += 1
+            continue
+        batch_status["success_count"] += 1
+
+    return {
+        "status": 1,
+        "msg": f"成功星标卡片数: {batch_status.get('success_count')}, 失败星标卡片数: {batch_status.get('fail_count')}",
+    }
+
+
+@router.delete("/batch-delete", response_model=GenericResponse, response_model_exclude_unset=True)
+async def batch_delete_card(batch_data: BatchCard, session: Session = Depends(get_session)):
+    """
+    批量删除卡片
+    """
+    # TODO: 修改uid
+    uid = 1
+    batch_status = {
+        "success_count": 0,
+        "fail_count": 0,
+    }
+    for cid in batch_data.cards:
+        rowcount = delete_data_by_user(session=session, uid=uid, target_id=cid, model_class=Card)
+        # rowcount = 0 时
+        if not rowcount:
+            batch_status["fail_count"] += 1
+            continue
+        batch_status["success_count"] += 1
+    return {
+        "status": 1,
+        "msg": f"成功删除卡片数: {batch_status.get('success_count')}, 失败删除卡片数: {batch_status.get('fail_count')}",
+    }
+
+
 @router.post("/{cid}/star", response_model=GenericResponse[StarModel])
 async def toggle_star(cid: int, star_status: StarModel, session: Session = Depends(get_session)):
     """
     切换分类星标状态
     """
-    now_status = toggle_star_status(session, model_class=Card, target_id=cid, star_status=star_status.is_star)
-    msg = "切换成功" if star_status.is_star != now_status else "切换失败"
+    uid = 1
+    rowcount = toggle_star_status(session, model_class=Card, target_id=cid, uid=uid, star_status=star_status.is_star)
+    msg = "切换成功" if rowcount else "切换失败"
+    now_status = not star_status.is_star if rowcount else star_status.is_star
+
     return {
         "status": 1,
         "msg": msg,

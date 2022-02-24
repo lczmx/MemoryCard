@@ -135,26 +135,27 @@ def query_plan_title_by_user(session: Session, *, uid: Optional[int] = None,
         return []
 
 
-def toggle_star_status(session: Session, model_class: ModelT, target_id: int, star_status: bool) -> bool:
+def toggle_star_status(session: Session, model_class: ModelT, uid: int, target_id: int, star_status: bool) -> int:
     """
     切换卡片或分类的星标状态
     :param session: 数据连接
     :param model_class:  sqlalchemy模型类
+    :param uid: 用户ID
     :param target_id: 主键值
     :param star_status: 目前星标状态
-    :return:
+    :return: 所影响行数
     """
     try:
 
-        session.execute(
-            update(model_class).where(model_class.id == target_id
+        result = session.execute(
+            update(model_class).where(model_class.id == target_id, model_class.uid == uid
                                       ).values(is_star=not_(star_status)))
         session.commit()
-        return not star_status
+        return result.rowcount
     except Exception as e:
         logging.error(str(e))
         # 返回原来的
-        return star_status
+        return 0
 
 
 def query_need_review_card(session: Session, uid: int, query_params: Optional[QueryLimit]) -> List[Card]:
