@@ -215,6 +215,7 @@ import { defineComponent, watch, ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import { Notify, Dialog } from "vant";
+import { useEventListener } from "@vant/use";
 
 import { useWindowSize } from "@vant/use";
 import FlyCard from "@/components/FlyCard.vue";
@@ -600,6 +601,17 @@ export default defineComponent({
 
     // ----------- 显示/隐藏 详细信息
     const showDescBtn = ref(false);
+
+    // ------------ 禁止移动端滑动返回, 防止影响拖拽卡片
+
+    useEventListener(
+      "touchmove",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      },
+      { target: document.body }
+    );
     return {
       cardWidth,
       cardHeight,
