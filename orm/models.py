@@ -34,7 +34,6 @@ class Category(Base):
     icon = Column(String(32), nullable=False, comment='类别图标的类名')
     color = Column(String(7), nullable=False, comment='类别颜色')
     is_star = Column(Boolean, nullable=False, default=False, comment="是否星标")
-
     card = relationship("Card", backref="category", cascade="all, delete", passive_deletes=True)
 
 

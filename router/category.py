@@ -8,10 +8,10 @@ from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 from orm.schemas.category import ParamsCategoryModel, WriteCategoryModel, ReadCategoryModel, StarModel, BatchCategory
 from orm.schemas.generic import GenericResponse, QueryLimit
-from orm.crud import save_one_to_db, query_all_data_by_user, query_one_data_by_user, update_data, delete_category_data
-from orm.crud import toggle_star_status
+from orm.crud import save_one_to_db, query_all_data_by_user, query_one_data_by_user, \
+    update_data, delete_category_data, toggle_star_status, query_category_by_user_order_card_count
 from orm.models import Category
-from dependencies.queryParams import get_limit_params
+from dependencies.queryParams import get_limit_params, convert_category_order
 from dependencies.orm import get_session
 
 router = APIRouter(prefix="/category", tags=["分类相关"])
@@ -20,14 +20,20 @@ router = APIRouter(prefix="/category", tags=["分类相关"])
 @router.get("/",
             response_model=GenericResponse[List[ReadCategoryModel]])
 async def get_category(query_limit_params: QueryLimit = Depends(get_limit_params),
+                       order=Depends(convert_category_order),
                        session: Session = Depends(get_session)):
     """
     获取全部分类
     """
 
     uid = 1
-
-    category_data = query_all_data_by_user(session, uid=uid, model_class=Category, query_params=query_limit_params)
+    if order in ["cardCount", "-cardCount"]:
+        # 根据卡片数量排序, 不能使用通用的方法
+        category_data = query_category_by_user_order_card_count(session, uid=uid,
+                                                                query_params=query_limit_params, order=order)
+    else:
+        category_data = query_all_data_by_user(session, uid=uid, model_class=Category, query_params=query_limit_params,
+                                               order=order)
     return {
         "status": 1,
         "msg": "获取成功",

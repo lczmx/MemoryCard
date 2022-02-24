@@ -4,6 +4,7 @@
 from datetime import date as datetime_date
 
 from fastapi import Query
+from sqlalchemy import func
 
 from orm.models import Card, Category
 from orm.schemas.generic import QueryLimit, CardDateQueryLimit
@@ -37,5 +38,23 @@ def convert_card_order(order: str = Query("", description="排序方式")):
         "-title": Card.title.desc,
         "category": Card.cid.asc,
         "-category": Card.cid.desc,
+    }
+    return convert_ref.get(order, None)
+
+
+def convert_category_order(order: str = Query("", description="排序方式")):
+    """
+    将参数中的字段转换为与数据库中对应的
+    :param order:
+    :return:
+    """
+    convert_ref = {
+        # createAt 替换为id
+        "createAt": Category.id.asc,
+        "-createAt": Category.id.desc,
+        "name": Category.name.asc,
+        "-name": Category.name.desc,
+        "cardCount": "cardCount",
+        "-cardCount": "-cardCount",
     }
     return convert_ref.get(order, None)

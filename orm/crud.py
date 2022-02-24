@@ -6,7 +6,7 @@ import logging
 from typing import List, TypeVar, Optional
 
 from sqlalchemy.orm import Session
-from sqlalchemy import select, or_, not_, update, delete
+from sqlalchemy import select, or_, not_, update, delete, func, desc
 from pydantic import BaseModel
 from orm.database import Base
 from orm.models import Category, Plan, Card
@@ -313,3 +313,36 @@ def delete_category_data(session: Session,
         logging.error(str(e))
         session.rollback()
         return 0
+
+
+def query_category_by_user_order_card_count(session: Session, uid: int,
+                                            query_params: Optional[QueryLimit],
+                                            order: str
+                                            ) -> list[ModelT]:
+    """
+    通过uid, 查询用户的数据, 多条数据
+
+    :param session: 数据连接
+    :param uid: 用户id
+    :param query_params: limit offset 参数
+    :param order: 排序条件
+    :return: 对应sqlalchemy模型类的对象 列表
+    :return: 数据列表
+    """
+    # 判断是否allow_none, 选择对应的语句
+    # Statement
+    try:
+        if order == "cardCount":
+            stmt = select(Category, func.count(Category.id).label("count")).select_from(Category).join(Card).group_by(
+                Category.id).order_by("count")
+        else:
+            stmt = select(Category, func.count(Category.id).label("count")).select_from(Category).join(Card).group_by(
+                Category.id).order_by(desc("count"))
+
+        res = session.execute(stmt.limit(query_params.limit).offset(query_params.offset))
+
+        return res.scalars().all()  # 对应之前的.all()
+    except Exception as e:
+        logging.error(str(e))
+        session.rollback()
+        return []
