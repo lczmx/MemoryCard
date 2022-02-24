@@ -18,4 +18,14 @@
     <div id="app"></div>
     <!-- built files will be auto injected -->
   </body>
+  <script>
+    document.body.addEventListener(
+      "touchmove",
+      function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      },
+      { passive: false }
+    );
+  </script>
 </html>
