@@ -213,7 +213,7 @@
 <script lang="ts">
 import { defineComponent, ref, watch } from "vue";
 import { useStore } from "vuex";
-import { PopoverAction, Toast } from "vant";
+import { PopoverAction, Toast, Dialog } from "vant";
 import type { CheckboxInstance, CheckboxGroupInstance } from "vant";
 import { useToggle, useWindowSize } from "@vant/use";
 import { ICard, IStar, IBatchPostData } from "@/types";
@@ -375,6 +375,7 @@ export default defineComponent({
         Toast("请先选择卡片");
         return;
       }
+
       const config = {
         method: "post" as Method,
         url: `${store.state.serverHost}/cards/batch-star`,
@@ -385,7 +386,7 @@ export default defineComponent({
 
       postCreateData<null, IBatchPostData>(config, false).then(() => {
         // 提示
-        Toast.success("已星标选中卡片");
+        Toast.success("已批量星标");
         // 切换选中的星标状态
         const shouldStarCount = checkedCard.value.length; // 应该星标的数量
         let currentStarCount = 0;
@@ -410,36 +411,45 @@ export default defineComponent({
         Toast("请先选择卡片");
         return;
       }
-      const config = {
-        method: "delete" as Method,
-        url: `${store.state.serverHost}/cards/batch-delete`,
-        data: {
-          cards: checkedCard.value,
-        },
-      };
 
-      deleteData<IBatchPostData>(config, false).then(() => {
-        // 提示
-        Toast.success("已星标删除卡片");
-        // 删除选中
-        const shouldDeleteCount = checkedCard.value.length;
-        let currentDeleteCount = 0;
-        // 需要倒序遍历, 否则后面元素将往前移动
+      Dialog.confirm({
+        title: "警告",
+        message: "删除后无法恢复, 你确定要继续吗?",
+      }).then(() => {
+        const config = {
+          method: "delete" as Method,
+          url: `${store.state.serverHost}/cards/batch-delete`,
+          data: {
+            cards: checkedCard.value,
+          },
+        };
 
-        for (let index = data.value.length - 1; index >= 0; index--) {
-          const item = data.value[index];
-          if (checkedCard.value.includes(item.id)) {
-            // 符合要求, 删除
-            data.value.splice(index, 1);
-            currentDeleteCount += 1;
+        deleteData<IBatchPostData>(config, false).then(() => {
+          // 提示
+          Toast.success("已批量删除");
+          // 删除选中
+          const shouldDeleteCount = checkedCard.value.length;
+          let currentDeleteCount = 0;
+          // 需要倒序遍历, 否则后面元素将往前移动
 
-            // 检测是否已经判断完了
-            if (currentDeleteCount === shouldDeleteCount) break;
+          for (let index = data.value.length - 1; index >= 0; index--) {
+            const item = data.value[index];
+            if (checkedCard.value.includes(item.id)) {
+              // 符合要求, 删除
+              data.value.splice(index, 1);
+              currentDeleteCount += 1;
+
+              // 检测是否已经判断完了
+              if (currentDeleteCount === shouldDeleteCount) break;
+            }
           }
-        }
-        // 关闭选择模式
-        handlerClickCancel();
-      });
+          // 关闭选择模式
+          handlerClickCancel();
+        });
+      })
+      .catch(()=>{
+        Toast("已取消");
+      })
     };
 
     // --------- 选择卡片 结束
