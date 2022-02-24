@@ -255,13 +255,26 @@ export default defineComponent({
           dataBak = data.value as ICategory[];
         }
 
-        data.value = data.value.filter((value) => value.isStar);
         actions[1].text = "显示全部";
-      } else {
-        if (typeof dataBak !== "undefined") {
-          data.value = dataBak;
+        if (status.hasMore) {
+          // 假如还有的话, 需要继续获取星标, 因为 星标数据不是全部的
+          // 内部函数将备份dataBak
+          dataBak = [];
+          // 重置并获取数据
+          data.value = [];
+          status.limit = 10;
+          status.offset = 0;
+          getCategoryData();
+        } else {
+          dataBak = data.value as ICategory[];
+          data.value = data.value.filter((value) => value.isStar);
         }
-
+      } else {
+        // 1. 恢复备份
+        // 2. 清空备份
+        // 3. 修改选项内容
+        data.value = dataBak as ICategory[];
+        dataBak = [];
         actions[1].text = "只看星标";
       }
     };
@@ -489,15 +502,27 @@ export default defineComponent({
       limit: 10,
       offset: 0,
       hasMore: true,
-      order: "createAt", 
+      order: "createAt",
     };
     const config = {
       url: `${store.state.serverHost}/category/`,
     };
 
     const getCategoryData = () => {
+      loading.value = true;
       getDataOfPage<ICategory>(status, config, false).then((response) => {
-        data.value = [...data.value, ...response];
+        if (actions[1].text === "显示全部") {
+          // 只看星标状态
+          // 1. 备份全部
+          dataBak = [...dataBak, ...response];
+          // 2. 过滤星标
+          data.value = [
+            ...data.value,
+            ...response.filter((value) => value.isStar),
+          ];
+        } else {
+          data.value = [...data.value, ...response];
+        }
 
         loading.value = false;
         if (!status.hasMore) {
