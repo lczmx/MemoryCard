@@ -91,7 +91,7 @@ export interface IGetReviewByDateClientStatus {
   date: string;
 }
 
-export interface IBatchReviewPostData {
-  // 批量复习
+export interface IBatchPostData {
+  // 批量处理卡片
   cards: number[];
 }

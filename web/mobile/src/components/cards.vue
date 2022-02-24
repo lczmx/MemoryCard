@@ -1,12 +1,21 @@
 <template>
   <van-nav-bar
-    title="卡片"
+    :title="selectMode ? '' : '卡片'"
     :fixed="true"
-    @click-left="reload"
-    @click-right="more"
+    @click-left="() => (selectMode ? (selectMode = true) : reload())"
+    @click-right="() => (selectMode ? (selectMode = true) : more())"
   >
+    <!-- 根据selectMode和判断不同的执行方式 -->
     <template #left>
+      <div class="select-mode-left-tool-wrap" v-if="selectMode">
+        <div class="tool-item" @click.stop="handlerClickCancel">取消</div>
+        <div class="tool-item" @click.stop="handlerClickSelectInverse">
+          反选
+        </div>
+        <div class="tool-item" @click.stop="handlerClickSelectAll">全选</div>
+      </div>
       <van-icon
+        v-else
         size="20"
         v-show="!loading"
         class="iconfont"
@@ -18,8 +27,20 @@
       <van-loading color="#1989fa" size="20" v-show="loading" />
     </template>
     <template #right>
+      <div class="select-mode-right-tool-wrap" v-if="selectMode">
+        <div class="tool-item tool-star" @click.stop="handlerClickBatchStar">
+          批量星标
+        </div>
+        <div
+          class="tool-item tool-delete"
+          @click.stop="handlerClickBatchDelete"
+        >
+          批量删除
+        </div>
+      </div>
       <!-- 弹出层 -->
       <van-popover
+        v-else
         v-model:show="showPopover"
         :actions="actions"
         :show-arrow="false"
@@ -71,92 +92,106 @@
       v-touch:swipe.top="handlerHideAddCardBtn"
     >
       <div class="data_wrap">
-        <van-cell-group
-          inset
-          v-for="(item, index) in data"
-          :key="item.id"
-          class="cell_item"
-        >
-          <van-swipe-cell>
-            <van-cell
-              center
-              title-class="content_item"
-              label-class="content_date"
-            >
-              <template #icon>
-                <!-- 使用iconfont -->
-                <i
-                  :class="`left-icon iconfont ${item.category.icon}`"
-                  :style="{ 'font-size': '24px', color: item.category.color }"
-                  class="left-icon"
-                >
-                </i>
-              </template>
-              <template #title>
-                <div class="van-ellipsis item-title">
-                  {{ item.title }}
+        <van-checkbox-group v-model="checkedCard" ref="checkboxGroupRef">
+          <van-cell-group
+            inset
+            v-for="(item, index) in data"
+            :key="item.id"
+            class="cell_item"
+            @click="toggleCardCheckboxStatus(index)"
+          >
+            <!-- 选择模式禁用滑动 -->
+            <van-swipe-cell :disabled="selectMode">
+              <van-cell
+                center
+                title-class="content_item"
+                label-class="content_date"
+              >
+                <template #icon>
+                  <!-- 使用iconfont -->
+                  <i
+                    :class="`left-icon iconfont ${item.category.icon}`"
+                    :style="{ 'font-size': '24px', color: item.category.color }"
+                    class="left-icon"
+                  >
+                  </i>
+                </template>
+                <template #title>
+                  <div class="van-ellipsis item-title">
+                    {{ item.title }}
+                  </div>
+                </template>
+                <template #label>
+                  <div class="van-ellipsis item-category">
+                    <van-tag :color="item.category.color" text-color="#fff">{{
+                      item.category.name
+                    }}</van-tag>
+                  </div>
+                </template>
+                <!-- 右边复选框 -->
+                <template #right-icon>
+                  <van-checkbox
+                    v-show="selectMode"
+                    :name="item.id"
+                    :ref="(el) => (checkboxRefs[index] = el)"
+                    @click.stop
+                  />
+                </template>
+              </van-cell>
+              <template #right>
+                <!-- 右边滑动区域 -->
+                <div class="swipe_right_wrap">
+                  <van-button
+                    class="swipe_right_btn"
+                    icon="edit"
+                    type="primary"
+                    round
+                    :block="true"
+                    @click="handlerEditBtn(item.id)"
+                    :cid="item.id"
+                  />
+                  <van-button
+                    class="swipe_right_btn"
+                    icon="delete-o"
+                    type="danger"
+                    round
+                    :block="true"
+                    @click="handlerDeleteBtn(item.id)"
+                    :cid="item.id"
+                  />
+                  <van-button
+                    color="#f08300"
+                    class="swipe_right_btn"
+                    round
+                    plain
+                    :block="true"
+                    @click="handlerToggleStarStatus($event, index, item.id)"
+                  >
+                    <template #icon>
+                      <van-icon
+                        v-show="item.isStar"
+                        class="iconfont star_true"
+                        color="#f08300"
+                        class-prefix="icon"
+                        name="favorfill"
+                        size="24"
+                      />
+                      <van-icon
+                        v-show="!item.isStar"
+                        class="iconfont star_false"
+                        class-prefix="icon"
+                        name="favor"
+                        size="24"
+                      />
+                    </template>
+                  </van-button>
                 </div>
               </template>
-              <template #label>
-                <div class="van-ellipsis item-category">
-                  <van-tag :color="item.category.color" text-color="#fff">{{
-                    item.category.name
-                  }}</van-tag>
-                </div>
-              </template>
-            </van-cell>
-            <template #right>
-              <!-- 右边滑动区域 -->
-              <div class="swipe_right_wrap">
-                <van-button
-                  class="swipe_right_btn"
-                  icon="edit"
-                  type="primary"
-                  round
-                  :block="true"
-                  @click="handlerEditBtn(item.id)"
-                  :cid="item.id"
-                />
-                <van-button
-                  class="swipe_right_btn"
-                  icon="delete-o"
-                  type="danger"
-                  round
-                  :block="true"
-                  @click="handlerDeleteBtn(item.id)"
-                  :cid="item.id"
-                />
-                <van-button
-                  color="#f08300"
-                  class="swipe_right_btn"
-                  round
-                  plain
-                  :block="true"
-                  @click="handlerToggleStarStatus($event, index, item.id)"
-                >
-                  <template #icon>
-                    <van-icon
-                      v-show="item.isStar"
-                      class="iconfont star_true"
-                      color="#f08300"
-                      class-prefix="icon"
-                      name="favorfill"
-                      size="24"
-                    />
-                    <van-icon
-                      v-show="!item.isStar"
-                      class="iconfont star_false"
-                      class-prefix="icon"
-                      name="favor"
-                      size="24"
-                    />
-                  </template>
-                </van-button>
-              </div>
-            </template>
-          </van-swipe-cell>
-          <show-plan :card="item"></show-plan>
-        </van-cell-group>
+            </van-swipe-cell>
+            <!-- 复习计划 -->
+            <show-plan :card="item"></show-plan>
+          </van-cell-group>
+        </van-checkbox-group>
       </div>
     </div>
   </van-list>
@@ -179,8 +214,9 @@
 import { defineComponent, ref, watch } from "vue";
 import { useStore } from "vuex";
 import { PopoverAction, Toast } from "vant";
+import type { CheckboxInstance, CheckboxGroupInstance } from "vant";
 import { useToggle, useWindowSize } from "@vant/use";
-import { ICard, IStar } from "@/types";
+import { ICard, IStar, IBatchPostData } from "@/types";
 import { getDataOfPage, postCreateData, deleteData } from "@/utils/request";
 import ShowPlan from "@/components/showPlan.vue";
 import { Method } from "axios";
@@ -199,9 +235,14 @@ export default defineComponent({
     ];
     // ------ 弹框选项选中回调
     const onSelect = (action: PopoverAction, index: number) => {
-      switch (index) {
+      switch (
+        index // TODO: 排序按钮
+      ) {
         case 1:
           onlyShowStarCard(action);
+          break;
+        case 2:
+          handlerClickSelectBtn();
           break;
       }
       console.log(action, index);
@@ -258,6 +299,150 @@ export default defineComponent({
         }
       });
     };
+
+    // --------- 选择卡片 开始
+    const selectMode = ref(false); // 是否为选择模式
+    let hasMoreBak: boolean; // 备份是否还有下一页, 原数据将会被修改
+    const handlerClickSelectBtn = () => {
+      selectMode.value = true;
+      // 默认的宽度会将CheckBox挤到外部
+      // 需要重新设置宽度
+      // --- copy from resetFiledWidth
+      const field = document.querySelector(".van-swipe-cell") as HTMLElement;
+      if (!field) return;
+      const { width: fieldWidth } = field.getBoundingClientRect();
+
+      const contentItem = document.querySelectorAll(".content_item");
+      const titleNodes = document.querySelectorAll(".item-title");
+      const categoryNodes = document.querySelectorAll(".item-category");
+
+      contentItem.forEach((titleNode) => {
+        const ele = titleNode as HTMLElement;
+        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 30) + "px";
+      });
+      titleNodes.forEach((titleNode) => {
+        const ele = titleNode as HTMLElement;
+        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 40) + "px";
+      });
+      categoryNodes.forEach((titleNode) => {
+        const ele = titleNode as HTMLElement;
+        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 40) + "px";
+      });
+      // 禁止, 触底获取数据
+      // 免得, 新获取的数据与原来的数据样式不一样
+      // finished也要修改, 防止多一次触底
+      hasMoreBak = status.hasMore;
+      status.hasMore = false;
+    };
+    // 复选框
+    const checkedCard = ref<number[]>([]);
+    const checkboxRefs = ref<CheckboxInstance[]>([]);
+    const checkboxGroupRef = ref<CheckboxGroupInstance>();
+    // 点击卡片切换
+    const toggleCardCheckboxStatus = (index: number) => {
+      if (checkboxRefs.value) {
+        checkboxRefs.value[index].toggle();
+      }
+    };
+    // 取消
+    const handlerClickCancel = () => {
+      selectMode.value = false;
+      // 恢复宽度
+      resetFiledWidth();
+      // 恢复hasMore
+      status.hasMore = hasMoreBak;
+      // 全部取消选择
+      if (checkboxGroupRef.value) {
+        checkboxGroupRef.value.toggleAll(false);
+      }
+    };
+    // 反选
+    const handlerClickSelectInverse = () => {
+      if (checkboxGroupRef.value) {
+        checkboxGroupRef.value.toggleAll();
+      }
+    };
+    // 全选
+    const handlerClickSelectAll = () => {
+      if (checkboxGroupRef.value) {
+        checkboxGroupRef.value.toggleAll(true);
+      }
+    };
+    // 批量星标
+    const handlerClickBatchStar = () => {
+      if (!checkedCard.value || checkedCard.value.length <= 0) {
+        // 提示先选择
+        Toast("请先选择卡片");
+        return;
+      }
+      const config = {
+        method: "post" as Method,
+        url: `${store.state.serverHost}/cards/batch-star`,
+        data: {
+          cards: checkedCard.value,
+        },
+      };
+
+      postCreateData<null, IBatchPostData>(config, false).then(() => {
+        // 提示
+        Toast.success("已星标选中卡片");
+        // 切换选中的星标状态
+        const shouldStarCount = checkedCard.value.length; // 应该星标的数量
+        let currentStarCount = 0;
+
+        for (let item of data.value) {
+          if (checkedCard.value.includes(item.id)) {
+            // 符合要求, 星标
+            item.isStar = true;
+            currentStarCount += 1;
+            if (currentStarCount === shouldStarCount) break;
+          }
+        }
+
+        // 关闭选择模式
+        handlerClickCancel();
+      });
+    };
+    // 批量删除
+    const handlerClickBatchDelete = () => {
+      if (!checkedCard.value || checkedCard.value.length <= 0) {
+        // 提示先选择
+        Toast("请先选择卡片");
+        return;
+      }
+      const config = {
+        method: "delete" as Method,
+        url: `${store.state.serverHost}/cards/batch-delete`,
+        data: {
+          cards: checkedCard.value,
+        },
+      };
+
+      deleteData<IBatchPostData>(config, false).then(() => {
+        // 提示
+        Toast.success("已星标删除卡片");
+        // 删除选中
+        const shouldDeleteCount = checkedCard.value.length;
+        let currentDeleteCount = 0;
+        // 需要倒序遍历, 否则后面元素将往前移动
+
+        for (let index = data.value.length - 1; index >= 0; index--) {
+          const item = data.value[index];
+          if (checkedCard.value.includes(item.id)) {
+            // 符合要求, 删除
+            data.value.splice(index, 1);
+            currentDeleteCount += 1;
+
+            // 检测是否已经判断完了
+            if (currentDeleteCount === shouldDeleteCount) break;
+          }
+        }
+        // 关闭选择模式
+        handlerClickCancel();
+      });
+    };
+
+    // --------- 选择卡片 结束
     // ----- 编辑按钮
     const router = useRouter();
     const handlerEditBtn = (cid: number) => {
@@ -349,10 +534,15 @@ export default defineComponent({
       const field = document.querySelector(".van-swipe-cell") as HTMLElement;
       if (!field) return;
       const { width: fieldWidth } = field.getBoundingClientRect();
+      const contentItem = document.querySelectorAll(".content_item");
       const titleNodes = document.querySelectorAll(".item-title");
       const categoryNodes = document.querySelectorAll(".item-category");
       // 30 - 24 - 15
       // 代表 图标的两边margin - 图标大小 - 右边的空白
+      contentItem.forEach((titleNode) => {
+        const ele = titleNode as HTMLElement;
+        ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
+      });
       titleNodes.forEach((titleNode) => {
         const ele = titleNode as HTMLElement;
         ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
@@ -365,9 +555,17 @@ export default defineComponent({
 
     const { width, height } = useWindowSize();
     // 窗口大小改变时
-    watch([width, height], resetFiledWidth);
+    watch([width, height], () => {
+      // 选择模式下, 不应该重新设置宽度
+      if (selectMode.value) return;
+      resetFiledWidth();
+    });
     // 有新数据时
-    watch([data], resetFiledWidth);
+    watch([data], () => {
+      // 选择模式下, 不应该重新设置宽度
+      if (selectMode.value) return;
+      resetFiledWidth();
+    });
 
     return {
       reload,
@@ -385,12 +583,47 @@ export default defineComponent({
       handlerShowAddCardBtn,
       handlerHideAddCardBtn,
       showAddCardBtnState,
+      checkedCard,
+      checkboxRefs,
+      checkboxGroupRef,
+      selectMode,
+      toggleCardCheckboxStatus,
+      handlerClickCancel,
+      handlerClickSelectInverse,
+      handlerClickSelectAll,
+      handlerClickBatchStar,
+      handlerClickBatchDelete,
     };
   },
 });
 </script>
 
 <style lang="scss">
+// 选择模式样式
+.select-mode-left-tool-wrap {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  .tool-item {
+    margin-right: 10px;
+    color: #35495e;
+  }
+}
+.select-mode-right-tool-wrap {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  .tool-item {
+    margin-right: 20px;
+  }
+  .tool-star {
+    color: #53bb86;
+  }
+  .tool-delete {
+    color: #ee0a24;
+  }
+}
+
 .loading-text-wrap {
   // 加载中...
   background-color: #f4f3f5;
