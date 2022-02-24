@@ -2,7 +2,7 @@
   <van-nav-bar
     :title="selectMode ? '' : '复习'"
     :fixed="true"
-    @click-left="showCal = true"
+    @click-left="() => (selectMode ? (showCal = false) : (showCal = true))"
     @click-right="
       () => (selectMode ? handlerClickSuccessReview() : (showPopover = true))
     "
@@ -402,7 +402,7 @@ export default defineComponent({
     const handlerEditBtn = (cid: number) => {
       router.push({ name: "editorCard", params: { cid } });
     };
-
+    // ---- 点击日历回调
     const handlerConfirmCal = (value: Date) => {
       showCal.value = false;
       // 修改配置
