@@ -33,6 +33,7 @@ export interface IGetClientStatus {
   method: Method;
   limit?: number;
   offset?: number;
+  order?: string;
   hasMore?: boolean;
 }
 // ---------------- 复习曲线相关
@@ -87,6 +88,7 @@ export interface IGetReviewByDateClientStatus {
   method: Method;
   limit?: number;
   offset?: number;
+  order?: string;
   hasMore?: boolean;
   date: string;
 }

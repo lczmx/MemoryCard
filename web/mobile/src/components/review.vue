@@ -168,6 +168,7 @@
       </van-checkbox-group>
     </div>
   </van-list>
+
 </template>
 
 <script lang="ts">
@@ -515,6 +516,7 @@ export default defineComponent({
       handlerClickSelectInverse,
       handlerClickSelectAll,
       handlerClickSuccessReview,
+
     };
   },
 });

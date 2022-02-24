@@ -6,6 +6,20 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "10471946",
+      "name": "正序",
+      "font_class": "zhengxu1",
+      "unicode": "e61f",
+      "unicode_decimal": 58911
+    },
+    {
+      "icon_id": "10471947",
+      "name": "倒序",
+      "font_class": "daoxu-",
+      "unicode": "e620",
+      "unicode_decimal": 58912
+    },
+    {
       "icon_id": "5974400",
       "name": "复习",
       "font_class": "fuxi",

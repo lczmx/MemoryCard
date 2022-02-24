@@ -95,6 +95,7 @@ export async function getDataOfPage<R>(
     params: {
       limit: clientStatus.limit,
       offset: clientStatus.offset,
+      order: clientStatus.order,
     },
   };
 
