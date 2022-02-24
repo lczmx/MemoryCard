@@ -1,10 +1,11 @@
 """
 用于接收query参数的依赖
 """
-import datetime
 from datetime import date as datetime_date
 
 from fastapi import Query
+
+from orm.models import Card, Category
 from orm.schemas.generic import QueryLimit, CardDateQueryLimit
 
 
@@ -21,3 +22,20 @@ def get_card_by_date_limit_params(
 ) -> CardDateQueryLimit:
     data = {"limit": limit, "offset": offset, "date": date}
     return CardDateQueryLimit(**data)
+
+
+def convert_card_order(order: str = Query("", description="排序方式")):
+    """
+    将参数中的字段转换为与数据库中对应的
+    :param order:
+    :return:
+    """
+    convert_ref = {
+        "createAt": Card.created_at.asc,
+        "-createAt": Card.created_at.desc,
+        "title": Card.title.asc,
+        "-title": Card.title.desc,
+        "category": Card.cid.asc,
+        "-category": Card.cid.desc,
+    }
+    return convert_ref.get(order, None)

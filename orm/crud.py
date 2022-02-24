@@ -64,7 +64,8 @@ def save_all_to_db(session: Session, model_class: ModelT, data_list: List[DataT]
 def query_all_data_by_user(session: Session, uid: int,
                            model_class: ModelT,
                            query_params: Optional[QueryLimit],
-                           allow_none=False
+                           allow_none=False,
+                           order=None
                            ) -> list[ModelT]:
     """
     通过uid, 查询用户的数据, 多条数据
@@ -74,6 +75,7 @@ def query_all_data_by_user(session: Session, uid: int,
     :param model_class: sqlalchemy模型类
     :param query_params: limit offset 参数
     :param allow_none: 是否将uid为null的情况纳入
+    :param order: 排序条件
     :return: 对应sqlalchemy模型类的对象 列表
     :return: 数据列表
     """
@@ -81,9 +83,12 @@ def query_all_data_by_user(session: Session, uid: int,
     # Statement
     try:
         stmt = select(model_class).where(
-            or_(model_class.uid == uid, Plan.uid.is_(None))) if allow_none else select(
+            or_(model_class.uid == uid, model_class.uid.is_(None))) if allow_none else select(
             model_class).where(model_class.uid == uid)
-        res = session.execute(stmt.limit(query_params.limit).offset(query_params.offset))
+        if order:
+            res = session.execute(stmt.limit(query_params.limit).offset(query_params.offset).order_by(order()))
+        else:
+            res = session.execute(stmt.limit(query_params.limit).offset(query_params.offset))
 
         return res.scalars().all()  # 对应之前的.all()
     except Exception as e:

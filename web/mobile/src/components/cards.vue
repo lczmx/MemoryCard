@@ -618,7 +618,7 @@ export default defineComponent({
     const sortActions = [
       { name: "创建时间", icon: "zhengxu1", active: true },
       { name: "卡片名称", icon: "zhengxu1", active: false },
-      { name: "类别名称", icon: "zhengxu1", active: false },
+      { name: "根据类别", icon: "zhengxu1", active: false },
     ];
     const onSelectSort = (action: ActionSheetAction, index: number) => {
       const item = sortActions[index];

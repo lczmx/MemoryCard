@@ -14,20 +14,21 @@ from orm.crud import save_one_to_db, query_all_data_by_user, toggle_star_status,
     query_one_data_by_user, update_data, delete_data_by_user
 from orm.models import Card
 from dependencies.orm import get_session
-from dependencies.queryParams import get_limit_params
+from dependencies.queryParams import get_limit_params, convert_card_order
 
 router = APIRouter(prefix="/cards", tags=["卡片相关"])
 
 
 @router.get("/",
             response_model=GenericResponse[List[ReadSummaryCardModel]])
-async def get_cards(limit_params: QueryLimit = Depends(get_limit_params), session: Session = Depends(get_session)):
+async def get_cards(limit_params: QueryLimit = Depends(get_limit_params), order=Depends(convert_card_order),
+                    session: Session = Depends(get_session)):
     """
     获取多个卡片
     """
     uid = 1
 
-    card_data = query_all_data_by_user(session, uid=uid, model_class=Card, query_params=limit_params)
+    card_data = query_all_data_by_user(session, uid=uid, model_class=Card, query_params=limit_params, order=order)
     return {
         "status": 1,
         "msg": "获取成功",
@@ -142,7 +143,7 @@ async def retrieve_card(cid: int, session: Session = Depends(get_session)):
 
 
 @router.post("/{cid}", response_model=GenericResponse[ReadDescriptionCardModel])
-async def retrieve_card(cid: int, data: ParamsCardModel, session: Session = Depends(get_session)):
+async def update_card(cid: int, data: ParamsCardModel, session: Session = Depends(get_session)):
     """
     修改一条卡片的数据
     """
@@ -162,7 +163,7 @@ async def retrieve_card(cid: int, data: ParamsCardModel, session: Session = Depe
 
 
 @router.delete("/{cid}", response_model=GenericResponse, response_model_exclude_unset=True)
-async def retrieve_card(cid: int, session: Session = Depends(get_session)):
+async def delete_card(cid: int, session: Session = Depends(get_session)):
     """
     删除一条卡片的数据
     """
