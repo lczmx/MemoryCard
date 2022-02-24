@@ -340,6 +340,8 @@ export default defineComponent({
     const checkboxGroupRef = ref<CheckboxGroupInstance>();
     // 点击卡片切换
     const toggleCardCheckboxStatus = (index: number) => {
+      // 不在选择模式, 不能选中
+      if (!selectMode.value) return;
       if (checkboxRefs.value) {
         checkboxRefs.value[index].toggle();
       }
@@ -415,41 +417,42 @@ export default defineComponent({
       Dialog.confirm({
         title: "警告",
         message: "删除后无法恢复, 你确定要继续吗?",
-      }).then(() => {
-        const config = {
-          method: "delete" as Method,
-          url: `${store.state.serverHost}/cards/batch-delete`,
-          data: {
-            cards: checkedCard.value,
-          },
-        };
+      })
+        .then(() => {
+          const config = {
+            method: "delete" as Method,
+            url: `${store.state.serverHost}/cards/batch-delete`,
+            data: {
+              cards: checkedCard.value,
+            },
+          };
 
-        deleteData<IBatchPostData>(config, false).then(() => {
-          // 提示
-          Toast.success("已批量删除");
-          // 删除选中
-          const shouldDeleteCount = checkedCard.value.length;
-          let currentDeleteCount = 0;
-          // 需要倒序遍历, 否则后面元素将往前移动
+          deleteData<IBatchPostData>(config, false).then(() => {
+            // 提示
+            Toast.success("已批量删除");
+            // 删除选中
+            const shouldDeleteCount = checkedCard.value.length;
+            let currentDeleteCount = 0;
+            // 需要倒序遍历, 否则后面元素将往前移动
 
-          for (let index = data.value.length - 1; index >= 0; index--) {
-            const item = data.value[index];
-            if (checkedCard.value.includes(item.id)) {
-              // 符合要求, 删除
-              data.value.splice(index, 1);
-              currentDeleteCount += 1;
+            for (let index = data.value.length - 1; index >= 0; index--) {
+              const item = data.value[index];
+              if (checkedCard.value.includes(item.id)) {
+                // 符合要求, 删除
+                data.value.splice(index, 1);
+                currentDeleteCount += 1;
 
-              // 检测是否已经判断完了
-              if (currentDeleteCount === shouldDeleteCount) break;
+                // 检测是否已经判断完了
+                if (currentDeleteCount === shouldDeleteCount) break;
+              }
             }
-          }
-          // 关闭选择模式
-          handlerClickCancel();
+            // 关闭选择模式
+            handlerClickCancel();
+          });
+        })
+        .catch(() => {
+          Toast("已经取消");
         });
-      })
-      .catch(()=>{
-        Toast("已取消");
-      })
     };
 
     // --------- 选择卡片 结束
