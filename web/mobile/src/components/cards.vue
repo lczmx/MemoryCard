@@ -216,7 +216,7 @@ import { useStore } from "vuex";
 import { PopoverAction, Toast, Dialog } from "vant";
 import type { CheckboxInstance, CheckboxGroupInstance } from "vant";
 import { useToggle, useWindowSize } from "@vant/use";
-import { ICard, IStar, IBatchPostData } from "@/types";
+import { ICard, IStar, IBatchPostCardData } from "@/types";
 import { getDataOfPage, postCreateData, deleteData } from "@/utils/request";
 import ShowPlan from "@/components/showPlan.vue";
 import { Method } from "axios";
@@ -386,7 +386,7 @@ export default defineComponent({
         },
       };
 
-      postCreateData<null, IBatchPostData>(config, false).then(() => {
+      postCreateData<null, IBatchPostCardData>(config, false).then(() => {
         // 提示
         Toast.success("已批量星标");
         // 切换选中的星标状态
@@ -427,7 +427,7 @@ export default defineComponent({
             },
           };
 
-          deleteData<IBatchPostData>(config, false).then(() => {
+          deleteData<IBatchPostCardData>(config, false).then(() => {
             // 提示
             Toast.success("已批量删除");
             // 删除选中

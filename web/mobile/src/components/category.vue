@@ -188,7 +188,7 @@ import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { useToggle } from "@vant/use";
 import { getDataOfPage, postCreateData, deleteData } from "@/utils/request";
-import { ICategory, IStar, IBatchPostData } from "@/types";
+import { ICategory, IStar, IBatchPostCategoryData } from "@/types";
 import { Method } from "axios";
 
 export default defineComponent({
@@ -297,11 +297,11 @@ export default defineComponent({
         method: "post" as Method,
         url: `${store.state.serverHost}/category/batch-star`,
         data: {
-          cards: checkedCategory.value,
+          category: checkedCategory.value,
         },
       };
 
-      postCreateData<null, IBatchPostData>(config, false).then(() => {
+      postCreateData<null, IBatchPostCategoryData>(config, false).then(() => {
         // 提示
         Toast.success("已批量星标");
         // 切换选中的星标状态
@@ -338,11 +338,11 @@ export default defineComponent({
             method: "delete" as Method,
             url: `${store.state.serverHost}/category/batch-delete`,
             data: {
-              cards: checkedCategory.value,
+              category: checkedCategory.value,
             },
           };
 
-          deleteData<IBatchPostData>(config, false).then(() => {
+          deleteData<IBatchPostCategoryData>(config, false).then(() => {
             // 提示
             Toast.success("已批量删除");
             // 删除选中

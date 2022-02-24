@@ -178,7 +178,7 @@ import type { CheckboxInstance, CheckboxGroupInstance } from "vant";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { Method } from "axios";
-import { ICard, IBatchPostData } from "@/types";
+import { ICard, IBatchPostCardData } from "@/types";
 import dayjs from "dayjs";
 import {
   getDataOfPage,
@@ -351,7 +351,7 @@ export default defineComponent({
         },
       };
 
-      postCreateData<null, IBatchPostData>(postConfig, false).then(() => {
+      postCreateData<null, IBatchPostCardData>(postConfig, false).then(() => {
         // 提示
         Toast.success("选中卡片已复习完成");
         // 删除选中

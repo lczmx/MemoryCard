@@ -6,7 +6,7 @@ from typing import List, Dict
 from fastapi import APIRouter, status, Depends
 from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
-from orm.schemas.category import ParamsCategoryModel, WriteCategoryModel, ReadCategoryModel, StarModel
+from orm.schemas.category import ParamsCategoryModel, WriteCategoryModel, ReadCategoryModel, StarModel, BatchCategory
 from orm.schemas.generic import GenericResponse, QueryLimit
 from orm.crud import save_one_to_db, query_all_data_by_user, query_one_data_by_user, update_data, delete_category_data
 from orm.crud import toggle_star_status
@@ -54,6 +54,54 @@ async def create_category(category_prams: ParamsCategoryModel,
         "status": 1,
         "msg": "success",
         "data": category_obj
+    }
+
+
+@router.post("/batch-star", response_model=GenericResponse, response_model_exclude_unset=True)
+async def batch_star_category(batch_data: BatchCategory, session: Session = Depends(get_session)):
+    """
+    批量星标类别
+    """
+    # TODO: 修改uid
+    uid = 1
+    batch_status = {
+        "success_count": 0,
+        "fail_count": 0,
+    }
+    for cid in batch_data.category:
+        rowcount = toggle_star_status(session, model_class=Category, target_id=cid, uid=uid, star_status=False)
+        if not rowcount:  # 0时, 星标失败
+            batch_status["fail_count"] += 1
+            continue
+        batch_status["success_count"] += 1
+
+    return {
+        "status": 1,
+        "msg": f"成功星标卡片数: {batch_status.get('success_count')}, 失败星标卡片数: {batch_status.get('fail_count')}",
+    }
+
+
+@router.delete("/batch-delete", response_model=GenericResponse, response_model_exclude_unset=True)
+async def batch_delete_category(batch_data: BatchCategory, session: Session = Depends(get_session)):
+    """
+    批量删除类别
+    """
+    # TODO: 修改uid
+    uid = 1
+    batch_status = {
+        "success_count": 0,
+        "fail_count": 0,
+    }
+    for cid in batch_data.category:
+        rowcount = delete_category_data(session=session, uid=uid, cid=cid)
+        # rowcount = 0 时
+        if not rowcount:
+            batch_status["fail_count"] += 1
+            continue
+        batch_status["success_count"] += 1
+    return {
+        "status": 1,
+        "msg": f"成功删除卡片数: {batch_status.get('success_count')}, 失败删除卡片数: {batch_status.get('fail_count')}",
     }
 
 

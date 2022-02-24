@@ -1,8 +1,8 @@
 """
 定义分类数据模型
 """
-
-from pydantic import BaseModel, Field, validator, Extra
+from typing import List
+from pydantic import BaseModel, Field
 from orm.schemas.plan import ReadPlanModel
 
 
@@ -46,3 +46,8 @@ class WriteCategoryModel(BaseCategoryModel):
     uid: int
     pid: int
     is_star: bool = Field(False, alias="isStar")
+
+
+class BatchCategory(BaseModel):
+    # 批量处理类别
+    category: List[int]

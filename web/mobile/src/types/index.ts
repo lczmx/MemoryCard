@@ -91,7 +91,11 @@ export interface IGetReviewByDateClientStatus {
   date: string;
 }
 
-export interface IBatchPostData {
+export interface IBatchPostCardData {
   // 批量处理卡片
   cards: number[];
+}
+export interface IBatchPostCategoryData {
+  // 批量处理类别
+  category: number[];
 }
