@@ -785,5 +785,16 @@ export default defineComponent({
   position: fixed;
   bottom: 80px;
   right: 30px;
+  button {
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+  }
+}
+// 排序动作面板
+.van-action-sheet__content {
+  .van-action-sheet__item {
+    background-color: #fff;
+  }
 }
 </style>

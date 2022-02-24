@@ -162,7 +162,7 @@
       <van-button
         icon="plus"
         type="primary"
-        round
+        square
         to="/add/category"
         color="#35495e"
       ></van-button>
@@ -186,6 +186,7 @@
     close-on-click-action
     @cancel="showSortActionSheet = false"
     @select="onSelectSort"
+    class="sort-action-sheet-wrap"
   >
     <template #action="{ action }">
       <van-cell :title="action.name" :style="{ margin: 0, padding: 0 }">
@@ -745,5 +746,17 @@ export default defineComponent({
   position: fixed;
   bottom: 80px;
   right: 30px;
+  button{
+    width: 44px;
+    height: 44px;
+    border-radius:22px
+
+  }
+}
+// 排序动作面板
+.sort-action-sheet-wrap {
+  .van-action-sheet__item {
+    background-color: #fff;
+  }
 }
 </style>
