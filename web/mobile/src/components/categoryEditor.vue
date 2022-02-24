@@ -30,10 +30,9 @@
         <van-popup v-model:show="showColorPopup" position="bottom">
           <color-picker
             :colorArray="colorArray"
+            :selectColor="color"
             @picked="handlerColorPicked"
-            class="color-picker"
-          >
-          </color-picker>
+          />
         </van-popup>
         <van-field
           v-model="icon"
@@ -57,8 +56,11 @@
           </template>
         </van-field>
         <van-popup v-model:show="showIconPopup" position="bottom">
-          <icon-picker :iconArray="iconArray" @picked="handlerIconPicked">
-          </icon-picker>
+          <icon-picker
+            :iconArray="iconArray"
+            :selectIcon="icon"
+            @picked="handlerIconPicked"
+          />
         </van-popup>
         <!-- 选择复习曲线 -->
         <van-field
@@ -316,9 +318,6 @@ export default defineComponent({
     width: 24px;
     height: 24px;
     border-radius: 5px;
-  }
-  .color-picker {
-    margin: 10px;
   }
 }
 </style>
