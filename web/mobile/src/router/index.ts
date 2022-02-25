@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import Page from "@/views/Page.vue";
 import EditorPage from "@/views/EditorPage.vue";
 import CardReview from "@/views/cardReview.vue";
+import SettingsContent from "@/views/SettingsContent.vue";
 
 import Review from "@/components/review.vue";
 import Cards from "@/components/cards.vue";
@@ -11,6 +12,9 @@ import AddCategory from "@/components/addCategory.vue";
 import AddCard from "@/components/addCard.vue";
 import EditorCategory from "@/components/EditorCategory.vue";
 import EditorCard from "@/components/EditorCard.vue";
+// ---- 设置内部页面
+import About from "@/components/About.vue";
+import Plan from "@/components/Plan.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -52,13 +56,16 @@ const routes: Array<RouteRecordRaw> = [
     component: CardReview,
   },
   {
-    path: "/about",
-    name: "About",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/About.vue"),
+    path: "/settings",
+    component: SettingsContent,
+    children: [
+      {
+        path: "about",
+        component: About,
+        name: "About",
+      },
+      { path: "plans", component: Plan, name: "Plan" },
+    ],
   },
 ];
 

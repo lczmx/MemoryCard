@@ -584,7 +584,6 @@ export default defineComponent({
       const contentItem = document.querySelectorAll(".content_item");
       const titleNodes = document.querySelectorAll(".item-title");
       const categoryNodes = document.querySelectorAll(".item-category");
-      console.log(categoryNodes);
       // 30 - 24 - 15
       // 代表 图标的两边margin - 图标大小 - 右边的空白
       contentItem.forEach((titleNode) => {

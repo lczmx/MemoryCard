@@ -43,7 +43,7 @@ export interface IGetReviewClientStatus {
   method: Method;
   limit?: number;
   offset?: number;
-  category?:  number;
+  category?: number;
   hasMore?: boolean;
 }
 // ---------------- 复习曲线相关
@@ -110,4 +110,11 @@ export interface IBatchPostCardData {
 export interface IBatchPostCategoryData {
   // 批量处理类别
   category: number[];
+}
+
+// --- 复习曲线展示
+
+export interface IPlanStep {
+  title: string; // 第几次复习
+  time: string; // 相对于现在的复习的时间
 }

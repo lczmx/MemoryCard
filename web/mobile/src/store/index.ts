@@ -10,6 +10,8 @@ export default createStore({
     submitData: false,
     // 添加/修改页面的标题
     pageTitle: "title",
+    // 设置内部页面的标题
+    settingsItemPageTitle: "title",
   },
   mutations: {
     // 切换
@@ -21,6 +23,9 @@ export default createStore({
     },
     changePageTitle(state, title) {
       state.pageTitle = title;
+    },
+    changeSettingsPageTitle(state, title) {
+      state.settingsItemPageTitle = title;
     },
   },
   actions: {},
