@@ -24,9 +24,9 @@ export function useCurrentCardPlan(card: ICard): ICardPlan {
     .format("YYYY/MM/D H:m:s");
   // 计算
   return {
-    reviewAt,
-    reviewAtNext,
-    reviewTimes: card.reviewTimes,
-    allReviewTimes: planStepSec.length,
+    reviewAt, // 之前的复习时间
+    reviewAtNext, // 本次复习时间
+    reviewTimes: card.reviewTimes, // 目前复习次数
+    allReviewTimes: planStepSec.length, // 全部复习次数
   };
 }

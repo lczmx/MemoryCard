@@ -109,7 +109,7 @@
             <van-cell
               center
               title-class="content_item"
-              label-class="content_date"
+              label-class="content-info"
             >
               <template #icon>
                 <!-- 使用iconfont -->
@@ -124,11 +124,12 @@
                 <div class="van-ellipsis item-title">{{ item.title }}</div>
               </template>
               <template #label>
-                <span class="van-ellipsis item-category">
+                <div class="van-ellipsis item-category">
                   <van-tag :color="item.category.color" text-color="#fff">{{
                     item.category.name
                   }}</van-tag>
-                </span>
+                </div>
+                <div>{{ useCurrentCardPlan(item).reviewAtNext }}</div>
               </template>
               <!-- 右边复选框 -->
               <template #right-icon>
@@ -246,6 +247,7 @@ import type { CheckboxInstance, CheckboxGroupInstance } from "vant";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { Method } from "axios";
+import { useCurrentCardPlan } from "@/hook";
 import { ICard, IBatchPostCardData, ICategory } from "@/types";
 import dayjs from "dayjs";
 import {
@@ -414,7 +416,8 @@ export default defineComponent({
       });
       categoryNodes.forEach((titleNode) => {
         const ele = titleNode as HTMLElement;
-        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 40) + "px";
+        // 120px=时间宽度
+        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 40 - 120) + "px";
       });
       // 禁止, 触底获取数据
       // 免得, 新获取的数据与原来的数据样式不一样
@@ -475,7 +478,7 @@ export default defineComponent({
 
       postCreateData<null, IBatchPostCardData>(postConfig, false).then(() => {
         // 提示
-        Toast.success("选中卡片已复习完成");
+        Toast.success("已批量复习");
         // 删除选中
         const shouldDeleteCount = checkedCard.value.length;
         let currentDeleteCount = 0;
@@ -581,6 +584,7 @@ export default defineComponent({
       const contentItem = document.querySelectorAll(".content_item");
       const titleNodes = document.querySelectorAll(".item-title");
       const categoryNodes = document.querySelectorAll(".item-category");
+      console.log(categoryNodes);
       // 30 - 24 - 15
       // 代表 图标的两边margin - 图标大小 - 右边的空白
       contentItem.forEach((titleNode) => {
@@ -593,7 +597,8 @@ export default defineComponent({
       });
       categoryNodes.forEach((titleNode) => {
         const ele = titleNode as HTMLElement;
-        ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
+        // 120px 是时间宽度
+        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 120) + "px";
       });
     };
 
@@ -602,13 +607,14 @@ export default defineComponent({
     watch([width, height], () => {
       // 选择模式下, 不应该重新设置宽度
       if (selectMode.value) return;
-      resetFiledWidth;
+      resetFiledWidth();
     });
     // 有新数据时
     watch([data], () => {
       // 选择模式下, 不应该重新设置宽度
+
       if (selectMode.value) return;
-      resetFiledWidth;
+      resetFiledWidth();
     });
 
     // ---------- 点击跳转到复习页面
@@ -645,6 +651,7 @@ export default defineComponent({
       filterCategoryLoading,
       filterCategoryStatus,
       getFilterCategoryData,
+      useCurrentCardPlan, // 展示复习
     };
   },
 });
@@ -688,18 +695,24 @@ export default defineComponent({
       display: flex;
       flex-direction: column;
       margin-left: 15px;
-      .item-category {
-        display: flex;
-        font-size: 8px;
-      }
+
       .item-title {
         font-size: 16px;
         font-weight: 600;
         display: flex;
       }
-      .content_date {
+      .content-info {
         color: #8f8e90;
         display: flex;
+        justify-content: space-between;
+        .item-category {
+          display: flex;
+          font-size: 8px;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          -o-text-overflow: ellipsis;
+        }
       }
     }
     .swipe_right_wrap {
