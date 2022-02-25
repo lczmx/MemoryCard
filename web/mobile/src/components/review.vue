@@ -168,7 +168,74 @@
       </van-checkbox-group>
     </div>
   </van-list>
-
+  <!-- 展示分类筛选的类别 开始 -->
+  <van-popup
+    v-model:show="showFilterCategory"
+    closeable
+    position="right"
+    :style="{ width: '70vw', height: '100vh' }"
+    class="filter-category-popup"
+  >
+    <div class="filter-category-popup-wrap">
+      <van-list
+        v-model:loading="filterCategoryLoading"
+        :finished="!filterCategoryStatus.hasMore"
+        @load="getFilterCategoryData"
+        loading-text="加载中..."
+      >
+        <van-empty
+          description="没有类别?!"
+          v-if="!filterCategoryLoading && filterCategoryData.length <= 0"
+        />
+        <van-cell-group
+          v-else
+          inset
+          v-for="(item, index) in filterCategoryData"
+          :key="index"
+          @click="handlerClickFilterCategory(item.id)"
+          :style="{
+            borderLeft: `4px solid ${
+              status.category === item.id ? '#000' : item.color
+            }`,
+          }"
+        >
+          <van-cell
+            title-class="content_item"
+            :style="{ backgroundColor: item.color }"
+          >
+            <template #icon>
+              <!-- 使用iconfont -->
+              <i
+                :class="`left-icon iconfont ${item.icon}`"
+                :style="{ fontSize: '24px', color: '#fff' }"
+              >
+              </i>
+            </template>
+            <template #title>
+              <div
+                class="van-ellipsis item-title"
+                :tid="item.id"
+                v-touch:hold="touchHoldHandler"
+              >
+                {{ item.name }}
+              </div>
+            </template>
+            <template #value>
+              <div class="item-card-count">
+                <van-icon
+                  class="iconfont card-icon"
+                  class-prefix="icon"
+                  name="kapian"
+                />
+                <span class="card-count"> {{ item.cardCount }}</span>
+              </div>
+            </template>
+          </van-cell>
+        </van-cell-group>
+      </van-list>
+    </div>
+  </van-popup>
+  <!-- 展示分类筛选的类别 结束 -->
 </template>
 
 <script lang="ts">
@@ -179,10 +246,11 @@ import type { CheckboxInstance, CheckboxGroupInstance } from "vant";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { Method } from "axios";
-import { ICard, IBatchPostCardData } from "@/types";
+import { ICard, IBatchPostCardData, ICategory } from "@/types";
 import dayjs from "dayjs";
 import {
   getDataOfPage,
+  getReviewDataOfPage,
   postCreateData,
   getReviewCardByDateData,
 } from "@/utils/request";
@@ -230,6 +298,10 @@ export default defineComponent({
         // 在getReviewData中获取数据
         getReviewData();
       } else {
+        status.hasMore = true;
+        status.limit = 10;
+        status.offset = 0;
+
         action.text = "今日卡片";
         action.icon = " iconfont icon-jinri";
         getReviewData();
@@ -264,8 +336,57 @@ export default defineComponent({
     };
 
     // ----------- 筛选类别
+
+    const filterCategoryLoading = ref(false);
+
+    let filterCategoryStatus = {
+      method: "GET" as Method,
+      limit: 10,
+      offset: 0,
+      hasMore: true,
+    };
+    const showFilterCategory = ref(false);
+
+    const filterCategoryData = ref<ICategory[]>([]);
+    const getFilterCategoryData = () => {
+      // 获取类别信息
+
+      filterCategoryLoading.value = true;
+      getDataOfPage<ICategory>(
+        filterCategoryStatus,
+        { url: `${store.state.serverHost}/review/category` },
+        false
+      ).then((response) => {
+        filterCategoryData.value = [...filterCategoryData.value, ...response];
+        filterCategoryLoading.value = false;
+      });
+    };
     const filterCardByCategory = () => {
-      console.log("filterCardByCategory");
+      // 显示 popup
+      showFilterCategory.value = true;
+      // if (!filterCategoryStatus.hasMore) return;
+      // 1. 获取要复习卡片的类别
+      // getFilterCategoryData();
+      // 2. 展示类别 -> template
+      // 3. 点击类别跳转到指定类别 -> @click
+    };
+    // 修改status
+    const handlerClickFilterCategory = (cid: number) => {
+      if (status.category && status.category === cid) {
+        status.category = 0;
+      } else {
+        status.category = cid;
+      }
+      // 重置数据
+      data.value = [];
+      status.limit = 10;
+      status.offset = 0;
+      status.hasMore = true;
+      finished.value = false;
+      getReviewData();
+
+      //  隐藏 popup
+      showFilterCategory.value = false;
     };
     // --------- 选择卡片 开始
     const selectMode = ref(false); // 是否为选择模式
@@ -427,6 +548,7 @@ export default defineComponent({
       limit: 10,
       offset: 0,
       hasMore: true,
+      category: 0,
     };
     const config = {
       url: `${store.state.serverHost}/review/`,
@@ -438,7 +560,7 @@ export default defineComponent({
       finished.value = false;
       if (actions[0].text === "今日卡片") {
         loading.value = true;
-        getDataOfPage<ICard>(status, config, false).then((response) => {
+        getReviewDataOfPage<ICard>(status, config, false).then((response) => {
           data.value = [...data.value, ...response];
           loading.value = false;
           // 判断是否完成
@@ -496,6 +618,7 @@ export default defineComponent({
 
     return {
       loading,
+      status,
       finished,
       getReviewData,
       data,
@@ -516,7 +639,12 @@ export default defineComponent({
       handlerClickSelectInverse,
       handlerClickSelectAll,
       handlerClickSuccessReview,
-
+      showFilterCategory, // 分类筛选
+      filterCategoryData,
+      handlerClickFilterCategory,
+      filterCategoryLoading,
+      filterCategoryStatus,
+      getFilterCategoryData,
     };
   },
 });
@@ -585,6 +713,41 @@ export default defineComponent({
         // margin-bottom: 5px;
         width: 44px;
         margin-right: 5px;
+      }
+    }
+  }
+}
+.filter-category-popup-wrap {
+  // 分类筛选
+  margin-top: 45px;
+  margin-bottom: 20px;
+  height: calc(100vh - 45px - 20px);
+  overflow: scroll;
+  .van-cell-group {
+    margin: 10px 16px;
+    .left-icon {
+      margin-right: 10px;
+    }
+    .content_item {
+      width: calc(100% - 68px);
+      .item-title {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        -o-text-overflow: ellipsis;
+        color: #fff;
+      }
+    }
+    .item-card-count {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      color: #fff;
+      .card-icon {
+        margin-right: 5px;
+      }
+      .card-count {
+        font-size: 14px;
       }
     }
   }

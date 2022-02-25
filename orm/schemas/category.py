@@ -33,6 +33,7 @@ class ReadCategoryModel(BaseCategoryModel, StarModel):
     """
     id: int
     plan: ReadPlanModel
+    count: int = Field(None, alias='cardCount')  # 类别的卡片数量
 
     class Config:
         orm_mode = True

@@ -3,7 +3,7 @@
 """
 import datetime
 import logging
-from typing import List, TypeVar, Optional
+from typing import List, TypeVar, Optional, Dict
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select, or_, not_, update, delete, func, desc
@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from orm.database import Base
 from orm.models import Category, Plan, Card
 
+from orm.schemas.category import ReadCategoryModel
 from orm.schemas.generic import QueryLimit, CardDateQueryLimit
 
 ModelT = TypeVar("ModelT", bound=Base)
@@ -163,20 +164,21 @@ def toggle_star_status(session: Session, model_class: ModelT, uid: int, target_i
         return 0
 
 
-def query_need_review_card(session: Session, uid: int, query_params: Optional[QueryLimit]) -> List[Card]:
+def query_need_review_card(session: Session, uid: int, query_params: Optional[QueryLimit],
+                           cid: int = 0) -> List[Card]:
     """
     查询所有需要复习的卡片
     :param session: 数据连接
     :param uid: 用户id
+    :param cid: 分类id
     :param query_params: limit offset 参数
     :return: 卡片模型类的对象列表
     """
     try:
-        stmt = select(Card).where(
-            Card.cid == Category.id,
-            Category.pid == Plan.id,
-            Card.uid == uid
-        )
+        if cid == 0:
+            stmt = select(Card).where(Card.cid == Category.id, Card.uid == uid)
+        else:
+            stmt = select(Card).where(Card.cid == cid, Card.uid == uid)
 
         res = session.execute(stmt)
         temp = [i for i in res.scalars().all() if i.is_review_date]
@@ -320,7 +322,7 @@ def query_category_by_user_order_card_count(session: Session, uid: int,
                                             order: str
                                             ) -> list[ModelT]:
     """
-    通过uid, 查询用户的数据, 多条数据
+    通过uid, 查询用户的数据, 多条数据, 根据卡片数量排序
 
     :param session: 数据连接
     :param uid: 用户id
@@ -333,10 +335,12 @@ def query_category_by_user_order_card_count(session: Session, uid: int,
     # Statement
     try:
         if order == "cardCount":
-            stmt = select(Category, func.count(Category.id).label("count")).select_from(Category).join(Card).group_by(
+            stmt = select(Category, func.count(Category.id).label("count")).where(Category.uid == uid).select_from(
+                Category).join(Card).group_by(
                 Category.id).order_by("count")
         else:
-            stmt = select(Category, func.count(Category.id).label("count")).select_from(Category).join(Card).group_by(
+            stmt = select(Category, func.count(Category.id).label("count")).where(Category.uid == uid).select_from(
+                Category).join(Card).group_by(
                 Category.id).order_by(desc("count"))
 
         res = session.execute(stmt.limit(query_params.limit).offset(query_params.offset))
@@ -346,3 +350,40 @@ def query_category_by_user_order_card_count(session: Session, uid: int,
         logging.error(str(e))
         session.rollback()
         return []
+
+
+def query_review_category_by_user(session: Session, uid: int, query_params: Optional[QueryLimit]) -> list[Dict]:
+    """
+
+    :param session:
+    :param uid:
+    :param query_params:
+    :return:
+    """
+
+    stmt = select(Card).where(
+        Card.cid == Category.id,
+        Category.pid == Plan.id,
+        Card.uid == uid
+    )
+
+    res = session.execute(stmt)
+    # TODO: 优化一下
+    need_review_card = [i.id for i in res.scalars().all() if i.is_review_date]
+
+    # 利用子查询 查询类别
+    stmt = select(Category, func.count(Category.id).label("count")
+                  ).where(Category.uid == uid, Card.id.in_(need_review_card)
+                          ).select_from(Category).join(Card).group_by(Category.id).order_by(desc("count"))
+
+    rows = session.execute(stmt.limit(query_params.limit).offset(query_params.offset))
+    # 拼接列表
+    result = []
+    for row in rows:
+        temp = {}
+        res = ReadCategoryModel.from_orm(row.Category)
+        res.count = row.count
+        temp.update(res.dict())
+        result.append(temp)
+
+    return result  # 对应之前的.all()

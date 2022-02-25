@@ -2,6 +2,7 @@ import axios from "axios";
 import { AxiosRequestConfig } from "axios";
 import {
   IGetClientStatus,
+  IGetReviewClientStatus,
   IResponse,
   IGetReviewByDateClientStatus,
 } from "@/types";
@@ -68,6 +69,7 @@ const getCategoryData = () => {
 };
 
 */
+
 export async function getDataOfPage<R>(
   // 处理有分页的数据
   clientStatus: IGetClientStatus,
@@ -134,6 +136,71 @@ export async function getDataOfPage<R>(
   );
 }
 
+export async function getReviewDataOfPage<R>(
+  // 处理有分页的数据
+  clientStatus: IGetReviewClientStatus,
+  config: AxiosRequestConfig,
+  loading = true
+): Promise<R[]> {
+  const fake_res = [] as R[];
+  // 判断有无下一页
+  // 只有在显示loading的情况下提示
+  if (
+    !clientStatus.hasMore &&
+    typeof clientStatus.hasMore !== "undefined" &&
+    loading
+  ) {
+    Toast({
+      message: "已经到底了",
+      position: "bottom",
+    });
+
+    return Promise.resolve(fake_res);
+  }
+  const RequestConfig = {
+    ...config,
+    method: clientStatus.method,
+    params: {
+      limit: clientStatus.limit,
+      offset: clientStatus.offset,
+      category: clientStatus.category,
+    },
+  };
+
+  return request<IResponse<R[]>, undefined>(RequestConfig, loading).then(
+    (response) => {
+      if (!response.data) {
+        // undefined
+        return Promise.resolve(fake_res);
+      }
+
+      if (response.status === 1) {
+        // status为1时, 为正常情况
+        if (response.data.length <= 0) {
+          // 没数据了
+          clientStatus.hasMore = false;
+          if (loading) {
+            Toast({
+              message: "已经到底了",
+              position: "bottom",
+            });
+          }
+        }
+        // 修改offset, 不能为undefined
+        if (
+          typeof clientStatus.offset !== "undefined" &&
+          typeof clientStatus.limit !== "undefined"
+        ) {
+          clientStatus.offset += clientStatus.limit;
+        }
+        return Promise.resolve(response.data);
+      } else {
+        Toast.fail(response.msg);
+        return Promise.reject(response.msg);
+      }
+    }
+  );
+}
 /* post数据 */
 /* 
 // 一般例子

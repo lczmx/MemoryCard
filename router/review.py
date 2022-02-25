@@ -4,12 +4,14 @@
 from typing import List
 from datetime import datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from orm.schemas.generic import QueryLimit, GenericResponse, CardDateQueryLimit
 from orm.schemas.card import ReadSummaryCardModel, ReadDescriptionCardModel, BatchCard
-from orm.crud import query_need_review_card, query_one_data_by_user, update_review_times, query_review_card_by_date
+from orm.schemas.category import ReadCategoryModel
+from orm.crud import query_need_review_card, query_one_data_by_user, update_review_times, \
+    query_review_card_by_date, query_review_category_by_user
 from orm.models import Card
 from dependencies.queryParams import get_limit_params, get_card_by_date_limit_params
 from dependencies.orm import get_session
@@ -20,15 +22,16 @@ router = APIRouter(prefix="/review", tags=["复习相关"])
 @router.get("/", response_model=GenericResponse[List[ReadSummaryCardModel]])
 async def get_review(
         session: Session = Depends(get_session),
-        limit_params: QueryLimit = Depends(get_limit_params)
+        limit_params: QueryLimit = Depends(get_limit_params),
+        cid: int = Query(0, ge=0, description="类别的id", alias="category")
 ):
     """
     获取所有需要复习卡片
     """
     # TODO: 替换uid
-
     uid = 1
-    review_data = query_need_review_card(session, uid=uid, query_params=limit_params)
+
+    review_data = query_need_review_card(session, uid=uid, cid=cid, query_params=limit_params)
     return {
         "status": 1,
         "msg": "获取成功",
@@ -119,6 +122,25 @@ async def get_card_by_date(session: Session = Depends(get_session),
         "status": 1,
         "msg": "获取成功",
         "data": card_data
+    }
+
+
+@router.get("/category", response_model=GenericResponse[List[ReadCategoryModel]])
+async def get_review_card_category(session: Session = Depends(get_session),
+                                   limit_params: QueryLimit = Depends(get_limit_params)):
+    """
+    获取要复习卡片的类别
+    :return:
+    """
+    # TODO: 替换uid
+
+    uid = 1
+    category_data = query_review_category_by_user(session, uid=uid, query_params=limit_params)
+
+    return {
+        "status": 1,
+        "msg": "获取成功",
+        "data": category_data
     }
 
 

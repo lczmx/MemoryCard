@@ -3,7 +3,7 @@ import { createStore } from "vuex";
 export default createStore({
   state: {
     // sever hostname
-    serverHost: "http://192.168.43.110:8000",
+    serverHost: "http://192.168.0.110:8000",
     // 用于记录当前页面是否被修改
     changeState: false,
     // 是否被提交

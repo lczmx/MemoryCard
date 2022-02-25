@@ -6,6 +6,13 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "25998663",
+      "name": "卡片",
+      "font_class": "kapian",
+      "unicode": "e61e",
+      "unicode_decimal": 58910
+    },
+    {
       "icon_id": "10471946",
       "name": "正序",
       "font_class": "zhengxu1",

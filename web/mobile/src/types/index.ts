@@ -20,6 +20,7 @@ export interface ICategory {
   name: string;
   icon: string;
   color: string;
+  cardCount?: number;
   isStar?: boolean;
   plan: IPlan;
 }
@@ -34,6 +35,15 @@ export interface IGetClientStatus {
   limit?: number;
   offset?: number;
   order?: string;
+  hasMore?: boolean;
+}
+
+// ---------------- 记录复习请求
+export interface IGetReviewClientStatus {
+  method: Method;
+  limit?: number;
+  offset?: number;
+  category?:  number;
   hasMore?: boolean;
 }
 // ---------------- 复习曲线相关

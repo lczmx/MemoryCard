@@ -750,6 +750,7 @@ export default defineComponent({
     width: 44px;
     height: 44px;
     border-radius:22px
+    
 
   }
 }
