@@ -51,6 +51,8 @@ def get_plan(pid: int, session: Session = Depends(get_session)):
     # TODO: 用真实uid
     uid = 1
     plan = query_one_data_by_user(session=session, uid=uid, target_id=pid, model_class=Plan)
+    print(plan.editable)
+    print("="*100)
     if not plan:
         return {
             "status": 0,

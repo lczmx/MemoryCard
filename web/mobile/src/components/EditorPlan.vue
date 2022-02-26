@@ -18,6 +18,7 @@
 import { defineComponent, ref, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
+import { Toast } from "vant";
 
 import { IPlan } from "@/types";
 import { getDataOfOne } from "@/utils/request";
@@ -45,19 +46,24 @@ export default defineComponent({
       url: url.value,
     };
 
-    const getCardData = () => {
-      getDataOfOne<IPlan>(config, false).then((response) => {
-        planTitle.value = response.title;
-        if (!planPlans.value) return;
-        response.content.split("-").forEach((sec) => {
-          planPlans.value.push(Number(sec));
-        });
+    const getPlanData = () => {
+      getDataOfOne<IPlan>(config, false)
+        .then((response) => {
+          planTitle.value = response.title;
+          if (!planPlans.value) return;
+          response.content.split("-").forEach((sec) => {
+            planPlans.value.push(Number(sec));
+          });
 
-        loading.value = false;
-      });
+          loading.value = false;
+        })
+        .catch(() => {
+          Toast.fail("编辑复习曲线失败");
+          router.go(-1); // 返回上一页
+        });
     };
     onMounted(() => {
-      getCardData();
+      getPlanData();
     });
 
     return {

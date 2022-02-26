@@ -23,6 +23,7 @@ class ReadPlanModel(BasePlanModel):
     返回的
     """
     id: int
+    editable: bool
 
     class Config:
         orm_mode = True

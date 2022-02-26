@@ -49,7 +49,7 @@
           </van-cell>
           <template #right>
             <!-- 右边滑动区域 -->
-            <div class="swipe-right-wrap">
+            <div class="swipe-right-wrap" v-if="item.editable">
               <van-button
                 class="swipe-right-btn"
                 icon="edit"
@@ -67,6 +67,7 @@
                 @click="handlerDeleteBtn(item.id)"
               />
             </div>
+            <div v-else class="cant-not-editable">默认复习曲线不可编辑</div>
           </template>
         </van-swipe-cell>
       </van-cell-group>
@@ -141,10 +142,11 @@
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import { useStore } from "vuex";
-import { getDataOfPage } from "@/utils/request";
+import { getDataOfPage, deleteData } from "@/utils/request";
 import { IPlan, IPlanStep } from "@/types";
 import { convert_sec_to_string } from "@/hook";
 import { Method } from "axios";
+import { Toast } from "vant";
 export default defineComponent({
   name: "Plan",
 
@@ -184,7 +186,28 @@ export default defineComponent({
       showAddPlanBtnState.value = false;
     };
     const handlerDeleteBtn = (pid: number) => {
-      console.log("handlerDeleteBtn", pid);
+      // 删除卡片
+      const config = {
+        method: "delete" as Method,
+        url: `${store.state.serverHost}/plans/${pid}`,
+      };
+      deleteData(config, false)
+        .then(() => {
+          // 提示
+          Toast.success("已删除");
+          // 移除
+          for (let index in planData.value) {
+            // index 为string
+            const numIndex = Number(index);
+            if (planData.value[numIndex].id === pid) {
+              planData.value.splice(numIndex, 1);
+              break;
+            }
+          }
+        })
+        .catch(() => {
+          Toast.fail("删除失败");
+        });
     };
     // ----------- 显示曲线
     const allPlanSteps = ref<IPlanStep[][]>([]);
@@ -266,6 +289,15 @@ export default defineComponent({
         width: 34px;
         margin-right: 5px;
       }
+    }
+    .cant-not-editable {
+      height: 66px;
+      margin-right: 5px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #969799;
+      font-size: 12px;
     }
   }
 }

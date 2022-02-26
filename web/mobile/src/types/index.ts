@@ -51,6 +51,7 @@ export interface IPlan {
   id: number;
   title: string;
   content: string;
+  editable: Boolean
 }
 export interface IPostPlan {
   title: string;

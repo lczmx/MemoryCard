@@ -86,3 +86,8 @@ class Plan(Base):
     content = Column(String(1024), nullable=False, comment='复习曲线内容, 以空格隔开, 单位s')
 
     category = relationship("Category", backref="plan")
+
+    @hybrid_property
+    def editable(self):
+        # 是否可以编辑
+        return bool(self.uid)
