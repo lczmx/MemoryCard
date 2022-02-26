@@ -160,6 +160,9 @@ import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { Toast } from "vant";
 import type { ActionSheetAction, FormInstance } from "vant";
+import { postCreateData } from "@/utils/request";
+import { IPlan, IPostPlan } from "@/types";
+import { Method } from "axios";
 
 import {
   use_fmt_to_sec,
@@ -182,14 +185,22 @@ export default defineComponent({
       type: String,
       required: true,
     },
+    planTitle: {
+      type: String,
+      default: "",
+    },
+    planPlans: {
+      type: Array,
+      default: () => [],
+    },
   },
   setup(props) {
     const store = useStore();
     // 修改标题
     store.commit("changePageTitle", props.propTitle);
-    const title = ref("");
+    const title = ref(props.planTitle);
     const value = ref(0);
-    const plans = ref<number[]>([]); // 曲线秒数
+    const plans = ref<number[]>(props.planPlans as number[]); // 曲线秒数
     const planText = ref("");
 
     // -------- 显示 popup
@@ -298,6 +309,7 @@ export default defineComponent({
             planText.value = " ".repeat(plans.value.length);
           } else {
             Toast.fail("请先添加复习时间");
+            return;
           }
 
           // 检验表单数据
@@ -305,31 +317,26 @@ export default defineComponent({
           addPlanForm.value
             ?.validate()
             .then(() => {
-              /*
-              if (!category.value) {
-                return;
-              }
+              // 格式化plans
+              if (!title.value) return;
+              const content = plans.value.join("-");
               const data = {
                 title: title.value,
-                category: category.value.id,
-                summary: summary.value,
-                description: description.value,
+                content,
               };
               const postConfig = {
                 method: "post" as Method,
                 url: props.postUrl,
                 data,
               };
-              postCreateData<ICard, IPostCard>(postConfig, false).then(() => {
+              postCreateData<IPlan, IPostPlan>(postConfig, false).then(() => {
                 // 成功创建了
                 Toast.success(props.successText);
                 setTimeout(() => {
                   Toast.clear();
                   router.go(-1);
                 }, 1000);
-                
               });
-              */
             })
             .catch((error) => {
               console.log(error);

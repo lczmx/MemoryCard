@@ -52,6 +52,10 @@ export interface IPlan {
   title: string;
   content: string;
 }
+export interface IPostPlan {
+  title: string;
+  content: string;
+}
 
 // 卡片复习计划数据
 export interface ICardPlan {

@@ -6,7 +6,7 @@
     loading-text="加载中..."
   >
     <van-empty
-      description="请先添加卡片"
+      description="复习曲线为空"
       :style="{ backgroundColor: '#f4f3f5' }"
       v-if="!loadingPlanData && planData.length <= 0"
       class="empty-plan"
@@ -56,8 +56,7 @@
                 type="primary"
                 round
                 :block="true"
-                @click="handlerEditBtn(item.id)"
-                :pid="item.id"
+                :to="{ name: 'editorPlan', params: { pid: item.id } }"
               />
               <van-button
                 class="swipe-right-btn"
@@ -66,7 +65,6 @@
                 round
                 :block="true"
                 @click="handlerDeleteBtn(item.id)"
-                :pid="item.id"
               />
             </div>
           </template>
@@ -82,7 +80,7 @@
         icon="plus"
         type="primary"
         round
-        to="/add/plan"
+        :to="{ name: 'addPlan' }"
         color="#07c160"
       ></van-button>
     </div>
@@ -185,11 +183,8 @@ export default defineComponent({
     const handlerHideAddPlanBtn = () => {
       showAddPlanBtnState.value = false;
     };
-    const handlerEditBtn = () => {
-      console.log("handlerEditBtn");
-    };
-    const handlerDeleteBtn = () => {
-      console.log("handlerDeleteBtn");
+    const handlerDeleteBtn = (pid: number) => {
+      console.log("handlerDeleteBtn", pid);
     };
     // ----------- 显示曲线
     const allPlanSteps = ref<IPlanStep[][]>([]);
@@ -231,7 +226,6 @@ export default defineComponent({
       showAddPlanBtnState,
       handlerShowAddPlanBtn, // 按钮控制
       handlerHideAddPlanBtn,
-      handlerEditBtn,
       handlerDeleteBtn,
       handlerClickShowPlan, //点击显示曲线
       showPlan,

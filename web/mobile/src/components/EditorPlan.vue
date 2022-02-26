@@ -3,20 +3,15 @@
   <div class="loading_wrap" v-if="loading">
     <van-loading color="#1989fa" />
   </div>
-  <card-editor
+  <plan-editor
     v-else
     :propTitle="title"
-    :propCardTitle="cardTitle"
-    :propCategory="category"
-    :propCategoryText="categoryText"
-    :propSummary="summary"
-    :propSummaryText="summaryText"
-    :propDescription="description"
-    :propDescriptionText="descriptionText"
     :postUrl="url"
     :successText="successText"
+    :planTitle="planTitle"
+    :planPlans="planPlans"
   >
-  </card-editor>
+  </plan-editor>
 </template>
 
 <script lang="ts">
@@ -24,49 +19,39 @@ import { defineComponent, ref, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 
-import { ICard, ICategory } from "@/types";
+import { IPlan } from "@/types";
 import { getDataOfOne } from "@/utils/request";
 
-import CardEditor from "@/components/cardEditor.vue";
+import PlanEditor from "@/components/planEditor.vue";
 export default defineComponent({
   name: "EditorPlan",
-  components: { CardEditor },
+  components: { PlanEditor },
   setup() {
     const router = useRouter();
     const store = useStore();
 
-    const { cid } = router.currentRoute.value.params;
+    const { pid } = router.currentRoute.value.params;
     const loading = ref(true);
-    const successText = ref("已修改卡片");
+    const successText = ref("已修改复习曲线");
 
     // -------- 初始化数据
-    const title = ref("编辑卡片"); // 导航栏标题
-    const cardTitle = ref(""); // 卡片名
+    const title = ref("编辑复习曲线"); // 导航栏标题
+    const planTitle = ref(""); // 曲线名
+    const planPlans = ref<number[]>([]); // 曲线名
 
-    const url = ref(`${store.state.serverHost}/cards/${cid}`);
-    const category = ref<ICategory>();
-    const categoryText = ref("");
-    const summary = ref("");
-    const summaryText = ref("");
-    const description = ref("");
-    const descriptionText = ref("");
+    const url = ref(`${store.state.serverHost}/plans/${pid}`);
 
     const config = {
       url: url.value,
     };
 
     const getCardData = () => {
-      getDataOfOne<ICard>(config, false).then((response) => {
-        cardTitle.value = response.title;
-        category.value = response.category;
-        categoryText.value = response.category.name;
-        // 不能用<string>, eslint报错
-        if (response.summary && response.description) {
-          summary.value = response.summary;
-          summaryText.value = summary.value.replace(/<\/?.+?>/g, "");
-          description.value = response.description;
-          descriptionText.value = description.value.replace(/<\/?.+?>/g, "");
-        }
+      getDataOfOne<IPlan>(config, false).then((response) => {
+        planTitle.value = response.title;
+        if (!planPlans.value) return;
+        response.content.split("-").forEach((sec) => {
+          planPlans.value.push(Number(sec));
+        });
 
         loading.value = false;
       });
@@ -78,13 +63,8 @@ export default defineComponent({
     return {
       loading,
       title,
-      cardTitle,
-      category,
-      categoryText,
-      summary,
-      summaryText,
-      description,
-      descriptionText,
+      planTitle,
+      planPlans,
       url,
       successText,
     };
