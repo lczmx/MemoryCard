@@ -6,12 +6,15 @@
   >
     <!-- 根据selectMode和判断不同的执行方式 -->
     <template #left>
-      <div class="select-mode-left-tool-wrap" v-if="selectMode">
-        <div class="tool-item" @click.stop="handlerClickCancel">取消</div>
-        <div class="tool-item" @click.stop="handlerClickSelectInverse">
-          反选
+      <van-loading color="#1989fa" size="16" v-show="loading" />
+      <div v-show="!loading">
+        <div class="select-mode-left-tool-wrap" v-if="selectMode">
+          <div class="tool-item" @click.stop="handlerClickCancel">取消</div>
+          <div class="tool-item" @click.stop="handlerClickSelectInverse">
+            反选
+          </div>
+          <div class="tool-item" @click.stop="handlerClickSelectAll">全选</div>
         </div>
-        <div class="tool-item" @click.stop="handlerClickSelectAll">全选</div>
       </div>
     </template>
     <template #right>
@@ -60,13 +63,8 @@
     v-model:loading="loading"
     :finished="!status.hasMore"
     @load="getCategoryData"
-    loading-text="加载中..."
   >
-    <template #loading>
-      <div class="loading-text-wrap">
-        <van-loading color="#1989fa" />
-      </div>
-    </template>
+    <template #loading> </template>
     <van-empty
       description="请先添加类别"
       :style="{ backgroundColor: '#f4f3f5' }"
@@ -672,11 +670,6 @@ export default defineComponent({
   }
 }
 
-.loading-text-wrap {
-  // 加载中...
-  background-color: #f4f3f5;
-  color: #fff;
-}
 .category_body_empty {
   background-color: #f4f3f5;
   min-height: calc(100vh - 56px);
@@ -746,12 +739,10 @@ export default defineComponent({
   position: fixed;
   bottom: 80px;
   right: 30px;
-  button{
+  button {
     width: 44px;
     height: 44px;
-    border-radius:22px
-    
-
+    border-radius: 22px;
   }
 }
 // 排序动作面板

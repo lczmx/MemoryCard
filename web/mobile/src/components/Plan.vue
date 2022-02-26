@@ -3,8 +3,8 @@
     v-model:loading="loadingPlanData"
     :finished="!status.hasMore"
     @load="getPlanData"
-    loading-text="加载中..."
   >
+  <template #loading></template>
     <van-empty
       description="复习曲线为空"
       :style="{ backgroundColor: '#f4f3f5' }"
@@ -138,6 +138,9 @@
       </van-step>
     </van-steps>
   </van-popup>
+  <div class="loading-wrap" v-show="loadingPlanData">
+    <van-loading color="#1989fa" />
+  </div>
 </template>
 <script lang="ts">
 import { defineComponent, ref } from "vue";
@@ -155,7 +158,7 @@ export default defineComponent({
     const store = useStore();
     store.commit("changeSettingsPageTitle", "复习曲线");
     // --------- 获取数据
-    const loadingPlanData = ref(false);
+    const loadingPlanData = ref(true);
     let status = {
       method: "GET" as Method,
       limit: 50,
@@ -173,7 +176,6 @@ export default defineComponent({
       getDataOfPage<IPlan>(status, config, false).then((response) => {
         // 加上之前的
         planData.value = [...planData.value, ...response];
-        console.log(planData.value);
         loadingPlanData.value = false;
       });
     };
@@ -259,6 +261,15 @@ export default defineComponent({
 });
 </script>
 <style lang="scss">
+// 加载中
+.loading-wrap {
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+}
 .empty-plan {
   background-color: #f4f3f5;
   min-height: calc(100vh - 56px);

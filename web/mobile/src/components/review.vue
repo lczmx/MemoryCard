@@ -8,21 +8,24 @@
     "
   >
     <template #left>
-      <div class="select-mode-tool-wrap" v-if="selectMode">
-        <div class="tool-item" @click.stop="handlerClickCancel">取消</div>
-        <div class="tool-item" @click.stop="handlerClickSelectInverse">
-          反选
+      <van-loading color="#1989fa" size="18" v-show="loading" />
+      <div v-show="!loading">
+        <div class="select-mode-tool-wrap" v-if="selectMode">
+          <div class="tool-item" @click.stop="handlerClickCancel">取消</div>
+          <div class="tool-item" @click.stop="handlerClickSelectInverse">
+            反选
+          </div>
+          <div class="tool-item" @click.stop="handlerClickSelectAll">全选</div>
         </div>
-        <div class="tool-item" @click.stop="handlerClickSelectAll">全选</div>
+        <van-icon
+          v-else
+          Inverse
+          class="iconfont"
+          class-prefix="icon"
+          name="rili"
+          size="16"
+        />
       </div>
-      <van-icon
-        v-else
-        Inverse
-        class="iconfont"
-        class-prefix="icon"
-        name="rili"
-        size="16"
-      />
     </template>
     <template #right>
       <div v-if="selectMode" class="select-mode-tool-success-review">
@@ -76,13 +79,8 @@
     v-model:loading="loading"
     :finished="finished"
     @load="getReviewData"
-    loading-text="加载中..."
   >
-    <template #loading>
-      <div class="loading-text-wrap">
-        <van-loading color="#1989fa" />
-      </div>
-    </template>
+    <template #loading></template>
     <van-empty
       description="没有需要复习的卡片"
       :style="{ backgroundColor: '#f4f3f5' }"
@@ -670,11 +668,7 @@ export default defineComponent({
 .select-mode-tool-success-review {
   color: #53bb86;
 }
-.loading-text-wrap {
-  // 加载中...
-  background-color: #f4f3f5;
-  color: #fff;
-}
+
 .review_body_empty {
   background-color: #f4f3f5;
   min-height: calc(100vh - 56px);

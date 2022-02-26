@@ -71,13 +71,8 @@
     v-model:loading="loading"
     :finished="!status.hasMore"
     @load="getCardData"
-    loading-text="加载中..."
   >
-    <template #loading>
-      <div class="loading-text-wrap">
-        <van-loading color="#1989fa" />
-      </div>
-    </template>
+    <template #loading></template>
     <van-empty
       description="请先添加卡片"
       :style="{ backgroundColor: '#f4f3f5' }"
@@ -728,11 +723,6 @@ export default defineComponent({
   }
 }
 
-.loading-text-wrap {
-  // 加载中...
-  background-color: #f4f3f5;
-  color: #fff;
-}
 
 .cards_body_empty {
   background-color: #f4f3f5;
