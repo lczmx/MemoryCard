@@ -6,7 +6,7 @@ from dependencies.orm import get_session
 from dependencies.queryParams import get_limit_params
 from orm.schemas.generic import QueryLimit, GenericResponse
 from orm.schemas.plan import WritePlanModel, ReadPlanModel, ParamsPlanModel
-from orm.crud import query_all_data_by_user, save_one_to_db, query_one_data_by_user, update_data
+from orm.crud import query_all_data_by_user, save_one_to_db, query_one_data_by_user, update_data, delete_data_by_user
 from orm.models import Plan
 
 router = APIRouter(prefix="/plans", tags=["复习计划相关"])
@@ -83,4 +83,23 @@ def update_plan(pid: int, plan_data: ParamsPlanModel, session: Session = Depends
         "status": 1,
         "msg": "修改成功",
         "data": plan
+    }
+
+
+@router.delete('/{pid}', response_model=GenericResponse, response_model_exclude_unset=True)
+def delete_plan(pid: int, session: Session = Depends(get_session)):
+    """
+    删除一天复习计划
+    """
+    # TODO: 用真实uid
+    uid = 1
+    plan = delete_data_by_user(session=session, uid=uid, target_id=pid, model_class=Plan)
+    if not plan:
+        return {
+            "status": 0,
+            "msg": "删除失败",
+        }
+    return {
+        "status": 1,
+        "msg": "删除成功",
     }
