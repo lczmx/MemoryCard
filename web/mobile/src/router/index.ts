@@ -3,6 +3,9 @@ import Page from "@/views/Page.vue";
 import EditorPage from "@/views/EditorPage.vue";
 import CardReview from "@/views/cardReview.vue";
 import SettingsContent from "@/views/SettingsContent.vue";
+// 登录/注册
+import LogIn from "@/views/LogIn.vue";
+import SignUp from "@/views/SignUp.vue";
 
 import Review from "@/components/review.vue";
 import Cards from "@/components/cards.vue";
@@ -17,6 +20,7 @@ import About from "@/components/About.vue";
 import Plan from "@/components/Plan.vue";
 import AddPlan from "@/components/AddPlan.vue";
 import EditorPlan from "@/components/EditorPlan.vue";
+import Analyse from "@/components/Analyse.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -69,7 +73,18 @@ const routes: Array<RouteRecordRaw> = [
         name: "About",
       },
       { path: "plans", component: Plan, name: "Plan" },
+      { path: "analyse", component: Analyse, name: "Analyse" },
     ],
+  },
+  {
+    path: "/login",
+    component: LogIn,
+    name: "LogIn"
+  },
+  {
+    path: "/signup",
+    component: SignUp,
+    name: "SignUp"
   },
 ];
 

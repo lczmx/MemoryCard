@@ -2,7 +2,7 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
 import store from "./store";
-import "./assets/font_3172792_5xjyqo83iju/iconfont.css"; // 前端页面图标
+import "./assets/font_3172792_oqcrjhucpmq/iconfont.css"; // 前端页面图标
 import "./assets/font_3188311_1wipkj1s0u8/iconfont.css"; // 分类图标
 
 import { Tabbar, TabbarItem } from "vant";

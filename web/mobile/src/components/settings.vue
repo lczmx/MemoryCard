@@ -4,15 +4,31 @@
     <div class="user-info-wrap">
       <!-- 是否已经登录 -->
       <div class="uer-login" v-if="!user.username">
-        <!-- TODO: 替换 router-link -->
         <van-notice-bar color="#28414a" background="#ecf9ff" left-icon="info-o">
-          当前处于游客模式, 你可以<a href="#" class="">登录</a>或<a href="#"
-            >注册</a
-          >
+          当前处于游客模式, 你可以
+          <router-link :to="{ name: 'LogIn' }">登录</router-link>或
+          <router-link :to="{ name: 'SignUp' }">注册</router-link>
         </van-notice-bar>
       </div>
       <div class="user-info" else>
-        用户信息展示: {{ user.username }}-{{ user.email }}
+        <van-cell-group inset>
+          <van-cell class="user-info-cell">
+            <template #title>
+              <div class="user-info-username">
+                {{ user.username }}
+              </div>
+            </template>
+            <template #icon>
+              <van-icon
+                class="iconfont"
+                class-prefix="icon"
+                name="taogongzi"
+                size="40"
+                color="#41b883"
+              />
+            </template>
+          </van-cell>
+        </van-cell-group>
       </div>
     </div>
     <!-- 第一部分开始 -->
@@ -25,7 +41,7 @@
             class="iconfont item-icon"
             class-prefix="icon"
             name="settings"
-            size="16"
+            size="20"
           />
         </template>
         <!-- 使用 title 插槽来自定义标题 -->
@@ -39,7 +55,7 @@
             class="iconfont item-icon"
             class-prefix="icon"
             name="fsux_tubiao_fenbuquxiantu"
-            size="16"
+            size="20"
           />
         </template>
         <!-- 使用 title 插槽来自定义标题 -->
@@ -47,13 +63,13 @@
           <span class="custom-title">复习曲线</span>
         </template>
       </van-cell>
-      <van-cell value="" is-link>
+      <van-cell value="" is-link :to="{ name: 'Analyse' }">
         <template #icon>
           <van-icon
             class="iconfont item-icon"
             class-prefix="icon"
             name="tongji"
-            size="16"
+            size="20"
           />
         </template>
         <!-- 使用 title 插槽来自定义标题 -->
@@ -73,7 +89,7 @@
             class="iconfont item-icon"
             class-prefix="icon"
             name="question"
-            size="16"
+            size="20"
           />
         </template>
         <!-- 使用 title 插槽来自定义标题 -->
@@ -87,7 +103,7 @@
             class="iconfont item-icon"
             class-prefix="icon"
             name="about"
-            size="16"
+            size="20"
           />
         </template>
         <!-- 使用 title 插槽来自定义标题 -->
@@ -106,7 +122,7 @@
             class="iconfont item-icon"
             class-prefix="icon"
             name="logout"
-            size="16"
+            size="20"
           />
         </template>
         <!-- 使用 title 插槽来自定义标题 -->
@@ -154,13 +170,23 @@ export default defineComponent({
 .settings_body {
   background-color: #f4f3f5;
   padding-top: 10px;
-  min-height: calc(100vh - 106px);
+  min-height: calc(100vh - 107px);
   margin-bottom: 50px;
   margin-top: 47px;
   .user-info-wrap {
     .uer-login {
     }
     .user-info {
+      .user-info-cell {
+        height: 80px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        .user-info-username {
+          text-align: right;
+          font-size: 20px;
+        }
+      }
     }
     margin-bottom: 20px;
   }

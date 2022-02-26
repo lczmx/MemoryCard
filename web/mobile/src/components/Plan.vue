@@ -294,10 +294,10 @@ export default defineComponent({
       align-items: center;
 
       height: 66px;
-      margin-right: 5px;
+      margin-right: 10px;
       .swipe-right-btn {
-        height: 34px;
-        width: 34px;
+        height: 44px;
+        width: 44px;
         margin-right: 5px;
       }
     }
