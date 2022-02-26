@@ -145,8 +145,8 @@ import { defineComponent, ref } from "vue";
 import { useStore } from "vuex";
 import { getDataOfPage } from "@/utils/request";
 import { IPlan, IPlanStep } from "@/types";
+import { convert_sec_to_string } from "@/hook";
 import { Method } from "axios";
-import dayjs from "dayjs";
 export default defineComponent({
   name: "Plan",
 
@@ -178,7 +178,7 @@ export default defineComponent({
       });
     };
     // --------------- 添加按钮
-    const showAddPlanBtnState = ref(false);
+    const showAddPlanBtnState = ref(true);
     const handlerShowAddPlanBtn = () => {
       showAddPlanBtnState.value = true;
     };
@@ -202,7 +202,6 @@ export default defineComponent({
     };
     // 获取整个曲线所需时间
     const getPlanAllTime = (planContent: string): string => {
-      const nowDate = new Date();
       let temp: IPlanStep[] = [];
 
       let allSec = 0;
@@ -212,32 +211,18 @@ export default defineComponent({
 
         const time =
           index === 0
-            ? `创建卡片${convert_sec(Number(sec))}后`
-            : `距上一次复习${convert_sec(Number(sec))}后`;
+            ? `创建卡片${convert_sec_to_string(Number(sec))}后`
+            : `距上一次复习${convert_sec_to_string(Number(sec))}后`;
         const title = `第${index + 1}次复习`;
         temp.push({ title, time });
         reviewCount += 1;
       });
       allPlanSteps.value.push(temp);
-      const duration = convert_sec(allSec);
+      const duration = convert_sec_to_string(allSec);
 
       return `复习:${reviewCount}次 共需: ${duration}`;
     };
-    // 转换时间, 并返回对应格式
-    const convert_sec = (sec: number): string => {
-      let duration = "";
-      let days = Math.floor(sec / 86400);
-      let hours = Math.floor((sec % 86400) / 3600);
-      let minutes = Math.floor(((sec % 86400) % 3600) / 60);
-      let seconds = Math.floor(((sec % 86400) % 3600) % 60);
 
-      if (days > 0) duration += `${days}天`;
-      if (hours > 0) duration += `${hours}小时`;
-      if (minutes > 0) duration += `${minutes}分`;
-      if (seconds > 0) duration += `${seconds}秒`;
-
-      return duration;
-    };
     return {
       loadingPlanData, // 获取复习曲线开始
       status,

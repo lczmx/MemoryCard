@@ -15,6 +15,8 @@ import EditorCard from "@/components/EditorCard.vue";
 // ---- 设置内部页面
 import About from "@/components/About.vue";
 import Plan from "@/components/Plan.vue";
+import AddPlan from "@/components/AddPlan.vue";
+import EditorPlan from "@/components/EditorPlan.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -35,6 +37,7 @@ const routes: Array<RouteRecordRaw> = [
     children: [
       { path: "category", component: AddCategory, name: "addCategory" },
       { path: "card", component: AddCard, name: "addCard" },
+      { path: "plan", component: AddPlan, name: "addPlan" },
     ],
   },
   {
@@ -48,6 +51,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "editorCategory",
       },
       { path: "card/:cid", component: EditorCard, name: "editorCard" },
+      { path: "plan/:pid", component: EditorPlan, name: "editorPlan" },
     ],
   },
   {

@@ -30,3 +30,43 @@ export function useCurrentCardPlan(card: ICard): ICardPlan {
     allReviewTimes: planStepSec.length, // 全部复习次数
   };
 }
+
+// 转换时间, 并返回对应格式
+export function convert_sec_to_string(sec: number): string {
+  let duration = "";
+  const days = Math.floor(sec / 86400);
+  const hours = Math.floor((sec % 86400) / 3600);
+  const minutes = Math.floor(((sec % 86400) % 3600) / 60);
+  const seconds = Math.floor(((sec % 86400) % 3600) % 60);
+
+  if (days > 0) duration += `${days}天`;
+  if (hours > 0) duration += `${hours}小时`;
+  if (minutes > 0) duration += `${minutes}分`;
+  if (seconds > 0) duration += `${seconds}秒`;
+
+  return duration;
+}
+// 将时间装换成秒数
+export function use_fmt_to_sec(
+  days: number,
+  hours: number,
+  minutes: number,
+  seconds: number
+): number {
+  let sec = 0;
+  if (days > 0) sec += days * 86400;
+  if (hours > 0) sec += hours * 3600;
+  if (minutes > 0) sec += minutes * 60;
+  if (seconds > 0) sec += seconds;
+  return sec;
+}
+
+// 将秒数转化为对应的时间单位
+export function convert_sec_to_other(sec: number) {
+  const days = Math.floor(sec / 86400);
+  const hours = Math.floor((sec % 86400) / 3600);
+  const minutes = Math.floor(((sec % 86400) % 3600) / 60);
+  const seconds = Math.floor(((sec % 86400) % 3600) % 60);
+
+  return { days, hours, minutes, seconds };
+}
