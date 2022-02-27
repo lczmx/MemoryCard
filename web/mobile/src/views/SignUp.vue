@@ -1,17 +1,18 @@
 <template>
-  <div>SignUp</div>
+  <login-singup :containerCls="containerCls"></login-singup>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-
+import { defineComponent, ref } from "vue";
+import LoginSingup from "@/components/LoginSingup.vue";
 export default defineComponent({
-  name: "SignUp",
+  name: "SingUp",
+  components: { LoginSingup },
   setup() {
-    
+    const containerCls = ref("sign-up-mode");
     return {
       // 返回的数据
-      
+      containerCls,
     };
   },
 });

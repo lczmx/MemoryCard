@@ -6,3 +6,4 @@ from router.cards import router as cards_router
 from router.analyse import router as analyse_router
 from router.category import router as category_router
 from router.plans import router as plans_router
+from router.user import router as user_router

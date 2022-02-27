@@ -6,6 +6,20 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "372158",
+      "name": "cc-envelope",
+      "font_class": "ccenvelope",
+      "unicode": "e640",
+      "unicode_decimal": 58944
+    },
+    {
+      "icon_id": "12898998",
+      "name": "lock",
+      "font_class": "lock",
+      "unicode": "e682",
+      "unicode_decimal": 59010
+    },
+    {
       "icon_id": "10124265",
       "name": "下箭头",
       "font_class": "xiajiantou",

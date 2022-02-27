@@ -1,5 +1,8 @@
 import axios from "axios";
 import { AxiosRequestConfig } from "axios";
+
+import store from "@/store";
+import router from "@/router";
 import {
   IGetClientStatus,
   IGetReviewClientStatus,
@@ -21,6 +24,13 @@ export async function request<T, D>(
       duration: 0, // 一直存在loading, 除非手动取消
     });
   }
+  // 设置jwt
+  if (!config.headers) config.headers = {};
+  const token = store.state.token.accessToken;
+  const jwt_auth = `${store.state.token.tokenType} ${token}`;
+  if (token) {
+    config.headers = { ...config.headers, ...{ Authorization: jwt_auth } };
+  }
 
   // 请求数据
   return axios
@@ -39,11 +49,44 @@ export async function request<T, D>(
       return Promise.resolve(res.data);
     })
     .catch((e) => {
-      console.error(e);
       // 请求错误
       // 取消 加载中
       // 异常捕捉后被你吞了，相当于返回了 Promise<void>；所以需要继续向上抛出。
       // TODO: 异常处理
+      const status = e.toJSON().status;
+      switch (status) {
+        case 401:
+          // 跳转到登录页面
+          setTimeout(() => {
+            router.push({ name: "LogIn" });
+          }, 1500);
+          Toast.fail({
+            message: "请先登录",
+            duration: 1000,
+          });
+
+          break;
+        case 403:
+          // 无权访问, 返回上一页
+          setTimeout(() => {
+            router.go(-1);
+          }, 1500);
+          Toast.fail({
+            message: "无法访问",
+            duration: 1000,
+          });
+          break;
+        case 404:
+          break;
+        default:
+          console.log(status);
+          Toast.fail({
+            message: "未知错误",
+            duration: 1000,
+          });
+      }
+      console.log(status);
+
       return Promise.reject(e);
     });
 }
@@ -246,7 +289,7 @@ export async function postCreateData<R, D>(
       return Promise.resolve(response.data);
     } else {
       Toast.fail(response.msg);
-      return Promise.reject(response.msg);
+      return Promise.reject(response);
     }
   });
 }

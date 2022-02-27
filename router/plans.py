@@ -4,20 +4,19 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from dependencies.orm import get_session
 from dependencies.queryParams import get_limit_params
+from dependencies.auth import jwt_get_current_user
 from orm.schemas.generic import QueryLimit, GenericResponse
 from orm.schemas.plan import WritePlanModel, ReadPlanModel, ParamsPlanModel
 from orm.crud import query_all_data_by_user, save_one_to_db, query_one_data_by_user, update_data, delete_data_by_user
-from orm.models import Plan
+from orm.models import Plan, User
 
 router = APIRouter(prefix="/plans", tags=["复习计划相关"])
 
 
 @router.get('/', response_model=GenericResponse[List[ReadPlanModel]])
-def get_plans(query_limit_params: QueryLimit = Depends(get_limit_params),
-              session: Session = Depends(get_session)):
-    # TODO: 用真实uid
-
-    uid = 1
+def get_plans(query_limit_params: QueryLimit = Depends(get_limit_params), session: Session = Depends(get_session),
+              user: User = Depends(jwt_get_current_user)):
+    uid = user.id
     plans = query_all_data_by_user(session=session, model_class=Plan, uid=uid, query_params=query_limit_params,
                                    allow_none=True)
     return {
@@ -28,12 +27,12 @@ def get_plans(query_limit_params: QueryLimit = Depends(get_limit_params),
 
 
 @router.post('/', response_model=GenericResponse[ReadPlanModel])
-def create_plan(plan_data: ParamsPlanModel, session: Session = Depends(get_session)):
+def create_plan(plan_data: ParamsPlanModel, session: Session = Depends(get_session),
+                user: User = Depends(jwt_get_current_user)):
     """
     创建复习曲线
     """
-    # TODO: 用真实uid
-    uid = 1
+    uid = user.id
     data = WritePlanModel(**plan_data.dict(), uid=uid)
     plan = save_one_to_db(session=session, model_class=Plan, data=data)
     return {
@@ -44,15 +43,12 @@ def create_plan(plan_data: ParamsPlanModel, session: Session = Depends(get_sessi
 
 
 @router.get('/{pid}', response_model=GenericResponse[ReadPlanModel])
-def get_plan(pid: int, session: Session = Depends(get_session)):
+def get_plan(pid: int, session: Session = Depends(get_session), user: User = Depends(jwt_get_current_user)):
     """
     获取一条复习曲线数据
     """
-    # TODO: 用真实uid
-    uid = 1
+    uid = user.id
     plan = query_one_data_by_user(session=session, uid=uid, target_id=pid, model_class=Plan)
-    print(plan.editable)
-    print("="*100)
     if not plan:
         return {
             "status": 0,
@@ -68,12 +64,12 @@ def get_plan(pid: int, session: Session = Depends(get_session)):
 
 
 @router.post('/{pid}', response_model=GenericResponse[ReadPlanModel])
-def update_plan(pid: int, plan_data: ParamsPlanModel, session: Session = Depends(get_session)):
+def update_plan(pid: int, plan_data: ParamsPlanModel, session: Session = Depends(get_session),
+                user: User = Depends(jwt_get_current_user)):
     """
     获取一条复习曲线数据
     """
-    # TODO: 用真实uid
-    uid = 1
+    uid = user.id
     plan = update_data(session=session, uid=uid, target_id=pid, model_class=Plan, data=plan_data)
     if not plan:
         return {
@@ -89,12 +85,11 @@ def update_plan(pid: int, plan_data: ParamsPlanModel, session: Session = Depends
 
 
 @router.delete('/{pid}', response_model=GenericResponse, response_model_exclude_unset=True)
-def delete_plan(pid: int, session: Session = Depends(get_session)):
+def delete_plan(pid: int, session: Session = Depends(get_session), user: User = Depends(jwt_get_current_user)):
     """
     删除一天复习计划
     """
-    # TODO: 用真实uid
-    uid = 1
+    uid = user.id
     plan = delete_data_by_user(session=session, uid=uid, target_id=pid, model_class=Plan)
     if not plan:
         return {

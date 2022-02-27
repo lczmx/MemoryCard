@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, or_, not_, update, delete, func, desc
 from pydantic import BaseModel
 from orm.database import Base
-from orm.models import Category, Plan, Card
+from orm.models import Category, Plan, Card, User
 
 from orm.schemas.category import ReadCategoryModel
 from orm.schemas.generic import QueryLimit, CardDateQueryLimit
@@ -387,3 +387,66 @@ def query_review_category_by_user(session: Session, uid: int, query_params: Opti
         result.append(temp)
 
     return result  # 对应之前的.all()
+
+
+def query_user_username_exists(session: Session, username: str) -> bool:
+    """
+    用户名是否存在
+    :param session:
+    :param username:  用户名
+    :return:
+    """
+    res = session.execute(
+        select(User.id).where(User.username == username)
+    )
+    return bool(res.first())
+
+
+def query_user_email_exists(session: Session, email: str) -> bool:
+    """
+    邮箱是否存在
+    :param session:
+    :param email:  邮箱
+    :return:
+    """
+    res = session.execute(
+        select(User.id).where(User.email == email)
+    )
+    return bool(res.first())
+
+
+def query_account_by_username_or_email(session: Session, username: str, email: str) -> List[User]:
+    """
+    获取符合用户名和邮箱要求的用户对象
+    :param session:
+    :param username:
+    :param email:
+    :return:
+    """
+    try:
+        res = session.execute(
+            select(User).where(or_(User.username == username, User.email == email))
+        )
+        return res.scalars().all()
+    except Exception as e:
+        logging.error(str(e))
+        return []
+
+
+def query_user_by_id_username_email(session: Session, username: str, email: str, uid: int) -> User:
+    """
+   为了让修改用户名或邮箱后, 重置jwt, 需要比较三个值
+    :param session:
+    :param username:
+    :param email:
+    :param uid:
+    :return:
+    """
+    try:
+        stmt = select(User).where(User.username == username, User.email == email, User.id == uid).limit(1)
+        res = session.scalars(stmt)
+        return res.first()
+
+    except Exception as e:
+        logging.error(str(e))
+        return None

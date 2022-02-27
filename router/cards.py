@@ -12,9 +12,10 @@ from orm.schemas.generic import GenericResponse, QueryLimit
 
 from orm.crud import save_one_to_db, query_all_data_by_user, toggle_star_status, \
     query_one_data_by_user, update_data, delete_data_by_user
-from orm.models import Card
+from orm.models import Card, User
 from dependencies.orm import get_session
 from dependencies.queryParams import get_limit_params, convert_card_order
+from dependencies.auth import jwt_get_current_user
 
 router = APIRouter(prefix="/cards", tags=["卡片相关"])
 
@@ -22,11 +23,11 @@ router = APIRouter(prefix="/cards", tags=["卡片相关"])
 @router.get("/",
             response_model=GenericResponse[List[ReadSummaryCardModel]])
 async def get_cards(limit_params: QueryLimit = Depends(get_limit_params), order=Depends(convert_card_order),
-                    session: Session = Depends(get_session)):
+                    session: Session = Depends(get_session), user: User = Depends(jwt_get_current_user)):
     """
     获取多个卡片
     """
-    uid = 1
+    uid = user.id
 
     card_data = query_all_data_by_user(session, uid=uid, model_class=Card, query_params=limit_params, order=order)
     return {
@@ -38,12 +39,12 @@ async def get_cards(limit_params: QueryLimit = Depends(get_limit_params), order=
 
 @router.post("/", status_code=status.HTTP_201_CREATED,
              response_model=GenericResponse[ReadDescriptionCardModel])
-async def create_card(card_data: ParamsCardModel, session: Session = Depends(get_session)):
+async def create_card(card_data: ParamsCardModel, session: Session = Depends(get_session),
+                      user: User = Depends(jwt_get_current_user)):
     """
     创建卡片
     """
-    # TODO: 修改uid
-    uid = 1
+    uid = user.id
     data = WriteCardModel(uid=uid, **card_data.dict())
     card_obj = save_one_to_db(session=session, model_class=Card, data=data)
 
@@ -55,12 +56,12 @@ async def create_card(card_data: ParamsCardModel, session: Session = Depends(get
 
 
 @router.post("/batch-star", response_model=GenericResponse, response_model_exclude_unset=True)
-async def batch_star_card(batch_data: BatchCard, session: Session = Depends(get_session)):
+async def batch_star_card(batch_data: BatchCard, session: Session = Depends(get_session),
+                          user: User = Depends(jwt_get_current_user)):
     """
     批量星标卡片
     """
-    # TODO: 修改uid
-    uid = 1
+    uid = user.id
     batch_status = {
         "success_count": 0,
         "fail_count": 0,
@@ -79,12 +80,12 @@ async def batch_star_card(batch_data: BatchCard, session: Session = Depends(get_
 
 
 @router.delete("/batch-delete", response_model=GenericResponse, response_model_exclude_unset=True)
-async def batch_delete_card(batch_data: BatchCard, session: Session = Depends(get_session)):
+async def batch_delete_card(batch_data: BatchCard, session: Session = Depends(get_session),
+                            user: User = Depends(jwt_get_current_user)):
     """
     批量删除卡片
     """
-    # TODO: 修改uid
-    uid = 1
+    uid = user.id
     batch_status = {
         "success_count": 0,
         "fail_count": 0,
@@ -103,11 +104,12 @@ async def batch_delete_card(batch_data: BatchCard, session: Session = Depends(ge
 
 
 @router.post("/{cid}/star", response_model=GenericResponse[StarModel])
-async def toggle_star(cid: int, star_status: StarModel, session: Session = Depends(get_session)):
+async def toggle_star(cid: int, star_status: StarModel, session: Session = Depends(get_session),
+                      user: User = Depends(jwt_get_current_user)):
     """
     切换分类星标状态
     """
-    uid = 1
+    uid = user.id
     rowcount = toggle_star_status(session, model_class=Card, target_id=cid, uid=uid, star_status=star_status.is_star)
     msg = "切换成功" if rowcount else "切换失败"
     now_status = not star_status.is_star if rowcount else star_status.is_star
@@ -123,12 +125,12 @@ async def toggle_star(cid: int, star_status: StarModel, session: Session = Depen
 
 
 @router.get("/{cid}", response_model=GenericResponse[ReadDescriptionCardModel])
-async def retrieve_card(cid: int, session: Session = Depends(get_session)):
+async def retrieve_card(cid: int, session: Session = Depends(get_session), user: User = Depends(jwt_get_current_user)):
     """
     获取一条卡片的数据
     """
-    # TODO
-    uid = 1
+
+    uid = user.id
     card_data = query_one_data_by_user(session=session,
                                        uid=uid, target_id=cid, model_class=Card)
     if not card_data:
@@ -143,12 +145,13 @@ async def retrieve_card(cid: int, session: Session = Depends(get_session)):
 
 
 @router.post("/{cid}", response_model=GenericResponse[ReadDescriptionCardModel])
-async def update_card(cid: int, data: ParamsCardModel, session: Session = Depends(get_session)):
+async def update_card(cid: int, data: ParamsCardModel, session: Session = Depends(get_session),
+                      user: User = Depends(jwt_get_current_user)):
     """
     修改一条卡片的数据
     """
-    # TODO
-    uid = 1
+
+    uid = user.id
 
     card_data = update_data(session=session, uid=uid, target_id=cid, model_class=Card, data=data)
     if not card_data:
@@ -163,12 +166,12 @@ async def update_card(cid: int, data: ParamsCardModel, session: Session = Depend
 
 
 @router.delete("/{cid}", response_model=GenericResponse, response_model_exclude_unset=True)
-async def delete_card(cid: int, session: Session = Depends(get_session)):
+async def delete_card(cid: int, session: Session = Depends(get_session), user: User = Depends(jwt_get_current_user)):
     """
     删除一条卡片的数据
     """
-    # TODO
-    uid = 1
+
+    uid = user.id
     rowcount = delete_data_by_user(session=session, uid=uid, target_id=cid, model_class=Card)
     # rowcount = 0 时
     if not rowcount:

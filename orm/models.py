@@ -16,7 +16,7 @@ class User(Base):
     username = Column(String(32), unique=True, nullable=False, comment='用户名')
     email = Column(String(128), unique=True, nullable=False, comment='邮箱')
     hashed_pwd = Column(String(64), unique=True, nullable=False, comment='哈希后的密文')
-    phone_number = Column(String(11), unique=True, nullable=False, comment='手机号')
+    phone_number = Column(String(11), unique=True, nullable=True, comment='手机号')
 
     category = relationship("Category", backref="user", cascade="all, delete",
                             passive_deletes=True)  # 类别子表

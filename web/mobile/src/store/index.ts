@@ -1,4 +1,5 @@
 import { createStore } from "vuex";
+import persistedState from "vuex-persistedstate"; // 持久化
 
 export default createStore({
   state: {
@@ -12,6 +13,8 @@ export default createStore({
     pageTitle: "title",
     // 设置内部页面的标题
     settingsItemPageTitle: "title",
+    // token
+    token: { accessToken: "", tokenType: "" },
   },
   mutations: {
     // 切换
@@ -27,7 +30,12 @@ export default createStore({
     changeSettingsPageTitle(state, title) {
       state.settingsItemPageTitle = title;
     },
+    setToken(state, { accessToken, tokenType }) {
+      state.token.accessToken = accessToken;
+      state.token.tokenType = tokenType;
+    },
   },
   actions: {},
   modules: {},
+  plugins: [persistedState()], // 添加插件, 持久化
 });

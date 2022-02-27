@@ -12,9 +12,10 @@ from orm.schemas.card import ReadSummaryCardModel, ReadDescriptionCardModel, Bat
 from orm.schemas.category import ReadCategoryModel
 from orm.crud import query_need_review_card, query_one_data_by_user, update_review_times, \
     query_review_card_by_date, query_review_category_by_user
-from orm.models import Card
+from orm.models import Card, User
 from dependencies.queryParams import get_limit_params, get_card_by_date_limit_params
 from dependencies.orm import get_session
+from dependencies.auth import jwt_get_current_user
 
 router = APIRouter(prefix="/review", tags=["复习相关"])
 
@@ -23,13 +24,14 @@ router = APIRouter(prefix="/review", tags=["复习相关"])
 async def get_review(
         session: Session = Depends(get_session),
         limit_params: QueryLimit = Depends(get_limit_params),
-        cid: int = Query(0, ge=0, description="类别的id", alias="category")
+        cid: int = Query(0, ge=0, description="类别的id", alias="category"),
+        user: User = Depends(jwt_get_current_user)
+
 ):
     """
     获取所有需要复习卡片
     """
-    # TODO: 替换uid
-    uid = 1
+    uid = user.id
 
     review_data = query_need_review_card(session, uid=uid, cid=cid, query_params=limit_params)
     return {
@@ -40,13 +42,13 @@ async def get_review(
 
 
 @router.post("/batch-review", response_model=GenericResponse, response_model_exclude_unset=True)
-async def batch_review_card(review_cards: BatchCard, session: Session = Depends(get_session)):
+async def batch_review_card(review_cards: BatchCard, session: Session = Depends(get_session),
+                            user: User = Depends(jwt_get_current_user)):
     """
     批量复习卡片
     """
-    # TODO: 替换uid
 
-    uid = 1
+    uid = user.id
 
     status = {
         "success_count": 0,
@@ -89,13 +91,13 @@ async def batch_review_card(review_cards: BatchCard, session: Session = Depends(
 
 @router.get("/need", response_model=GenericResponse[List[int]])
 async def get_need_card_id(session: Session = Depends(get_session),
-                           limit_params: QueryLimit = Depends(get_limit_params)):
+                           limit_params: QueryLimit = Depends(get_limit_params),
+                           user: User = Depends(jwt_get_current_user)
+                           ):
     """
     获取需要复习的卡片的ID
     """
-    # TODO: 替换uid
-
-    uid = 1
+    uid = user.id
     card_id_lst = query_need_review_card(session=session, uid=uid, query_params=limit_params)
     data = []
     for card in card_id_lst:
@@ -110,12 +112,12 @@ async def get_need_card_id(session: Session = Depends(get_session),
 
 @router.get("/date", response_model=GenericResponse[List[ReadSummaryCardModel]])
 async def get_card_by_date(session: Session = Depends(get_session),
-                           query_params: CardDateQueryLimit = Depends(get_card_by_date_limit_params)):
+                           query_params: CardDateQueryLimit = Depends(get_card_by_date_limit_params),
+                           user: User = Depends(jwt_get_current_user)):
     """
     根据日期获取需要复习的卡片
     """
-    # TODO: 替换uid
-    uid = 1
+    uid = user.id
     card_data = query_review_card_by_date(session=session, uid=uid, query_params=query_params)
 
     return {
@@ -127,14 +129,13 @@ async def get_card_by_date(session: Session = Depends(get_session),
 
 @router.get("/category", response_model=GenericResponse[List[ReadCategoryModel]])
 async def get_review_card_category(session: Session = Depends(get_session),
-                                   limit_params: QueryLimit = Depends(get_limit_params)):
+                                   limit_params: QueryLimit = Depends(get_limit_params),
+                                   user: User = Depends(jwt_get_current_user)):
     """
     获取要复习卡片的类别
     :return:
     """
-    # TODO: 替换uid
-
-    uid = 1
+    uid = user.id
     category_data = query_review_category_by_user(session, uid=uid, query_params=limit_params)
 
     return {
@@ -148,13 +149,11 @@ async def get_review_card_category(session: Session = Depends(get_session),
 async def get_card(
         cid: int,
         session: Session = Depends(get_session),
-):
+        user: User = Depends(jwt_get_current_user)):
     """
     获取一条需要复习卡片
     """
-    # TODO: 替换uid
-
-    uid = 1
+    uid = user.id
     card_data = query_one_data_by_user(session=session, uid=uid, target_id=cid, model_class=Card)
     if not card_data:
         return {
@@ -181,13 +180,11 @@ async def get_card(
 async def review_done(
         cid: int,
         session: Session = Depends(get_session),
-):
+        user: User = Depends(jwt_get_current_user)):
     """
     完成卡片复习
     """
-    # TODO: 替换uid
-
-    uid = 1
+    uid = user.id
     card_data = query_one_data_by_user(session=session, uid=uid, target_id=cid, model_class=Card)
     if not card_data:
         return {

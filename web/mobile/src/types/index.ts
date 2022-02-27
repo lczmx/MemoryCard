@@ -51,7 +51,7 @@ export interface IPlan {
   id: number;
   title: string;
   content: string;
-  editable: Boolean
+  editable: Boolean;
 }
 export interface IPostPlan {
   title: string;
@@ -122,4 +122,30 @@ export interface IBatchPostCategoryData {
 export interface IPlanStep {
   title: string; // 第几次复习
   time: string; // 相对于现在的复习的时间
+}
+
+// ---------- 登录/注册
+export interface IUserSignUpPostData {
+  username: string;
+  email: string;
+  password1: string;
+  password2: string;
+}
+export interface IUserSignUpPostMsg {
+  // 错误信息返回
+  username?: string;
+  email?: string;
+  password1?: string;
+  password2?: string;
+}
+
+export interface IUserLoginPostData {
+  // 登录的数据
+  username: string;
+  password: string;
+}
+
+export interface IUerToken {
+  accessToken: string;
+  tokenType: string;
 }
