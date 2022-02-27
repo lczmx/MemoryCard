@@ -5,3 +5,4 @@ node_modules/
 alembic/versions
 *.sqlite3
 test.*
+local_settings.py

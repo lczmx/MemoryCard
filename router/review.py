@@ -11,11 +11,12 @@ from orm.schemas.generic import QueryLimit, GenericResponse, CardDateQueryLimit
 from orm.schemas.card import ReadSummaryCardModel, ReadDescriptionCardModel, BatchCard
 from orm.schemas.category import ReadCategoryModel
 from orm.crud import query_need_review_card, query_one_data_by_user, update_review_times, \
-    query_review_card_by_date, query_review_category_by_user
+    query_review_card_by_date, query_review_category_by_user, recode_operation
 from orm.models import Card, User
 from dependencies.queryParams import get_limit_params, get_card_by_date_limit_params
 from dependencies.orm import get_session
 from dependencies.auth import jwt_get_current_user
+import settings
 
 router = APIRouter(prefix="/review", tags=["复习相关"])
 
@@ -25,9 +26,7 @@ async def get_review(
         session: Session = Depends(get_session),
         limit_params: QueryLimit = Depends(get_limit_params),
         cid: int = Query(0, ge=0, description="类别的id", alias="category"),
-        user: User = Depends(jwt_get_current_user)
-
-):
+        user: User = Depends(jwt_get_current_user)):
     """
     获取所有需要复习卡片
     """
@@ -80,6 +79,7 @@ async def batch_review_card(review_cards: BatchCard, session: Session = Depends(
         if not update_review_times(session=session, cid=cid, review_at=datetime.now(), review_times=new_times):
             status["fail_count"] += 1
             continue
+        recode_operation(session=session, uid=uid, oid=settings.OPERATION_DATA["review_card"])
         status["success_count"] += 1
 
     # 返回
@@ -206,6 +206,7 @@ async def review_done(
             }
         new_times = old_times + 1
         update_review_times(session=session, cid=cid, review_at=datetime.now(), review_times=new_times)
+        recode_operation(session=session, uid=uid, oid=settings.OPERATION_DATA["review_card"])
         return {
             "status": 1,
             "msg": "复习成功",

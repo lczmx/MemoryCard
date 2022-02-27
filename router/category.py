@@ -8,12 +8,13 @@ from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 from orm.schemas.category import ParamsCategoryModel, WriteCategoryModel, ReadCategoryModel, StarModel, BatchCategory
 from orm.schemas.generic import GenericResponse, QueryLimit
-from orm.crud import save_one_to_db, query_all_data_by_user, query_one_data_by_user, \
-    update_data, delete_category_data, toggle_star_status, query_category_by_user_order_card_count
+from orm.crud import save_one_to_db, query_all_data_by_user, query_one_data_by_user, update_data, \
+    delete_category_data, toggle_star_status, query_category_by_user_order_card_count, recode_operation
 from orm.models import Category, User
 from dependencies.queryParams import get_limit_params, convert_category_order
 from dependencies.orm import get_session
 from dependencies.auth import jwt_get_current_user
+import settings
 
 router = APIRouter(prefix="/category", tags=["分类相关"])
 
@@ -50,16 +51,24 @@ async def create_category(category_prams: ParamsCategoryModel, session: Session 
     """
     创建一个分类
     """
+    uid = user.id
     prams = category_prams.dict()
     prams.update({
-        "uid": user.id
+        "uid": uid
     })
     data = WriteCategoryModel(**prams)
 
     category_obj = save_one_to_db(session=session, model_class=Category, data=data)
+    if not category_obj:
+        return {
+            "status": 0,
+            "msg": "创建类别失败",
+            "data": category_obj
+        }
+    recode_operation(session=session, uid=uid, oid=settings.OPERATION_DATA["create_category"])
     return {
         "status": 1,
-        "msg": "success",
+        "msg": "创建类别成功",
         "data": category_obj
     }
 
@@ -105,6 +114,7 @@ async def batch_delete_category(batch_data: BatchCategory, session: Session = De
         if not rowcount:
             batch_status["fail_count"] += 1
             continue
+        recode_operation(session=session, uid=uid, oid=settings.OPERATION_DATA["delete_category"])
         batch_status["success_count"] += 1
     return {
         "status": 1,
@@ -181,6 +191,7 @@ async def delete_category(cid: int, session: Session = Depends(get_session),
             "status": 0,
             "msg": "删除失败",
         }
+    recode_operation(session=session, uid=uid, oid=settings.OPERATION_DATA["delete_category"])
     return {
         "status": 1,
         "msg": "删除成功",

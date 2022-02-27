@@ -9,10 +9,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, or_, not_, update, delete, func, desc
 from pydantic import BaseModel
 from orm.database import Base
-from orm.models import Category, Plan, Card, User
+from orm.models import Category, Plan, Card, User, Operation, Recode
 
 from orm.schemas.category import ReadCategoryModel
 from orm.schemas.generic import QueryLimit, CardDateQueryLimit
+from orm.schemas.analyse import WriteRecodeModel
 
 ModelT = TypeVar("ModelT", bound=Base)
 DataT = TypeVar("DataT", bound=BaseModel)
@@ -450,3 +451,27 @@ def query_user_by_id_username_email(session: Session, username: str, email: str,
     except Exception as e:
         logging.error(str(e))
         return None
+
+
+def query_operation_title(session: Session) -> List[str]:
+    """查询全部操作名称"""
+    try:
+        res = session.execute(select(Operation.title))
+
+        return res.scalars().all()
+    except Exception as e:
+        logging.error(str(e))
+        session.rollback()
+        return []
+
+
+def recode_operation(session: Session, uid: int, oid: int):
+    """
+    记录用户的操作记录数据
+    :param session:
+    :param uid:
+    :param oid:
+    :return:
+    """
+    if 0 < oid <= 9:
+        save_one_to_db(session, model_class=Recode, data=WriteRecodeModel(uid=uid, oid=oid))

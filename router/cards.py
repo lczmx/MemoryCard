@@ -11,11 +11,12 @@ from orm.schemas.card import ParamsCardModel, ReadSummaryCardModel, \
 from orm.schemas.generic import GenericResponse, QueryLimit
 
 from orm.crud import save_one_to_db, query_all_data_by_user, toggle_star_status, \
-    query_one_data_by_user, update_data, delete_data_by_user
+    query_one_data_by_user, update_data, delete_data_by_user, recode_operation
 from orm.models import Card, User
 from dependencies.orm import get_session
 from dependencies.queryParams import get_limit_params, convert_card_order
 from dependencies.auth import jwt_get_current_user
+import settings
 
 router = APIRouter(prefix="/cards", tags=["卡片相关"])
 
@@ -47,7 +48,13 @@ async def create_card(card_data: ParamsCardModel, session: Session = Depends(get
     uid = user.id
     data = WriteCardModel(uid=uid, **card_data.dict())
     card_obj = save_one_to_db(session=session, model_class=Card, data=data)
-
+    if not card_obj:
+        return {
+            "status": 0,
+            "msg": "创建失败",
+            "data": None
+        }
+    recode_operation(session=session, uid=uid, oid=settings.OPERATION_DATA["create_card"])
     return {
         "status": 1,
         "msg": "创建成功",
@@ -96,6 +103,7 @@ async def batch_delete_card(batch_data: BatchCard, session: Session = Depends(ge
         if not rowcount:
             batch_status["fail_count"] += 1
             continue
+        recode_operation(session=session, uid=uid, oid=settings.OPERATION_DATA["delete_card"])
         batch_status["success_count"] += 1
     return {
         "status": 1,
@@ -179,7 +187,7 @@ async def delete_card(cid: int, session: Session = Depends(get_session), user: U
             "status": 0,
             "msg": "删除失败",
         }
-
+    recode_operation(session=session, uid=uid, oid=settings.OPERATION_DATA["delete_card"])
     return {
         "status": 1,
         "msg": "删除成功",

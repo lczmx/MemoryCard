@@ -7,8 +7,10 @@ from dependencies.queryParams import get_limit_params
 from dependencies.auth import jwt_get_current_user
 from orm.schemas.generic import QueryLimit, GenericResponse
 from orm.schemas.plan import WritePlanModel, ReadPlanModel, ParamsPlanModel
-from orm.crud import query_all_data_by_user, save_one_to_db, query_one_data_by_user, update_data, delete_data_by_user
+from orm.crud import query_all_data_by_user, save_one_to_db, query_one_data_by_user, update_data, delete_data_by_user, \
+    recode_operation
 from orm.models import Plan, User
+import settings
 
 router = APIRouter(prefix="/plans", tags=["复习计划相关"])
 
@@ -35,6 +37,13 @@ def create_plan(plan_data: ParamsPlanModel, session: Session = Depends(get_sessi
     uid = user.id
     data = WritePlanModel(**plan_data.dict(), uid=uid)
     plan = save_one_to_db(session=session, model_class=Plan, data=data)
+    if not plan:
+        return {
+            "status": 0,
+            "msg": "创建失败",
+            "data": plan
+        }
+    recode_operation(session=session, uid=uid, oid=settings.OPERATION_DATA["create_plan"])
     return {
         "status": 1,
         "msg": "创建成功",
@@ -67,7 +76,7 @@ def get_plan(pid: int, session: Session = Depends(get_session), user: User = Dep
 def update_plan(pid: int, plan_data: ParamsPlanModel, session: Session = Depends(get_session),
                 user: User = Depends(jwt_get_current_user)):
     """
-    获取一条复习曲线数据
+    修改一条复习曲线数据
     """
     uid = user.id
     plan = update_data(session=session, uid=uid, target_id=pid, model_class=Plan, data=plan_data)
@@ -96,6 +105,7 @@ def delete_plan(pid: int, session: Session = Depends(get_session), user: User = 
             "status": 0,
             "msg": "删除失败",
         }
+    recode_operation(session=session, uid=uid, oid=settings.OPERATION_DATA["delete_plan"])
     return {
         "status": 1,
         "msg": "删除成功",

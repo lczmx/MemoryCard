@@ -22,6 +22,7 @@ class User(Base):
                             passive_deletes=True)  # 类别子表
     card = relationship("Card", backref="user", cascade="all, delete", passive_deletes=True)  # 卡片子表
     plan = relationship("Plan", backref="user", cascade="all, delete", passive_deletes=True)  # 计划子表
+    recode = relationship("Recode", backref="user", cascade="all, delete", passive_deletes=True)  # 操作记录
 
 
 class Category(Base):
@@ -91,3 +92,30 @@ class Plan(Base):
     def editable(self):
         # 是否可以编辑
         return bool(self.uid)
+
+
+class Recode(Base):
+    __tablename__ = "Recode"  # 记录复习时的记录
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    uid = Column(Integer, ForeignKey("User.id", ondelete="CASCADE"), nullable=False, comment="记录所属用户")
+    oid = Column(Integer, ForeignKey("Operation.id", ondelete="CASCADE"), nullable=False, comment="该记录的操作类型")
+    create_at = Column(DateTime, nullable=False, server_default=func.now(), comment="记录时间")
+
+
+class Operation(Base):
+    __tablename__ = "Operation"  # 操作记录
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    """
+    1. delete_card
+    2. create_card
+    3. review_card
+    
+    4. delete_category
+    5. create_category
+
+    6. delete_plan
+    7. create_plan
+
+    """
+    title = Column(String(32), nullable=True, comment="操作记录")
+    recode = relationship("Recode", backref="operation")
