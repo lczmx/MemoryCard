@@ -10,7 +10,7 @@
           <router-link :to="{ name: 'SignUp' }">注册</router-link>
         </van-notice-bar>
       </div>
-      <div class="user-info" else>
+      <div class="user-info" v-else>
         <van-cell-group inset>
           <van-cell class="user-info-cell">
             <template #title>
