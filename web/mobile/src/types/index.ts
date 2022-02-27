@@ -149,3 +149,21 @@ export interface IUerToken {
   accessToken: string;
   tokenType: string;
 }
+
+// 当前用户的信息
+export interface IUserData {
+  uid: number;
+  email: string;
+  username: string;
+  phoneNumber?: number;
+}
+
+export interface JWTPayLoad {
+  uid: number;
+  email: string;
+  sub: string;
+  phoneNumber?: number;
+  exp:number
+
+}
+

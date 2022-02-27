@@ -135,20 +135,32 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { useStore } from "vuex";
+import jwt_decode from "jwt-decode";
+import { IUserData, JWTPayLoad } from "@/types";
 
 export default defineComponent({
   name: "Settings",
   setup() {
     /* 用户相关 */
     // -----------------获取用户数据 开始
-    const fake_user = {
-      username: "lczmx",
-      email: "xxx@example.com",
+    const store = useStore();
+    const user = ref<IUserData>({ username: "", uid: 0, email: "" });
+    const parseUserDataFromJWT = () => {
+      // 从jwt中解析用户数据
+      const token = store.state.token.accessToken;
+      if (!token) return;
+      let payload = jwt_decode(token);
+      const jwtPayLoad = payload as JWTPayLoad;
+
+      if (!user.value) return;
+      user.value.uid = jwtPayLoad.uid;
+      user.value.username = jwtPayLoad.sub;
+      user.value.email = jwtPayLoad.email;
+      user.value.phoneNumber = jwtPayLoad.phoneNumber;
     };
-    const user = ref({});
-    user.value = fake_user;
 
     // -----------------获取用户数据 结束
     // ------------- 跳转到About页面
@@ -157,6 +169,10 @@ export default defineComponent({
     const handlerClickAbout = () => {
       router.push({ name: "About" });
     };
+
+    onMounted(() => {
+      parseUserDataFromJWT();
+    });
     return {
       // 返回的数据
       user,
@@ -185,6 +201,10 @@ export default defineComponent({
         .user-info-username {
           text-align: right;
           font-size: 20px;
+          width: calc(100vw - 112px);
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
         }
       }
     }

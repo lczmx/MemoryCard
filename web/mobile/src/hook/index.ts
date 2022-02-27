@@ -62,7 +62,7 @@ export function use_fmt_to_sec(
 }
 
 // 将秒数转化为对应的时间单位
-export function convert_sec_to_other(sec: number) {
+export function convert_sec_to_other(sec: number): Record<string, number> {
   const days = Math.floor(sec / 86400);
   const hours = Math.floor((sec % 86400) / 3600);
   const minutes = Math.floor(((sec % 86400) % 3600) / 60);
