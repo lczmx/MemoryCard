@@ -474,4 +474,27 @@ def recode_operation(session: Session, uid: int, oid: int):
     :return:
     """
     if 0 < oid <= 9:
-        save_one_to_db(session, model_class=Recode, data=WriteRecodeModel(uid=uid, oid=oid))
+        save_one_to_db(session, model_class=Recode,
+                       data=WriteRecodeModel(uid=uid, oid=oid, create_at=datetime.datetime.now().date()))
+
+
+def query_recode_by_date_user(session: Session, uid: int, oid: int, min_date: datetime.date,
+                              max_date: datetime.date) -> List[Recode]:
+    """
+    根据日期查询数据
+    :param session:
+    :param uid: 用户ID
+    :param oid: 操作ID
+    :param min_date:
+    :param max_date:
+    :return:
+    """
+    try:
+        result = session.execute(
+            select(func.count(Recode.id).label("count"), Recode.create_at).where(
+                Recode.oid == oid, Recode.uid == uid, Recode.create_at >= min_date,
+                Recode.create_at <= max_date).group_by(Recode.create_at).order_by(Recode.create_at))
+        return result.all()
+    except Exception as e:
+        logging.error(str(e))
+        return []

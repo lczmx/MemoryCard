@@ -3,7 +3,7 @@
 """
 from datetime import date
 
-from sqlalchemy import Column, String, Integer, DateTime, Text, Boolean, ForeignKey, func
+from sqlalchemy import Column, String, Integer, DateTime, Text, Boolean, ForeignKey, func, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from datetime import datetime, timedelta
@@ -99,7 +99,7 @@ class Recode(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     uid = Column(Integer, ForeignKey("User.id", ondelete="CASCADE"), nullable=False, comment="记录所属用户")
     oid = Column(Integer, ForeignKey("Operation.id", ondelete="CASCADE"), nullable=False, comment="该记录的操作类型")
-    create_at = Column(DateTime, nullable=False, server_default=func.now(), comment="记录时间")
+    create_at = Column(Date, nullable=False, comment="记录时间")
 
 
 class Operation(Base):
