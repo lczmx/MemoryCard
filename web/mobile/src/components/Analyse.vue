@@ -18,7 +18,7 @@
         </van-grid-item>
         <van-grid-item
           icon="chart-trending-o"
-          to="https://github.com"
+          :to="{ name: 'analyseReview' }"
           :badge-props="{ dot: true, color: '#1989fa', offset: [10, 1] }"
         >
           <template #text>
@@ -39,7 +39,7 @@
         </van-grid-item>
         <van-grid-item
           icon="bar-chart-o"
-          to="https://github.com"
+          :to="{ name: 'analyseCreate' }"
           :badge-props="{ dot: true, color: '#1989fa', offset: [10, 1] }"
         >
           <template #text>
@@ -64,10 +64,13 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-
+import { useStore } from "vuex";
 export default defineComponent({
   name: "Analyse",
   setup() {
+    // ----- 设置标题
+    const store = useStore();
+    store.commit("changeSettingsPageTitle", "数据统计");
     return {
       // 返回的数据
     };

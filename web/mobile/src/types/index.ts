@@ -163,7 +163,17 @@ export interface JWTPayLoad {
   email: string;
   sub: string;
   phoneNumber?: number;
-  exp:number
-
+  exp: number;
 }
 
+export interface IAnalyseData {
+  // 分析的chart数据
+
+  count: number;
+  date: string;
+}
+
+export interface IAnalysePostData {
+  startDate: string;
+  endDate: string;
+}

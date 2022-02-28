@@ -21,6 +21,9 @@ import Plan from "@/components/Plan.vue";
 import AddPlan from "@/components/AddPlan.vue";
 import EditorPlan from "@/components/EditorPlan.vue";
 import Analyse from "@/components/Analyse.vue";
+// ---- 分析页面
+import AnalyseReview from "@/components/AnalyseReview.vue";
+import AnalyseCreate from "@/components/AnalyseCreate.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -76,15 +79,29 @@ const routes: Array<RouteRecordRaw> = [
       { path: "analyse", component: Analyse, name: "Analyse" },
     ],
   },
+// 数据分析
+  {
+    path: "/analyse",
+    component: SettingsContent,
+    children: [
+      {
+        path: "review",
+        component: AnalyseReview,
+        name: "analyseReview",
+      },
+      { path: "create", component: AnalyseCreate, name: "analyseCreate" },
+     
+    ],
+  },
   {
     path: "/login",
     component: LogIn,
-    name: "LogIn"
+    name: "LogIn",
   },
   {
     path: "/signup",
     component: SignUp,
-    name: "SignUp"
+    name: "SignUp",
   },
 ];
 

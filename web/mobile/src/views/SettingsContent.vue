@@ -22,7 +22,9 @@ export default defineComponent({
     // ---------- 点击返回
     const router = useRouter();
     const clickHistoryBack = () => {
-      router.push({ name: "settings" });
+      // router.push({ name: "settings" });
+      router.go(-1);
+      
     };
     const store = useStore();
 
