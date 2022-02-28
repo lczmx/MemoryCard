@@ -13,7 +13,10 @@ class SummaryAnalyseModel(BaseModel):
     # 概览信息
     review: DiffAnalyse
     create: DiffAnalyse
-    categoryCount: int
+    category_count: int = Field(..., alias="categoryCount")
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 class ReadAnalyseModel(BaseModel):

@@ -14,6 +14,7 @@ from orm.models import Category, Plan, Card, User, Operation, Recode
 from orm.schemas.category import ReadCategoryModel
 from orm.schemas.generic import QueryLimit, CardDateQueryLimit
 from orm.schemas.analyse import WriteRecodeModel
+import settings
 
 ModelT = TypeVar("ModelT", bound=Base)
 DataT = TypeVar("DataT", bound=BaseModel)
@@ -498,3 +499,51 @@ def query_recode_by_date_user(session: Session, uid: int, oid: int, min_date: da
     except Exception as e:
         logging.error(str(e))
         return []
+
+
+def query_summary_analyse_data(session: Session, uid: int, ):
+    """
+    获取分析数据的概览
+    :param session:
+    :param uid:
+    """
+    temp = {
+        "review": {"today": 0, "incr": 0},
+        "create": {"today": 0, "incr": 0},
+        "category_count": 0
+    }
+    now = datetime.datetime.now()
+    today = now.date()
+    yesterday = (now - datetime.timedelta(days=1)).date()
+
+    recode_review_data = session.execute(
+        select(func.count(Recode.id).label("count"), Recode.create_at).where(
+            Recode.uid == uid, or_(Recode.create_at == today, Recode.create_at == yesterday),
+            Recode.oid == settings.OPERATION_DATA["review_card"]).group_by(Recode.create_at))
+    for recode_review in recode_review_data.all():
+        if recode_review.create_at == today:
+            temp["review"]["today"] += recode_review.count
+            temp["review"]["incr"] += recode_review.count
+        elif recode_review.create_at == yesterday:
+            temp["review"]["incr"] -= recode_review.count
+
+    recode_create_data = session.execute(
+        select(func.count(Recode.id).label("count"), Recode.create_at).where(
+            Recode.uid == uid, or_(Recode.create_at == today, Recode.create_at == yesterday),
+            Recode.oid == settings.OPERATION_DATA["create_card"]).group_by(Recode.create_at))
+
+    for recode_create in recode_create_data.all():
+        # create
+        if recode_create.create_at == today:
+            temp["create"]["today"] += recode_create.count
+            temp["create"]["incr"] += recode_create.count
+        elif recode_create.create_at == yesterday:
+            temp["create"]["incr"] -= recode_create.count
+    # 获取category
+    category_data = session.execute(
+        select(func.count(Category.id).label("count")).where(Category.uid == uid)
+    )
+    category_count = category_data.scalar()
+    if category_count:
+        temp["category_count"] = category_count
+    return temp
