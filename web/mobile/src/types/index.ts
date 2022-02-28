@@ -177,3 +177,15 @@ export interface IAnalysePostData {
   startDate: string;
   endDate: string;
 }
+
+export interface IAnalyseSummaryData {
+  // 数据统计概览数据
+  review: IAnalyseSummaryItem;
+  create: IAnalyseSummaryItem;
+  categoryCount: number;
+}
+
+export interface IAnalyseSummaryItem {
+  today: number;
+  incr: number;
+}

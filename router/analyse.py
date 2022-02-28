@@ -19,11 +19,11 @@ router = APIRouter(prefix="/analyse", tags=["分析相关"])
 
 
 @router.get("/", response_model=GenericResponse[SummaryAnalyseModel])
-async def get_summary_analyse_data(session: Session = Depends(get_session)):
+async def get_summary_analyse_data(session: Session = Depends(get_session), user: User = Depends(jwt_get_current_user)):
     """
     获取数据统计的概览数据
     """
-    uid = 1
+    uid = user.id
     data = query_summary_analyse_data(session=session, uid=uid)
     return {
         "status": 1,

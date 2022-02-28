@@ -10,10 +10,16 @@
           <div class="review-today-wrap">
             <div class="review-diff-wrap">
               <div>较昨日</div>
-              <div class="review-diff-text">+100</div>
+              <div class="review-diff-text">
+                {{
+                  analyse_data.review.incr > 0
+                    ? "+" + analyse_data.review.incr
+                    : analyse_data.review.incr
+                }}
+              </div>
             </div>
           </div>
-          <div class="review-today-text">1123</div>
+          <div class="review-today-text">{{ analyse_data.review.today }}</div>
           <div class="review-title">今日复习次数</div>
         </van-grid-item>
         <van-grid-item
@@ -31,10 +37,16 @@
           <div class="review-today-wrap">
             <div class="review-diff-wrap">
               <div>较昨日</div>
-              <div class="review-diff-text">+100</div>
+              <div class="review-diff-text">
+                {{
+                  analyse_data.create.incr > 0
+                    ? "+" + analyse_data.create.incr
+                    : analyse_data.create.incr
+                }}
+              </div>
             </div>
           </div>
-          <div class="review-today-text">1123</div>
+          <div class="review-today-text">{{ analyse_data.create.incr }}</div>
           <div class="review-title">今日创建卡片</div>
         </van-grid-item>
         <van-grid-item
@@ -54,7 +66,7 @@
         <van-grid-item>
           <div class="item-category-wrap">
             <div>类别数量</div>
-            <div class="category-count">22</div>
+            <div class="category-count">{{ analyse_data.categoryCount }}</div>
           </div>
         </van-grid-item>
       </van-grid>
@@ -63,16 +75,37 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, ref, onMounted, computed } from "vue";
 import { useStore } from "vuex";
+import { IAnalyseSummaryData } from "@/types";
+import { getDataOfOne } from "@/utils/request";
 export default defineComponent({
   name: "Analyse",
   setup() {
     // ----- 设置标题
     const store = useStore();
     store.commit("changeSettingsPageTitle", "数据统计");
+    // ------ 获取数据
+    const analyse_data = ref<IAnalyseSummaryData>({
+      review: { today: 0, incr: 0 },
+      create: { today: 0, incr: 0 },
+      categoryCount: 0,
+    });
+    const config = {
+      url: `${store.state.serverHost}/analyse/`,
+    };
+    const getAnalyseData = () => {
+      getDataOfOne<IAnalyseSummaryData>(config, true).then((response) => {
+        analyse_data.value = response;
+      });
+    };
+
+    onMounted(() => {
+      getAnalyseData();
+    });
     return {
       // 返回的数据
+      analyse_data,
     };
   },
 });
