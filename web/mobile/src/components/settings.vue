@@ -35,7 +35,7 @@
     <!-- 数据分析, 需要登录 -->
 
     <van-cell-group inset v-if="user.username">
-      <van-cell value="" is-link>
+      <van-cell value="" is-link :to="{ name: 'Profile' }">
         <template #icon>
           <van-icon
             class="iconfont item-icon"
@@ -46,7 +46,7 @@
         </template>
         <!-- 使用 title 插槽来自定义标题 -->
         <template #title>
-          <span class="custom-title">用户设置</span>
+          <span class="custom-title">用户配置</span>
         </template>
       </van-cell>
       <van-cell value="" is-link :to="{ name: 'Plan' }">
@@ -116,7 +116,7 @@
     <!-- 第三部分开始 -->
     <!-- 登录等, 用户操作, 需要登录 -->
     <van-cell-group inset v-if="user.username">
-      <van-cell value="" is-link>
+      <van-cell is-link @click="handlerClickLogout">
         <template #icon>
           <van-icon
             class="iconfont item-icon"
@@ -173,10 +173,17 @@ export default defineComponent({
     onMounted(() => {
       parseUserDataFromJWT();
     });
+    // ---------- 注销登录
+    const handlerClickLogout = () => {
+      store.commit("setToken", { accessToken: "", tokenType: "" });
+      // 跳转到登录页面
+      router.push({ name: "LogIn" });
+    };
     return {
       // 返回的数据
       user,
       handlerClickAbout,
+      handlerClickLogout,
     };
   },
 });

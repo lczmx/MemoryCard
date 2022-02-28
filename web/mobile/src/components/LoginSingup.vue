@@ -185,10 +185,38 @@ export default defineComponent({
     const handlerClickSignupBtn = () => {
       if (!containerRef.value) return;
       containerRef.value.classList.add("sign-up-mode");
+      // 清空提示
+      loginAccount.value = "";
+      loginPassword.value = "";
+      loginAccountErrorMsg.value = "";
+      loginPasswordErrorMsg.value = "";
+      // 清空sign up数据
+      singUpUsername.value = "";
+      singUpEmail.value = "";
+      singUpPassword1.value = "";
+      singUpPassword2.value = "";
+      singUpUsernameErrorMsg.value = "";
+      singUpEmailErrorMsg.value = "";
+      singUpPassword1ErrorMsg.value = "";
+      singUpPassword2ErrorMsg.value = "";
     };
     const handlerClickLoginBtn = () => {
       if (!containerRef.value) return;
       containerRef.value.classList.remove("sign-up-mode");
+      // 清空提示
+      loginAccount.value = "";
+      loginPassword.value = "";
+      loginAccountErrorMsg.value = "";
+      loginPasswordErrorMsg.value = "";
+      // 清空sign up数据
+      singUpUsername.value = "";
+      singUpEmail.value = "";
+      singUpPassword1.value = "";
+      singUpPassword2.value = "";
+      singUpUsernameErrorMsg.value = "";
+      singUpEmailErrorMsg.value = "";
+      singUpPassword1ErrorMsg.value = "";
+      singUpPassword2ErrorMsg.value = "";
     };
     // --------------------- 注册数据
     const singUpUsername = ref("");
@@ -291,7 +319,7 @@ export default defineComponent({
           singUpPassword1ErrorMsg.value ||
           singUpPassword2ErrorMsg.value
         ) {
-          return;
+          return reject("fail");
         }
         // 验证通过
         resolve("success");
@@ -310,20 +338,13 @@ export default defineComponent({
           },
           true
         )
-          .then(() => {
+          .then((response) => {
             // 创建成功
             Toast.success("注册成功");
-
-            // 设置login账号数据
-            loginAccount.value = singUpUsername.value;
-            // 清空sign up数据
-            singUpUsername.value = "";
-            singUpEmail.value = "";
-            singUpPassword1.value = "";
-            singUpPassword2.value = "";
-
             // 跳到对应页面
             handlerClickLoginBtn();
+            // 设置login账号数据
+            loginAccount.value = response.username ? response.username : "";
           })
           .catch((error) => {
             const msg = error.data as IUserSignUpPostMsg;
@@ -373,7 +394,7 @@ export default defineComponent({
         isEmptyLoginAccount();
 
         if (loginAccountErrorMsg.value || loginPasswordErrorMsg.value) {
-          return;
+          return reject("fail");
         }
         // 验证通过
         resolve("success");

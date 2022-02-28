@@ -75,7 +75,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed } from "vue";
+import { defineComponent, ref, onMounted } from "vue";
 import { useStore } from "vuex";
 import { IAnalyseSummaryData } from "@/types";
 import { getDataOfOne } from "@/utils/request";

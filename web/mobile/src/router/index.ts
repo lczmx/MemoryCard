@@ -24,6 +24,8 @@ import Analyse from "@/components/Analyse.vue";
 // ---- 分析页面
 import AnalyseReview from "@/components/AnalyseReview.vue";
 import AnalyseCreate from "@/components/AnalyseCreate.vue";
+// ---------- 配置页面
+import Profile from "@/components/Profile.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -77,9 +79,10 @@ const routes: Array<RouteRecordRaw> = [
       },
       { path: "plans", component: Plan, name: "Plan" },
       { path: "analyse", component: Analyse, name: "Analyse" },
+      { path: "profile", component: Profile, name: "Profile" },
     ],
   },
-// 数据分析
+  // 数据分析
   {
     path: "/analyse",
     component: SettingsContent,
@@ -90,7 +93,6 @@ const routes: Array<RouteRecordRaw> = [
         name: "analyseReview",
       },
       { path: "create", component: AnalyseCreate, name: "analyseCreate" },
-     
     ],
   },
   {
