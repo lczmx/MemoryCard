@@ -319,7 +319,7 @@ export default defineComponent({
           singUpPassword1ErrorMsg.value ||
           singUpPassword2ErrorMsg.value
         ) {
-          return reject("fail");
+          return;
         }
         // 验证通过
         resolve("success");
@@ -394,7 +394,7 @@ export default defineComponent({
         isEmptyLoginAccount();
 
         if (loginAccountErrorMsg.value || loginPasswordErrorMsg.value) {
-          return reject("fail");
+          return;
         }
         // 验证通过
         resolve("success");

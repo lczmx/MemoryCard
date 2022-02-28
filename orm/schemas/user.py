@@ -65,3 +65,8 @@ class JWTModel(BaseModel):
 
     class Config:
         allow_population_by_field_name = True  # 使用字段名设置数据
+
+
+class UserProfileModel(BaseModel):
+    username: str = Field("")
+    email: str = Field("")

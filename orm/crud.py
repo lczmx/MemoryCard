@@ -435,17 +435,15 @@ def query_account_by_username_or_email(session: Session, username: str, email: s
         return []
 
 
-def query_user_by_id_username_email(session: Session, username: str, email: str, uid: int) -> User:
+def query_user_by_id(session: Session, uid: int) -> User:
     """
-   为了让修改用户名或邮箱后, 重置jwt, 需要比较三个值
+   获取用户对象
     :param session:
-    :param username:
-    :param email:
     :param uid:
     :return:
     """
     try:
-        stmt = select(User).where(User.username == username, User.email == email, User.id == uid).limit(1)
+        stmt = select(User).where(User.id == uid).limit(1)
         res = session.scalars(stmt)
         return res.first()
 
@@ -547,3 +545,23 @@ def query_summary_analyse_data(session: Session, uid: int, ):
     if category_count:
         temp["category_count"] = category_count
     return temp
+
+
+def update_user_profile_data(session: Session, uid: int, data: Dict) -> int:
+    """
+      更新用户配置
+
+    :param session: 数据连接
+    :param uid: 用户id
+    :param data: 要要更新的数据
+    :return: rowcount
+    """
+    try:
+        result = session.execute(
+            update(User).where(User.id == uid).values(**data))
+        session.commit()
+        return result.rowcount
+    except Exception as e:
+        logging.error(str(e))
+        session.rollback()
+        return 0

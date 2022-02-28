@@ -4,7 +4,7 @@
       <van-cell-group inset>
         <van-cell center title="用户名">
           <template #value>
-            <div class="value-wrap">lczmx</div>
+            <div class="value-wrap">{{ user.username }}</div>
           </template>
           <template #right-icon>
             <div class="icon-wrap" @click="handlerClickEditor(0)">
@@ -18,7 +18,7 @@
       <van-cell-group inset>
         <van-cell center title="邮箱">
           <template #value>
-            <div class="value-wrap">lczmx@foxmail.com</div>
+            <div class="value-wrap">{{ user.email }}</div>
           </template>
           <template #right-icon>
             <div class="icon-wrap" @click="handlerClickEditor(1)">
@@ -57,10 +57,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, onMounted } from "vue";
 import { useStore } from "vuex";
 import { Toast } from "vant";
-import { postCreateData } from "@/utils/request";
+import { postCreateData, getDataOfOne } from "@/utils/request";
+import { Method } from "axios";
+import { IUserData } from "@/types";
+
 export default defineComponent({
   name: "Profile",
   setup() {
@@ -68,14 +71,23 @@ export default defineComponent({
     const store = useStore();
     store.commit("changeSettingsPageTitle", "用户配置");
     const showEditor = ref(false);
+    // -----------------获取用户数据 开始
+
+    const user = ref<IUserData>({ email: "", username: "" } as IUserData);
+    const getUserData = () => {
+      const url = `${store.state.serverHost}/user/`;
+      getDataOfOne<IUserData>({ url }, true).then((response) => {
+        user.value = response;
+      });
+    };
     // 编辑数据
     const handlerClickEditor = (flag: number) => {
       switch (flag) {
         case 0:
           // 编辑用户名
           showEditor.value = true;
-          editorValue.value = "lczmx";
-          editorOriginValue.value = "lczmx";
+          editorValue.value = user.value.username;
+          editorOriginValue.value = user.value.username;
 
           editorTitle.value = "用户名";
           editorPlaceholder.value = "请输入用户名";
@@ -85,8 +97,8 @@ export default defineComponent({
         case 1:
           // 编辑邮箱
           showEditor.value = true;
-          editorValue.value = "lczmx@foxmail.com";
-          editorOriginValue.value = "lczmx@foxmail.com";
+          editorValue.value = user.value.email;
+          editorOriginValue.value = user.value.email;
 
           editorTitle.value = "邮箱";
           editorPlaceholder.value = "请输入邮箱";
@@ -125,21 +137,23 @@ export default defineComponent({
           break;
       }
       const config = {
-        url: `${store.state.serverHost}/analyse/`,
+        method: "POST" as Method,
+        url: `${store.state.serverHost}/user/profile`,
         data,
       };
       postCreateData<null, Record<string, string>>(config, true)
         .then(() => {
           Toast.success("修改成功");
           showEditor.value = false;
-          setTimeout(() => {
-            location.reload();
-          }, 2000);
+          location.reload();
         })
         .catch(() => {
           Toast.fail("修改失败");
         });
     };
+    onMounted(() => {
+      getUserData();
+    });
     return {
       // 返回的数据
       showEditor,
@@ -148,6 +162,7 @@ export default defineComponent({
       editorTitle,
       editorPlaceholder,
       handlerClickEditorSubmit,
+      user,
     };
   },
 });

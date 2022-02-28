@@ -11,7 +11,7 @@ from fastapi import status
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 
-from orm.crud import query_account_by_username_or_email, query_user_by_id_username_email
+from orm.crud import query_account_by_username_or_email, query_user_by_id
 from orm.models import User
 from dependencies.orm import get_session
 import settings
@@ -79,15 +79,12 @@ async def jwt_get_current_user(session: Session = Depends(get_session),
         # decode jwt token
         # 得到payload, 即 create_access_token 中的 to_encode
         payload = jwt.decode(token=token, key=settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        username = payload.get("sub")
-        email = payload.get("email")
         uid = payload.get("uid")
-
-        if username is None:
+        if uid is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = query_user_by_id_username_email(session=session, username=username, email=email, uid=uid)
+    user = query_user_by_id(session=session, uid=uid)
     if not user:
         raise credentials_exception
     return user

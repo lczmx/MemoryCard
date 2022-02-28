@@ -138,30 +138,21 @@
 import { defineComponent, ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
-import jwt_decode from "jwt-decode";
-import { IUserData, JWTPayLoad } from "@/types";
-
+import { IUserData } from "@/types";
+import { getDataOfOne } from "@/utils/request";
 export default defineComponent({
   name: "Settings",
   setup() {
     /* 用户相关 */
     // -----------------获取用户数据 开始
     const store = useStore();
-    const user = ref<IUserData>({ username: "", uid: 0, email: "" });
-    const parseUserDataFromJWT = () => {
-      // 从jwt中解析用户数据
-      const token = store.state.token.accessToken;
-      if (!token) return;
-      let payload = jwt_decode(token);
-      const jwtPayLoad = payload as JWTPayLoad;
-
-      if (!user.value) return;
-      user.value.uid = jwtPayLoad.uid;
-      user.value.username = jwtPayLoad.sub;
-      user.value.email = jwtPayLoad.email;
-      user.value.phoneNumber = jwtPayLoad.phoneNumber;
+    const user = ref<IUserData>({ email: "", username: "" } as IUserData);
+    const getUserData = () => {
+      const url = `${store.state.serverHost}/user/`;
+      getDataOfOne<IUserData>({ url }, true).then((response) => {
+        user.value = response;
+      });
     };
-
     // -----------------获取用户数据 结束
     // ------------- 跳转到About页面
     const router = useRouter();
@@ -171,7 +162,7 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      parseUserDataFromJWT();
+      getUserData();
     });
     // ---------- 注销登录
     const handlerClickLogout = () => {
