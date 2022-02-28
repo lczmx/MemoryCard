@@ -32,6 +32,7 @@
       </div>
     </div>
     <div id="container"></div>
+
     <!-- 自定义时间选择 -->
     <div class="date-wrap" @click="showCalendar = true">
       <div class="date-select">
@@ -42,6 +43,7 @@
       </div>
       <div class="show-date">
         <div class="date1 date">{{ showDateStart }}</div>
+        <div class="date-char">/</div>
         <div class="date2 date">{{ showDateEnd }}</div>
       </div>
     </div>
@@ -53,12 +55,17 @@
     @confirm="onConfirmCalendar"
     :min-date="beforeYear.toDate()"
     :max-date="now.toDate()"
+    color="#1989fa"
+    :default-date="[dayjs(showDateStart).toDate(), dayjs(showDateEnd).toDate()]"
   />
+  <!-- line loading -->
+  <div class="loading-chart" v-show="loadingChart">
+    <van-loading color="#1989fa" />
+  </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from "vue";
-import { useEventListener } from "@vant/use";
 import dayjs from "dayjs";
 dayjs.locale("zh-cn");
 import { Line } from "@antv/g2plot";
@@ -83,10 +90,7 @@ export default defineComponent({
     // ----- 设置标题
     const store = useStore();
     store.commit("changeSettingsPageTitle", props.title);
-    // 绑定onload事件
-    useEventListener("load", () => {
-      initChart();
-    });
+
     const data = ref<IAnalyseData[]>();
     // 获取数据:
     const getAnalyseData = () => {
@@ -107,17 +111,19 @@ export default defineComponent({
         (response) => {
           data.value = response;
           // 渲染
-          if (!line) {
-            Toast.fail("未创建Line实例");
-            return;
-          }
-          line.changeData(data.value);
+          if (!line) initChart();
+          changeData();
         }
       );
     };
-    //
+    // -- 更新数据
+    const changeData = () => {
+      if (!data.value) return;
+      line.changeData(data.value);
+    };
     // ---------- 创建line实例
     let line: Line;
+    const loadingChart = ref(true); // 加载line实例中
     const initChart = () => {
       line = new Line("container", {
         data: [], // 后面才指定
@@ -130,6 +136,7 @@ export default defineComponent({
         smooth: true,
       });
       line.render();
+      loadingChart.value = false;
     };
     // 初始化开始-截止时间
     const showDateStart = ref<string>();
@@ -139,8 +146,8 @@ export default defineComponent({
     const beforeYear = now.subtract(1, "year");
     const initDate = (value = 7, unit = "day") => {
       const before = now.subtract(value, unit);
-      showDateStart.value = before.format("YYYY/MM/DD");
-      showDateEnd.value = now.format("YYYY/MM/DD");
+      showDateStart.value = before.format("YYYY-MM-DD");
+      showDateEnd.value = now.format("YYYY-MM-DD");
     };
     // -------- 日历选择
 
@@ -148,26 +155,29 @@ export default defineComponent({
     const onConfirmCalendar = (values: Date[]) => {
       showCalendar.value = false;
       const [start, end] = values;
-      showDateStart.value = dayjs(start).format("YYYY/MM/DD");
-      showDateEnd.value = dayjs(end).format("YYYY/MM/DD");
-
-      console.log(start, end);
+      showDateStart.value = dayjs(start).format("YYYY-MM-DD");
+      showDateEnd.value = dayjs(end).format("YYYY-MM-DD");
+      getAnalyseData();
     };
     // ------- 时间选择 btn组
     const activeDateIndex = ref(0);
     const handlerClickDateBtn = (index: number) => {
       switch (index) {
         case 0:
-          initDate();
+          initDate(7, "day");
+          getAnalyseData();
           break;
         case 1:
-          initDate(1, "week");
+          initDate(1, "month");
+          getAnalyseData();
           break;
         case 2:
           initDate(6, "month");
+          getAnalyseData();
           break;
         case 3:
           initDate(1, "year");
+          getAnalyseData();
           break;
       }
       activeDateIndex.value = index;
@@ -176,6 +186,7 @@ export default defineComponent({
       initDate();
       getAnalyseData();
     });
+    // ------- 修改日期时 重新获取数据
     return {
       now,
       beforeYear,
@@ -185,14 +196,29 @@ export default defineComponent({
       onConfirmCalendar,
       activeDateIndex,
       handlerClickDateBtn,
+      loadingChart,
+      dayjs,
     };
   },
 });
 </script>
 
 <style lang="scss">
+.loading-chart {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  position: fixed;
+  bottom: 0;
+  top: 46px;
+  right: 0;
+  left: 0;
+  background: #fff;
+}
 .chart-wrap {
   margin: 10px;
+  // 图表容器占位
   .date-tool-bar {
     display: flex;
     align-items: center;
@@ -206,7 +232,8 @@ export default defineComponent({
   }
   .date-wrap {
     padding-top: 30px;
-    width: 100%;
+    width: calc(100vw - 40px - 20px);
+    margin: 0 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -220,6 +247,14 @@ export default defineComponent({
     }
     .show-date {
       flex: 1;
+      display: flex;
+      align-items: center;
+      .date {
+        font-size: 14px;
+      }
+      .date-char {
+        font-size: 30px;
+      }
     }
   }
 }
