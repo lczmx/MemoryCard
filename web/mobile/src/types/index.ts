@@ -187,3 +187,10 @@ export interface IAnalyseSummaryItem {
   today: number;
   incr: number;
 }
+
+export interface IDocs {
+  // 帮助文档
+  title: string;
+  tag: string;
+  content: string;
+}

@@ -1,89 +1,121 @@
 <template>
   <!-- 为分类编辑（修改／新增）提供通用组件 -->
-  <div class="editor_wrap">
+  <div class="category-editor-wrap">
     <van-form ref="addCategoryForm">
-      <van-cell-group inset>
-        <van-field
-          v-model="name"
-          name="类别名"
-          label="类别名"
-          placeholder="新建类别"
-          :rules="[{ required: true, message: '请填写类别名' }]"
-        />
-        <van-field
-          v-model="color"
-          is-link
-          readonly
-          name="color"
-          label="颜色"
-          placeholder="点击选择颜色"
-          @click="showColorPopup = true"
-          :rules="[{ required: true, message: '请先选择颜色' }]"
-        >
-          <template #input>
-            <div
-              class="show_color"
-              :style="{ 'background-color': color }"
-            ></div>
-          </template>
-        </van-field>
-        <van-popup v-model:show="showColorPopup" position="bottom">
-          <color-picker
-            :colorArray="colorArray"
-            :selectColor="color"
-            @picked="handlerColorPicked"
-          />
-        </van-popup>
-        <van-field
-          v-model="icon"
-          is-link
-          readonly
-          name="icon"
-          label="图标"
-          placeholder="点击选择图标"
-          @click="showIconPopup = true"
-          :rules="[{ required: true, message: '请先选择图标' }]"
-        >
-          <template #input>
-            <i
-              :class="`iconfont ${icon}`"
-              :style="{
-                'background-color': '#fff',
-                color: '#000',
-                'font-size': '24px',
-              }"
-            ></i>
-          </template>
-        </van-field>
-        <van-popup v-model:show="showIconPopup" position="bottom">
-          <icon-picker
-            :iconArray="iconArray"
-            :selectIcon="icon"
-            @picked="handlerIconPicked"
-          />
-        </van-popup>
-        <!-- 选择复习曲线 -->
-        <van-field
-          v-model="planText"
-          is-link
-          readonly
-          name="planText"
-          label="复习曲线"
-          placeholder="点击选择复习曲线"
-          @click="showPlanPicker = true"
-          :rules="[{ required: true, message: '请先选择复习曲线' }]"
-        />
-        <van-popup v-model:show="showPlanPicker" position="bottom">
-          <van-picker
-            :columns="planColumns"
-            @confirm="onConfirmPlan"
-            @cancel="showPlanPicker = false"
-            :loading="loadingPlanData"
-            :default-index="defaultPlanIndex"
-          />
-        </van-popup>
-      </van-cell-group>
+      <!-- 类别名 -->
+      <div class="category-editor-item">
+        <van-cell-group inset>
+          <van-cell>
+            <van-field
+              v-model="name"
+              name="类别名"
+              label="类别名"
+              placeholder="新建类别"
+              :rules="[{ required: true, message: '请填写类别名' }]"
+            />
+          </van-cell>
+        </van-cell-group>
+      </div>
+      <!-- 颜色 -->
+      <div class="category-editor-item">
+        <van-cell-group inset>
+          <van-cell>
+            <van-field
+              v-model="color"
+              is-link
+              readonly
+              name="color"
+              label="颜色"
+              placeholder="点击选择颜色"
+              @click="showColorPopup = true"
+              :rules="[{ required: true, message: '请先选择颜色' }]"
+            >
+              <template #input>
+                <div
+                  class="show_color"
+                  :style="{ 'background-color': color }"
+                ></div>
+              </template> </van-field
+          ></van-cell>
+        </van-cell-group>
+      </div>
+      <!-- 图标 -->
+      <div class="category-editor-item">
+        <van-cell-group inset>
+          <van-cell>
+            <van-field
+              v-model="icon"
+              is-link
+              readonly
+              name="icon"
+              label="图标"
+              placeholder="点击选择图标"
+              @click="showIconPopup = true"
+              :rules="[{ required: true, message: '请先选择图标' }]"
+            >
+              <template #input>
+                <i
+                  :class="`iconfont ${icon}`"
+                  :style="{
+                    'background-color': '#fff',
+                    color: '#000',
+                    'font-size': '24px',
+                  }"
+                ></i>
+              </template> </van-field
+          ></van-cell>
+        </van-cell-group>
+      </div>
+      <!-- 选择复习曲线 -->
+      <div class="category-editor-item">
+        <van-cell-group inset>
+          <van-cell>
+            <van-field
+              v-model="planText"
+              is-link
+              readonly
+              name="planText"
+              label="复习曲线"
+              placeholder="点击选择复习曲线"
+              @click="showPlanPicker = true"
+              :rules="[{ required: true, message: '请先选择复习曲线' }]"
+            />
+          </van-cell>
+        </van-cell-group>
+      </div>
     </van-form>
+  </div>
+  <!-- 颜色选择器 -->
+  <div class="color-selector">
+    <van-popup v-model:show="showColorPopup" position="bottom">
+      <color-picker
+        :colorArray="colorArray"
+        :selectColor="color"
+        @picked="handlerColorPicked"
+      />
+    </van-popup>
+  </div>
+  <!-- 图标选择 -->
+  <div class="icon-selector">
+    <van-popup v-model:show="showIconPopup" position="bottom">
+      <icon-picker
+        :iconArray="iconArray"
+        :selectIcon="icon"
+        @picked="handlerIconPicked"
+      />
+    </van-popup>
+  </div>
+  <!-- 复习曲线选择 -->
+  <div class="plan-selector">
+    <van-popup v-model:show="showPlanPicker" position="bottom">
+      <van-picker
+        :columns="planColumns"
+        @confirm="onConfirmPlan"
+        @cancel="showPlanPicker = false"
+        :loading="loadingPlanData"
+        :default-index="defaultPlanIndex"
+      />
+    </van-popup>
   </div>
 </template>
 
@@ -311,9 +343,13 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-.editor_wrap {
-  height: calc(100vh - 46px);
-  padding-top: 46px;
+.category-editor-wrap {
+  height: calc(100vh - 56px);
+  padding-top: 56px;
+  background-color: #f3f4f5;
+  .category-editor-item {
+    margin-bottom: 10px;
+  }
   .show_color {
     width: 24px;
     height: 24px;

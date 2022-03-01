@@ -1,145 +1,172 @@
 <template>
   <!-- 为编辑 (新建 修改) 卡片提供组件-->
-  <div class="editor_wrap">
+  <div class="card-editor-wrap">
     <van-form ref="addCardForm">
-      <van-cell-group inset>
-        <van-field
-          v-model="title"
-          name="卡片名称"
-          label="卡片名称"
-          placeholder="新建卡片"
-          :rules="[{ required: true, message: '请填写卡片名' }]"
-        />
-        <!-- 选择类别 -->
-        <van-field
-          v-model="categoryText"
-          is-link
-          readonly
-          name="categoryText"
-          label="类别"
-          placeholder="点击选择类别"
-          @click="showCategoryPicker = true"
-          :rules="[{ required: true, message: '请先选择类别' }]"
-        >
-          <template #input>
-            <div class="show-category-wrap" ref="categoryContentEle">
-              <div class="category-placeholder" v-if="!categoryText">
-                <input
-                  type="text"
-                  class="van-field__control"
-                  readonly=""
-                  placeholder="点击选择选择类别"
-                  aria-labelledby="van-field-22-label"
-                />
-              </div>
-              <div v-else class="category-content">
-                <!-- 只有一行 -->
-                <div class="category-name">
-                  <p>{{ category.name }}</p>
+      <div class="card-editor-item">
+        <van-cell-group inset>
+          <van-cell>
+            <van-field
+              v-model="title"
+              name="卡片名称"
+              label="卡片名称"
+              placeholder="新建卡片"
+              :rules="[{ required: true, message: '请填写卡片名' }]"
+          /></van-cell>
+        </van-cell-group>
+      </div>
+      <div class="card-editor-item">
+        <van-cell-group inset>
+          <!-- 选择类别 -->
+          <van-cell>
+            <van-field
+              v-model="categoryText"
+              is-link
+              readonly
+              name="categoryText"
+              label="类别"
+              placeholder="点击选择类别"
+              @click="showCategoryPicker = true"
+              :rules="[{ required: true, message: '请先选择类别' }]"
+            >
+              <template #input>
+                <div class="show-category-wrap" ref="categoryContentEle">
+                  <div class="category-placeholder" v-if="!categoryText">
+                    <input
+                      type="text"
+                      class="van-field__control"
+                      readonly=""
+                      placeholder="点击选择选择类别"
+                      aria-labelledby="van-field-22-label"
+                    />
+                  </div>
+                  <div v-else class="category-content">
+                    <!-- 只有一行 -->
+                    <div class="category-name">
+                      <p>{{ category.name }}</p>
+                    </div>
+                    <div class="category-icon">
+                      <!-- 使用iconfont -->
+                      <i
+                        :class="`category-icon iconfont ${category.icon}`"
+                        :style="{ color: category.color }"
+                      >
+                      </i>
+                    </div>
+                  </div>
                 </div>
-                <div class="category-icon">
-                  <!-- 使用iconfont -->
-                  <i
-                    :class="`category-icon iconfont ${category.icon}`"
-                    :style="{ color: category.color }"
-                  >
-                  </i>
+              </template>
+            </van-field>
+          </van-cell>
+        </van-cell-group>
+      </div>
+      <div class="card-editor-item">
+        <van-cell-group inset>
+          <!-- 编辑概要 -->
+          <van-cell>
+            <van-field
+              v-model="summary"
+              is-link
+              readonly
+              name="summary "
+              label="概要"
+              placeholder="点击编辑概要信息"
+              @click="showSummaryPicker = true"
+              :rules="[{ required: true, message: '请先填写概要信息' }]"
+            >
+              <template #input>
+                <div class="show-editor-wrap" ref="summaryEle">
+                  <div class="editor-placeholder" v-if="!summary">
+                    <input
+                      type="text"
+                      class="van-field__control"
+                      readonly=""
+                      placeholder="点击编辑概要信息"
+                      aria-labelledby="van-field-22-label"
+                    />
+                  </div>
+                  <div v-else class="editor-content">
+                    <p>
+                      {{ summaryText }}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </template>
-        </van-field>
+              </template>
+            </van-field>
+          </van-cell>
+        </van-cell-group>
+      </div>
 
-        <van-popup v-model:show="showCategoryPicker" position="bottom">
-          <van-picker
-            :columns="categoryColumns"
-            @confirm="onConfirmCategory"
-            @cancel="showCategoryPicker = false"
-            :loading="loadingCategoryData"
-            :default-index="defaultCategoryIndex"
-          />
-        </van-popup>
-        <!-- 编辑概要 -->
-        <van-field
-          v-model="summary"
-          is-link
-          readonly
-          name="summary "
-          label="概要"
-          placeholder="点击编辑概要信息"
-          @click="showSummaryPicker = true"
-          :rules="[{ required: true, message: '请先填写概要信息' }]"
-        >
-          <template #input>
-            <div class="show-editor-wrap" ref="summaryEle">
-              <div class="editor-placeholder" v-if="!summary">
-                <input
-                  type="text"
-                  class="van-field__control"
-                  readonly=""
-                  placeholder="点击编辑概要信息"
-                  aria-labelledby="van-field-22-label"
-                />
-              </div>
-              <div v-else class="editor-content">
-                <p>
-                  {{ summaryText }}
-                </p>
-              </div>
-            </div>
-          </template>
-        </van-field>
-
-        <van-popup v-model:show="showSummaryPicker" position="bottom">
-          <popup-editor
-            :title="summaryEditorTitle"
-            @onSuccess="showSummaryPicker = false"
-          >
-            <template #content> <TiptapEditor v-model="summary" /></template>
-          </popup-editor>
-        </van-popup>
-        <!-- 编辑详细描述 -->
-        <van-field
-          v-model="description"
-          is-link
-          readonly
-          name="description "
-          label="详细备注"
-          placeholder="点击编辑详细备注"
-          @click="showDescriptionPicker = true"
-          :rules="[{ required: true, message: '请先填写详细信息' }]"
-        >
-          <template #input>
-            <div class="show-editor-wrap" ref="descriptionEle">
-              <div class="editor-placeholder" v-if="!description">
-                <input
-                  type="text"
-                  class="van-field__control"
-                  readonly=""
-                  placeholder="点击编辑详细备注"
-                  aria-labelledby="van-field-22-label"
-                />
-              </div>
-              <div v-else class="editor-content">
-                <p>
-                  {{ descriptionText }}
-                </p>
-              </div>
-            </div>
-          </template>
-        </van-field>
-        <van-popup v-model:show="showDescriptionPicker" position="bottom">
-          <popup-editor
-            :title="descriptionEditorTitle"
-            @onSuccess="showDescriptionPicker = false"
-          >
-            <template #content>
-              <TiptapEditor v-model="description"
-            /></template>
-          </popup-editor>
-        </van-popup>
-      </van-cell-group>
+      <div class="card-editor-item">
+        <van-cell-group inset>
+          <!-- 编辑详细描述 -->
+          <van-cell>
+            <van-field
+              v-model="description"
+              is-link
+              readonly
+              name="description "
+              label="详细备注"
+              placeholder="点击编辑详细备注"
+              @click="showDescriptionPicker = true"
+              :rules="[{ required: true, message: '请先填写详细信息' }]"
+            >
+              <template #input>
+                <div class="show-editor-wrap" ref="descriptionEle">
+                  <div class="editor-placeholder" v-if="!description">
+                    <input
+                      type="text"
+                      class="van-field__control"
+                      readonly=""
+                      placeholder="点击编辑详细备注"
+                      aria-labelledby="van-field-22-label"
+                    />
+                  </div>
+                  <div v-else class="editor-content">
+                    <p>
+                      {{ descriptionText }}
+                    </p>
+                  </div>
+                </div>
+              </template>
+            </van-field>
+          </van-cell>
+        </van-cell-group>
+      </div>
     </van-form>
+  </div>
+  <!-- 选择类别 弹出层 -->
+  <div class="show-category-popup">
+    <van-popup v-model:show="showCategoryPicker" position="bottom">
+      <van-picker
+        :columns="categoryColumns"
+        @confirm="onConfirmCategory"
+        @cancel="showCategoryPicker = false"
+        :loading="loadingCategoryData"
+        :default-index="defaultCategoryIndex"
+      />
+    </van-popup>
+  </div>
+  <!-- 编辑概要 弹出层 -->
+  <div class="show-summary-popup">
+    <van-popup v-model:show="showSummaryPicker" position="bottom">
+      <popup-editor
+        :title="summaryEditorTitle"
+        @onSuccess="showSummaryPicker = false"
+      >
+        <template #content> <TiptapEditor v-model="summary" /></template>
+      </popup-editor>
+    </van-popup>
+  </div>
+  <!-- 编辑详细 弹出层 -->
+  <div class="show-desc-popup">
+    <van-popup v-model:show="showDescriptionPicker" position="bottom">
+      <popup-editor
+        :title="descriptionEditorTitle"
+        @onSuccess="showDescriptionPicker = false"
+      >
+        <template #content> <TiptapEditor v-model="description" /></template>
+      </popup-editor>
+    </van-popup>
   </div>
 </template>
 
@@ -327,7 +354,7 @@ export default defineComponent({
                 Toast.success(props.successText);
                 setTimeout(() => {
                   Toast.clear();
-                  router.go(-1)
+                  router.go(-1);
                 }, 1000);
               });
             })
@@ -401,13 +428,16 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-.editor_wrap {
-  height: calc(100vh - 46px);
-
-  padding-top: 46px;
+.card-editor-wrap {
+  height: calc(100vh - 56px);
+  background-color: #f3f4f5;
+  padding-top: 56px;
   display: flex;
   form {
     width: 100%;
+  }
+  .card-editor-item {
+    margin-bottom: 10px;
   }
   .show-category-wrap {
     .category-placeholder {

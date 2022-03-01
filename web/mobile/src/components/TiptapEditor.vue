@@ -158,7 +158,7 @@ export default defineComponent({
   },
 });
 </script>
-
+<style scoped src="@/assets/RemixIcon_Font/remixicon.css"></style>
 <style lang="scss" scoped>
 #text-editor {
   border: 1px solid #808080;
