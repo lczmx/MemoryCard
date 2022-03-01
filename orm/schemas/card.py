@@ -58,3 +58,16 @@ class ReadDescriptionCardModel(ReadSummaryCardModel):
 class BatchCard(BaseModel):
     # 批量处理卡片
     cards: List[int]
+
+
+class ResetModel(BaseModel):
+    cid: int
+
+
+class ReadResetModel(ResetModel):
+    review_at: datetime = Field(None, alias="reviewAt")
+    review_times: int = Field(None, alias="reviewTimes")
+
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True

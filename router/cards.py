@@ -7,11 +7,11 @@ from sqlalchemy.orm import Session
 from fastapi import APIRouter, status, Depends
 from fastapi.exceptions import HTTPException
 from orm.schemas.card import ParamsCardModel, ReadSummaryCardModel, \
-    ReadDescriptionCardModel, WriteCardModel, StarModel, BatchCard
+    ReadDescriptionCardModel, WriteCardModel, StarModel, BatchCard, ResetModel, ReadResetModel
 from orm.schemas.generic import GenericResponse, QueryLimit
 
 from orm.crud import save_one_to_db, query_all_data_by_user, toggle_star_status, \
-    query_one_data_by_user, update_card_data, delete_data_by_user, recode_operation
+    query_one_data_by_user, update_card_data, delete_data_by_user, recode_operation, reset_cards_review
 from orm.models import Card, User
 from dependencies.orm import get_session
 from dependencies.queryParams import get_limit_params, convert_card_order
@@ -59,6 +59,24 @@ async def create_card(card_data: ParamsCardModel, session: Session = Depends(get
         "status": 1,
         "msg": "创建成功",
         "data": card_obj
+    }
+
+
+@router.post("/reset", response_model=GenericResponse[ReadResetModel], response_model_exclude_unset=True)
+async def reset_card(reset_data: ResetModel, session: Session = Depends(get_session),
+                     user: User = Depends(jwt_get_current_user)):
+    """
+    重置卡片的复习
+    """
+    uid = user.id
+    card = query_one_data_by_user(session=session, uid=uid, target_id=reset_data.cid, model_class=Card)
+    if not card:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
+
+    return {
+        "status": 1,
+        "msg": "重置成功",
+        "data": reset_cards_review(session=session, uid=uid, cards=[card])[0]
     }
 
 

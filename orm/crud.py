@@ -346,7 +346,7 @@ def update_review_times(session: Session, cid: int, review_times: int, review_at
         return 0
 
 
-def reset_cards_review(session: Session, uid: int, cards: List[Card]):
+def reset_cards_review(session: Session, uid: int, cards: List[Type[Card]]) -> List[Type[Card]]:
     """
     重置卡片复习数据
     :param session:
@@ -360,6 +360,7 @@ def reset_cards_review(session: Session, uid: int, cards: List[Card]):
         card.review_times = 0
         card.review_at = datetime.datetime.now()
     session.commit()
+    return cards
 
 
 def delete_data_by_user(session: Session,
