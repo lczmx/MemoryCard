@@ -17,7 +17,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref, toRef } from "vue";
+import { defineComponent, PropType, toRef } from "vue";
 import { ICard } from "@/types";
 import { useCurrentCardPlan } from "@/hook";
 export default defineComponent({

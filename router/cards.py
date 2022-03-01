@@ -11,7 +11,8 @@ from orm.schemas.card import ParamsCardModel, ReadSummaryCardModel, \
 from orm.schemas.generic import GenericResponse, QueryLimit
 
 from orm.crud import save_one_to_db, query_all_data_by_user, toggle_star_status, \
-    query_one_data_by_user, update_card_data, delete_data_by_user, recode_operation, reset_cards_review
+    query_one_data_by_user, update_card_data, delete_data_by_user, recode_operation, reset_cards_review, \
+    batch_reset_cards
 from orm.models import Card, User
 from dependencies.orm import get_session
 from dependencies.queryParams import get_limit_params, convert_card_order
@@ -101,6 +102,30 @@ async def batch_star_card(batch_data: BatchCard, session: Session = Depends(get_
     return {
         "status": 1,
         "msg": f"成功星标卡片数: {batch_status.get('success_count')}, 失败星标卡片数: {batch_status.get('fail_count')}",
+    }
+
+
+@router.post("/batch-reset", response_model=GenericResponse, response_model_exclude_unset=True)
+async def batch_star_card(batch_data: BatchCard, session: Session = Depends(get_session),
+                          user: User = Depends(jwt_get_current_user)):
+    """
+    批量重置卡片
+    """
+    uid = user.id
+    batch_status = {
+        "success_count": 0,
+        "fail_count": 0,
+    }
+    cards = batch_reset_cards(session=session, uid=uid, cid_lst=batch_data.cards)
+    for card in cards:
+        if card.review_times:  # 0时, 成功
+            batch_status["fail_count"] += 1
+            continue
+        batch_status["success_count"] += 1
+
+    return {
+        "status": 1,
+        "msg": f"成功重置卡片数: {batch_status.get('success_count')}, 失败重置卡片数: {batch_status.get('fail_count')}",
     }
 
 

@@ -52,3 +52,7 @@ class WriteCategoryModel(BaseCategoryModel):
 class BatchCategory(BaseModel):
     # 批量处理类别
     category: List[int]
+
+
+class ResetCardByCategory(BaseModel):
+    id: int

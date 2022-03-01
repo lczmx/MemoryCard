@@ -39,7 +39,6 @@ export async function request<T, D>(
       // 请求成功返回
       Toast.clear(); // 取消 加载中
       if (!res.data) {
-        // TODO: 异常处理
         throw new Error("请求错误");
       }
       // 提示msg的信息
@@ -52,7 +51,6 @@ export async function request<T, D>(
       // 请求错误
       // 取消 加载中
       // 异常捕捉后被你吞了，相当于返回了 Promise<void>；所以需要继续向上抛出。
-      // TODO: 异常处理
       const status = e.toJSON().status;
       switch (status) {
         case 401:

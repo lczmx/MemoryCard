@@ -6,10 +6,12 @@ from typing import List, Dict
 from fastapi import APIRouter, status, Depends
 from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
-from orm.schemas.category import ParamsCategoryModel, WriteCategoryModel, ReadCategoryModel, StarModel, BatchCategory
+from orm.schemas.category import ParamsCategoryModel, WriteCategoryModel, ReadCategoryModel, StarModel, BatchCategory, \
+    ResetCardByCategory
 from orm.schemas.generic import GenericResponse, QueryLimit
 from orm.crud import save_one_to_db, query_all_data_by_user, query_one_data_by_user, update_category_data, \
-    delete_category_data, toggle_star_status, query_category_by_user_order_card_count, recode_operation
+    delete_category_data, toggle_star_status, query_category_by_user_order_card_count, recode_operation, \
+    reset_cards_review
 from orm.models import Category, User
 from dependencies.queryParams import get_limit_params, convert_category_order
 from dependencies.orm import get_session
@@ -70,6 +72,23 @@ async def create_category(category_prams: ParamsCategoryModel, session: Session 
         "status": 1,
         "msg": "创建类别成功",
         "data": category_obj
+    }
+
+
+@router.post("/reset", response_model=GenericResponse, response_model_exclude_unset=True)
+async def reset_card_category(category_data: ResetCardByCategory, session: Session = Depends(get_session),
+                              user: User = Depends(jwt_get_current_user)):
+    """
+    分类的所有卡片的复习
+    """
+    uid = user.id
+    category = query_one_data_by_user(session=session, uid=uid, target_id=category_data.id, model_class=Category)
+    if not category:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的分类")
+    reset_cards_review(session=session, uid=uid, cards=category.card)
+    return {
+        "status": 1,
+        "msg": "重置成功",
     }
 
 

@@ -419,13 +419,13 @@ export default defineComponent({
     let tid: number | null = null;
     const categoryActions = [
       { name: "编辑" },
+      { name: "重置复习" },
       { name: "删除", color: "red", subname: "删除后无法撤销" },
     ];
     const touchHoldHandler = (event: MouseEvent) => {
       // 使用类型转换
       const targetElement = event.target as HTMLElement;
       tid = Number(targetElement.getAttribute("tid"));
-
       showCategoryActionSheet.value = true;
       // 处理长按, 弹出提示
     };
@@ -444,6 +444,9 @@ export default defineComponent({
             editCategory(tid);
             break;
           case 1:
+            resetCardByCategory(tid);
+            break;
+          case 2:
             deleteCategory(tid);
             break;
         }
@@ -452,6 +455,19 @@ export default defineComponent({
     const router = useRouter();
     const editCategory = (id: number) => {
       router.push({ name: "editorCategory", params: { cid: id } });
+    };
+    const resetCardByCategory = (id: number) => {
+      // 重置卡片的复习
+      const config = {
+        method: "post" as Method,
+        url: `${store.state.serverHost}/category/reset`,
+        data: { id },
+      };
+      postCreateData<null, Record<string, number>>(config, false).then(() => {
+        // 提示
+        Toast.success("重置卡片");
+        // 移除
+      });
     };
     const deleteCategory = (id: number) => {
       // 删除标签

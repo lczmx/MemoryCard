@@ -363,6 +363,14 @@ def reset_cards_review(session: Session, uid: int, cards: List[Type[Card]]) -> L
     return cards
 
 
+def batch_reset_cards(session: Session, uid: int, cid_lst: List[int]) -> List[Type[Card]]:
+    cards = session.execute(
+        select(Card).where(Card.uid == uid, Card.id.in_(cid_lst))
+    ).scalars().all()
+
+    return reset_cards_review(session=session, uid=uid, cards=cards)
+
+
 def delete_data_by_user(session: Session,
                         uid: int,
                         target_id: int,
