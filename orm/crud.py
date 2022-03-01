@@ -718,3 +718,21 @@ def update_user_profile_data(session: Session, uid: int, data: Dict) -> str:
         logging.error(str(e))
         session.rollback()
         return "未知异常"
+
+
+def query_all_docs(session: Session) -> list[ModelT]:
+    """
+    查询所有文档数据
+
+    :param session: 数据连接
+    :return: 文档 列表
+    """
+    # 判断是否allow_none, 选择对应的语句
+    # Statement
+    try:
+        res = session.execute(select(Doc))
+        return res.scalars().all()
+    except Exception as e:
+        logging.error(str(e))
+        session.rollback()
+        return []
