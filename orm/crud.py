@@ -14,6 +14,7 @@ from orm.database import Base
 from orm.models import Category, Plan, Card, User, Operation, Recode
 
 from orm.schemas.category import ReadCategoryModel, ParamsCategoryModel
+from orm.schemas.plan import ParamsPlanModel
 from orm.schemas.card import ParamsCardModel
 from orm.schemas.generic import QueryLimit, CardDateQueryLimit
 from orm.schemas.analyse import WriteRecodeModel
@@ -259,9 +260,7 @@ def update_category_data(session: Session, uid: int, cid: int,
         old_category_data = query_one_data_by_user(session, uid, cid, Category)
         if old_category_data.pid != data.pid:
             # 重置卡片的review_at和review_times
-            for card in old_category_data.card:
-                card.review_times = 0
-                card.review_at = datetime.datetime.now()
+            reset_cards_review(session=session, uid=uid, cards=old_category_data.card)
             session.commit()
 
         return update_data(session=session, uid=uid, target_id=cid, model_class=Category, data=data)
@@ -286,11 +285,34 @@ def update_card_data(session: Session, uid: int, cid: int, data: ParamsCardModel
         old_card_data = query_one_data_by_user(session, uid, cid, Card)
         if old_card_data.cid != data.cid:
             # 重置卡片的review_at和review_times=
-            old_card_data.review_times = 0
-            old_card_data.review_at = datetime.datetime.now()
+            reset_cards_review(session=session, uid=uid, cards=[old_card_data])
             session.commit()
 
         return update_data(session=session, uid=uid, target_id=cid, model_class=Card, data=data)
+    except Exception as e:
+        logging.error(str(e))
+        session.rollback()
+        return None
+
+
+def update_plan_data(session: Session, uid: int, pid: int, data: ParamsPlanModel) -> Union[Type[Plan], None]:
+    """
+    更新复习曲线
+    修改plan时 重置 review_at和review_times
+    :param session:
+    :param uid:
+    :param pid:
+    :param data:
+    :return:
+    """
+    try:
+        # 对比pid
+        old_plan_data = query_one_data_by_user(session, uid, pid, Plan)
+        if old_plan_data.content != data.content:
+            # 重置卡片的review_at和review_times=
+            for category in old_plan_data.category:
+                reset_cards_review(session=session, uid=uid, cards=category.card)
+        return update_data(session=session, uid=uid, target_id=pid, model_class=Plan, data=data)
     except Exception as e:
         logging.error(str(e))
         session.rollback()
@@ -322,6 +344,22 @@ def update_review_times(session: Session, cid: int, review_times: int, review_at
         logging.error(str(e))
         session.rollback()
         return 0
+
+
+def reset_cards_review(session: Session, uid: int, cards: List[Card]):
+    """
+    重置卡片复习数据
+    :param session:
+    :param uid:
+    :param cards:
+    :return:
+    """
+    for card in cards:
+        if card.uid != uid:
+            continue
+        card.review_times = 0
+        card.review_at = datetime.datetime.now()
+    session.commit()
 
 
 def delete_data_by_user(session: Session,

@@ -1,6 +1,6 @@
 <template>
   <!-- 为分类编辑（修改／新增）提供通用组件 -->
-  <div class="editor-wrap">
+  <div class="editor-plan-wrap">
     <van-form ref="addPlanForm">
       <van-cell-group inset>
         <van-field
@@ -378,16 +378,21 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-.editor-wrap {
+.editor-plan-wrap {
   height: 88px;
-  padding-top: 46px;
+  padding-top: 56px;
+  background-color: #f4f3f5;
 }
 
 .show-plans-wrap {
-  height: calc(100vh - 46px - 88px - 40px - 5px);
+  height: calc(100vh - 56px - 88px - 40px);
   overflow: scroll;
-  padding-top: 20px;
-  margin: 5px 16px 20px 16px;
+  padding: 20px 16px;
+  background-color: #f4f3f5;
+  .van-steps{
+    border-radius: 8px;
+  }
+
   .show-plan-title {
     color: #000;
     margin: 0;

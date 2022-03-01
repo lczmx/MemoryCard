@@ -180,6 +180,15 @@
                       />
                     </template>
                   </van-button>
+                  <!-- 重置按钮 -->
+                  <van-button
+                    class="swipe_right_btn"
+                    icon="replay"
+                    type="success"
+                    round
+                    :block="true"
+                    @click="handlerResetReview(index, item.id)"
+                  />
                 </div>
               </template>
             </van-swipe-cell>
@@ -239,7 +248,7 @@ import type {
   ActionSheetAction,
 } from "vant";
 import { useToggle, useWindowSize } from "@vant/use";
-import { ICard, IStar, IBatchPostCardData } from "@/types";
+import { ICard, IStar, IBatchPostCardData, IResetCardReview } from "@/types";
 import { getDataOfPage, postCreateData, deleteData } from "@/utils/request";
 import ShowPlan from "@/components/showPlan.vue";
 import { Method } from "axios";
@@ -569,6 +578,28 @@ export default defineComponent({
         data.value[index].isStar = response.isStar;
       });
     };
+    // --------- 重置复习
+    const handlerResetReview = (index: number, cid: number) => {
+      const config = {
+        method: "post" as Method,
+        url: `${store.state.serverHost}/cards/reset`,
+        data: {
+          cid,
+        },
+      };
+
+      postCreateData<IResetCardReview, Record<string, number>>(
+        config,
+        false
+      ).then((response) => {
+        // 提示
+        if (data.value[index] && data.value[index].id === cid) {
+          data.value[index].reviewAt = response.reviewAt;
+          data.value[index].reviewTimes = response.reviewTimes;
+          Toast.success("已重置复习");
+        }
+      });
+    };
     // ----------------------- 限制category和title的width
     const resetFiledWidth = () => {
       const field = document.querySelector(".van-swipe-cell") as HTMLElement;
@@ -673,6 +704,7 @@ export default defineComponent({
       handlerDeleteBtn,
       handlerEditBtn,
       handlerToggleStarStatus,
+      handlerResetReview,
       showPopover,
       onSelect,
       actions,
@@ -722,7 +754,6 @@ export default defineComponent({
     color: #ee0a24;
   }
 }
-
 
 .cards_body_empty {
   background-color: #f4f3f5;

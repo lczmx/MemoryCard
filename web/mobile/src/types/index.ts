@@ -117,6 +117,12 @@ export interface IBatchPostCategoryData {
   category: number[];
 }
 
+export interface IResetCardReview {
+  // 重置复习
+  reviewAt: Date;
+  reviewTimes: number;
+}
+
 // --- 复习曲线展示
 
 export interface IPlanStep {

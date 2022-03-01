@@ -8,8 +8,8 @@ from dependencies.queryParams import get_limit_params
 from dependencies.auth import jwt_get_current_user
 from orm.schemas.generic import QueryLimit, GenericResponse
 from orm.schemas.plan import WritePlanModel, ReadPlanModel, ParamsPlanModel
-from orm.crud import query_all_data_by_user, save_one_to_db, query_one_data_by_user, update_data, delete_data_by_user, \
-    recode_operation
+from orm.crud import query_all_data_by_user, save_one_to_db, query_one_data_by_user, update_plan_data, \
+    delete_data_by_user, recode_operation
 from orm.models import Plan, User
 import settings
 
@@ -76,7 +76,7 @@ def update_plan(pid: int, plan_data: ParamsPlanModel, session: Session = Depends
     修改一条复习曲线数据
     """
     uid = user.id
-    plan = update_data(session=session, uid=uid, target_id=pid, model_class=Plan, data=plan_data)
+    plan = update_plan_data(session=session, uid=uid, pid=pid, data=plan_data)
     if not plan:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的复习曲线")
     return {
