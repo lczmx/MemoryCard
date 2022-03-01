@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 
 from pydantic import BaseModel
 from orm.database import Base
-from orm.models import Category, Plan, Card, User, Operation, Recode
+from orm.models import Category, Plan, Card, User, Operation, Recode, Doc
 
 from orm.schemas.category import ReadCategoryModel, ParamsCategoryModel
 from orm.schemas.plan import ParamsPlanModel
@@ -123,8 +123,7 @@ def query_one_data_by_user(session: Session,
     # Statement
     try:
         stmt = select(model_class).where(model_class.uid == uid, model_class.id == target_id).limit(1)
-        res = session.scalars(stmt)
-        return res.first()
+        return session.scalars(stmt).first()
 
     except Exception as e:
         logging.error(str(e))
@@ -139,6 +138,18 @@ def query_plan_title_by_user(session: Session, *, uid: Optional[int] = None,
         res = session.execute(
             select(Plan.title).where(Plan.uid == uid).limit(query_params.limit).offset(query_params.offset)
         )
+
+        return res.scalars().all()
+    except Exception as e:
+        logging.error(str(e))
+        session.rollback()
+        return []
+
+
+def query_all_doc_title(session: Session) -> List[str]:
+    """查文档的全部标题"""
+    try:
+        res = session.execute(select(Doc.title))
 
         return res.scalars().all()
     except Exception as e:
@@ -389,6 +400,37 @@ def delete_data_by_user(session: Session,
             delete(model_class).where(model_class.id == target_id, model_class.uid == uid)
         )
         session.commit()
+        return result.rowcount
+    except Exception as e:
+        logging.error(str(e))
+        session.rollback()
+        return 0
+
+
+def delete_plan_by_user(session: Session,
+                        uid: int,
+                        pid: int,
+                        ) -> int:
+    """
+    删除复习曲线数据
+    :param session: 数据库链接
+    :param uid: 用户ID
+    :param pid: 曲线ID
+    :return: 所影响的行数
+    """
+    try:
+        # 修改类别的复习曲线
+        # 设置为默认的
+        default_plan = session.scalars(select(Plan).where(Plan.uid.is_(None)).limit(1)).first()
+        category_lst = session.execute(
+            select(Category).where(Category.uid == uid, Category.pid == pid)).scalars().all()
+        for category in category_lst:
+            category.pid = default_plan.id
+            # 重置卡片复习
+            reset_cards_review(session=session, uid=uid, cards=category.card)
+        session.commit()
+
+        result = session.execute(delete(Plan).where(Plan.id == pid, Plan.uid == uid))
         return result.rowcount
     except Exception as e:
         logging.error(str(e))

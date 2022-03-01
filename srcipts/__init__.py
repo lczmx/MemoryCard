@@ -4,7 +4,8 @@
 
 from .init_plans import crate_plans
 from .init_operation import crate_operation
+from .init_docs import crate_docs
 
-# TODO: 取消注释
 crate_plans()
 crate_operation()
+crate_docs()

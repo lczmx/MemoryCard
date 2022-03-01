@@ -229,7 +229,7 @@ export default defineComponent({
     const actions = [
       { text: "排序", icon: " iconfont icon-sorting" },
       { text: "只看星标", icon: " iconfont icon-favor" },
-      { text: "选择标签", icon: " iconfont icon-select" },
+      { text: "选择类别", icon: " iconfont icon-select" },
     ];
     // ------ 弹框选项选中回调
     const onSelect = (action: PopoverAction, index: number) => {

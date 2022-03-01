@@ -9,7 +9,7 @@ from dependencies.auth import jwt_get_current_user
 from orm.schemas.generic import QueryLimit, GenericResponse
 from orm.schemas.plan import WritePlanModel, ReadPlanModel, ParamsPlanModel
 from orm.crud import query_all_data_by_user, save_one_to_db, query_one_data_by_user, update_plan_data, \
-    delete_data_by_user, recode_operation
+    delete_plan_by_user, recode_operation
 from orm.models import Plan, User
 import settings
 
@@ -92,7 +92,7 @@ def delete_plan(pid: int, session: Session = Depends(get_session), user: User = 
     删除一天复习计划
     """
     uid = user.id
-    plan = delete_data_by_user(session=session, uid=uid, target_id=pid, model_class=Plan)
+    plan = delete_plan_by_user(session=session, uid=uid, pid=pid)
     if not plan:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的复习曲线")
     recode_operation(session=session, uid=uid, oid=settings.OPERATION_DATA["delete_plan"])

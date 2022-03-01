@@ -119,3 +119,11 @@ class Operation(Base):
     """
     title = Column(String(32), nullable=True, comment="操作记录")
     recode = relationship("Recode", backref="operation")
+
+
+class Doc(Base):
+    __tablename__ = "Doc"  # 文档
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    title = Column(String(64), nullable=False, comment="文档标题")
+    tag = Column(String(128), nullable=False, comment="文档tag")
+    content = Column(Text, nullable=False, comment="文档内容")
