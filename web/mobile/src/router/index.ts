@@ -17,6 +17,8 @@ import EditorCategory from "@/components/EditorCategory.vue";
 import EditorCard from "@/components/EditorCard.vue";
 // ---- 设置内部页面
 import About from "@/components/About.vue";
+import Help from "@/components/Help.vue";
+
 import Plan from "@/components/Plan.vue";
 import AddPlan from "@/components/AddPlan.vue";
 import EditorPlan from "@/components/EditorPlan.vue";
@@ -72,14 +74,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/settings",
     component: SettingsContent,
     children: [
-      {
-        path: "about",
-        component: About,
-        name: "About",
-      },
       { path: "plans", component: Plan, name: "Plan" },
       { path: "analyse", component: Analyse, name: "Analyse" },
       { path: "profile", component: Profile, name: "Profile" },
+      { path: "about", component: About, name: "About" },
+      { path: "help", component: Help, name: "Help" },
     ],
   },
   // 数据分析

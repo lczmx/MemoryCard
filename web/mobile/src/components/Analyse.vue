@@ -1,7 +1,7 @@
 <template>
-  <div class="analyse-wrap">
+  <div class="analyse-data-wrap">
     <!-- 复习相关 -->
-    <p class="analyse-date-text">截止北京时间 2022年2月27日23:48:01</p>
+    <p class="analyse-date-text">截止北京时间 {{ nowDateString }}</p>
     <!-- 卡片相关 -->
     <div class="analyse-item">
       <van-grid clickable :column-num="2">
@@ -10,9 +10,13 @@
           <div class="review-today-wrap">
             <div class="review-diff-wrap">
               <div>较昨日</div>
-              <div class="review-diff-text">
+              <div
+                :class="`review-diff-text ${
+                  analyse_data.review.incr >= 0 ? 'diff-incr' : 'diff-decr'
+                }`"
+              >
                 {{
-                  analyse_data.review.incr > 0
+                  analyse_data.review.incr >= 0
                     ? "+" + analyse_data.review.incr
                     : analyse_data.review.incr
                 }}
@@ -37,16 +41,20 @@
           <div class="review-today-wrap">
             <div class="review-diff-wrap">
               <div>较昨日</div>
-              <div class="review-diff-text">
+              <div
+                :class="`review-diff-text ${
+                  analyse_data.create.incr >= 0 ? 'diff-incr' : 'diff-decr'
+                }`"
+              >
                 {{
-                  analyse_data.create.incr > 0
+                  analyse_data.create.incr >= 0
                     ? "+" + analyse_data.create.incr
                     : analyse_data.create.incr
                 }}
               </div>
             </div>
           </div>
-          <div class="review-today-text">{{ analyse_data.create.incr }}</div>
+          <div class="review-today-text">{{ analyse_data.create.today }}</div>
           <div class="review-title">今日创建卡片</div>
         </van-grid-item>
         <van-grid-item
@@ -79,6 +87,7 @@ import { defineComponent, ref, onMounted } from "vue";
 import { useStore } from "vuex";
 import { IAnalyseSummaryData } from "@/types";
 import { getDataOfOne } from "@/utils/request";
+import dayjs from "dayjs";
 export default defineComponent({
   name: "Analyse",
   setup() {
@@ -103,18 +112,22 @@ export default defineComponent({
     onMounted(() => {
       getAnalyseData();
     });
+    // 当前时间
+    const nowDateString = dayjs().format("YYYY年MM月DD日 HH:mm:ss");
     return {
       // 返回的数据
       analyse_data,
+      nowDateString,
     };
   },
 });
 </script>
 
-<style lang="scss" scoped>
-.analyse-wrap {
+<style lang="scss">
+.analyse-data-wrap {
   min-height: calc(100vh - 66px);
-  margin: 0 10px;
+  background-color: #f4f3f5;
+  padding: 10px;
   .analyse-date-text {
     color: #969790;
     font-size: 12px;
@@ -123,6 +136,10 @@ export default defineComponent({
   }
   .analyse-item {
     margin-bottom: 30px;
+    .van-grid-item__content--center {
+      border-radius: 8px;
+    }
+
     // 今日复习
     .review-today-wrap {
       font-size: 13px;
@@ -131,10 +148,17 @@ export default defineComponent({
         justify-content: center;
         align-items: center;
         .review-diff-text {
-          color: #178b50;
           display: flex;
           justify-content: center;
           align-items: center;
+          font-weight: bold;
+          margin-left:5px;
+        }
+        .diff-incr {
+          color: #178b50;
+        }
+        .diff-decr {
+          color: #e61c1d;
         }
       }
     }

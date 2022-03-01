@@ -671,7 +671,7 @@ export default defineComponent({
 
 .review_body_empty {
   background-color: #f4f3f5;
-  min-height: calc(100vh - 56px);
+  min-height: calc(100vh - 46px);
   padding-top: 56px;
   padding-bottom: 50px;
 }

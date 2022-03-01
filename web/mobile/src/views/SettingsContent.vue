@@ -4,9 +4,16 @@
     left-text="返回"
     left-arrow
     @click-left="clickHistoryBack"
+     @click-right="clickGoHome"
     :placeholder="true"
     :fixed="true"
-  />
+  >
+    <template #right>
+      <div class="setting-content-right-wrap">
+        <van-icon name="wap-home" size="20" />
+      </div>
+    </template>
+  </van-nav-bar>
   <router-view></router-view>
 </template>
 
@@ -26,11 +33,17 @@ export default defineComponent({
       router.go(-1);
       
     };
+    // ------- 返回首页
+    const clickGoHome = () => {
+      router.push({ name: "settings" });
+
+    }
     const store = useStore();
 
     return {
       clickHistoryBack,
       store,
+      clickGoHome
     };
   },
 });

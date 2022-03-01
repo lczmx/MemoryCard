@@ -62,6 +62,9 @@
   <div class="loading-chart" v-show="loadingChart">
     <van-loading color="#1989fa" />
   </div>
+
+  <!-- 设置背景颜色 -->
+  <div class="chart-wrap-bkg"></div>
 </template>
 
 <script lang="ts">
@@ -216,8 +219,18 @@ export default defineComponent({
   left: 0;
   background: #fff;
 }
+.chart-wrap-bkg {
+  z-index: -999;
+  position: fixed;
+  bottom: 0;
+  top: 46px;
+  right: 0;
+  left: 0;
+  background: #f3f4f5;
+}
 .chart-wrap {
-  margin: 10px;
+  padding: 10px;
+  background-color: #f3f4f5;
   // 图表容器占位
   .date-tool-bar {
     display: flex;
@@ -230,10 +243,18 @@ export default defineComponent({
       }
     }
   }
+
+  #container {
+    border-radius: 8px;
+    background-color: #fff;
+    padding: 10px;
+  }
+
   .date-wrap {
-    padding-top: 30px;
-    width: calc(100vw - 40px - 20px);
-    margin: 0 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    margin-top: 30px;
+    padding: 10px 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -241,8 +262,11 @@ export default defineComponent({
       flex: 1;
       display: flex;
       align-items: center;
+      font-size:14px;
       .date-icon {
         margin-right: 5px;
+        display: flex;
+        align-items: center;
       }
     }
     .show-date {
@@ -250,7 +274,7 @@ export default defineComponent({
       display: flex;
       align-items: center;
       .date {
-        font-size: 14px;
+        font-size: 12px;
       }
       .date-char {
         font-size: 30px;

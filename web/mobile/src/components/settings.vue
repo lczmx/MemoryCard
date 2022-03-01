@@ -76,7 +76,7 @@
     <!-- 第二部分开始 -->
     <!-- 关于项目等 -->
     <van-cell-group inset>
-      <van-cell value="" is-link>
+      <van-cell value="" is-link :to="{ name: 'Help' }">
         <template #icon>
           <van-icon
             class="iconfont item-icon"
@@ -90,7 +90,7 @@
           <span class="custom-title">帮助中心</span>
         </template>
       </van-cell>
-      <van-cell value="" is-link @click="handlerClickAbout">
+      <van-cell value="" is-link :to="{ name: 'About' }">
         <template #icon>
           <van-icon
             class="iconfont item-icon"
@@ -153,10 +153,6 @@ export default defineComponent({
     // ------------- 跳转到About页面
     const router = useRouter();
 
-    const handlerClickAbout = () => {
-      router.push({ name: "About" });
-    };
-
     onMounted(() => {
       getUserData();
     });
@@ -169,7 +165,6 @@ export default defineComponent({
     return {
       // 返回的数据
       user,
-      handlerClickAbout,
       handlerClickLogout,
     };
   },
