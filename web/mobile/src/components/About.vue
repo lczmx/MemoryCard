@@ -1,6 +1,8 @@
 <!--  统一的添加页面  -->
 
-<template>关于</template>
+<template>
+  <div class="about-wrap">关于</div>
+</template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
@@ -18,3 +20,11 @@ export default defineComponent({
   },
 });
 </script>
+
+<style lang="scss" scoped>
+.about-wrap {
+  min-height: calc(100vh - 56px);
+  background-color: #f3f4f5;
+  padding: 10px 16px 0;
+}
+</style>
