@@ -29,13 +29,16 @@
     <template #right>
       <div class="select-mode-right-tool-wrap" v-if="selectMode">
         <div class="tool-item tool-star" @click.stop="handlerClickBatchStar">
-          批量星标
+          星标
+        </div>
+        <div class="tool-item tool-reset" @click.stop="handlerClickBatchReset">
+          重置
         </div>
         <div
           class="tool-item tool-delete"
           @click.stop="handlerClickBatchDelete"
         >
-          批量删除
+          删除
         </div>
       </div>
       <!-- 弹出层 -->
@@ -440,6 +443,40 @@ export default defineComponent({
         handlerClickCancel();
       });
     };
+    // 批量重置复习
+    const handlerClickBatchReset = () => {
+      if (!checkedCard.value || checkedCard.value.length <= 0) {
+        // 提示先选择
+        Toast("请先选择卡片");
+        return;
+      }
+
+      const config = {
+        method: "post" as Method,
+        url: `${store.state.serverHost}/cards/batch-reset`,
+        data: {
+          cards: checkedCard.value,
+        },
+      };
+
+      postCreateData<null, IBatchPostCardData>(config, false).then(() => {
+        // 提示
+        Toast.success("已批量重置");
+        // 切换选中的星标状态
+        const shouldStarCount = checkedCard.value.length; // 应该重置的数量
+        let currentStarCount = 0;
+        for (let item of data.value) {
+          if (checkedCard.value.includes(item.id)) {
+            item.reviewTimes = 0;
+            currentStarCount += 1;
+            if (currentStarCount === shouldStarCount) break;
+          }
+        }
+
+        // 关闭选择模式
+        handlerClickCancel();
+      });
+    };
     // 批量删除
     const handlerClickBatchDelete = () => {
       if (!checkedCard.value || checkedCard.value.length <= 0) {
@@ -593,7 +630,7 @@ export default defineComponent({
         false
       ).then((response) => {
         // 提示
-        if (data.value[index] && data.value[index].id === cid) {
+        if (data.value[index] && data.value[index].id === response.id) {
           data.value[index].reviewAt = response.reviewAt;
           data.value[index].reviewTimes = response.reviewTimes;
           Toast.success("已重置复习");
@@ -720,6 +757,7 @@ export default defineComponent({
       handlerClickSelectInverse,
       handlerClickSelectAll,
       handlerClickBatchStar,
+      handlerClickBatchReset,
       handlerClickBatchDelete,
       showSortActionSheet, // 排序开始
       sortActions,
@@ -749,6 +787,9 @@ export default defineComponent({
   }
   .tool-star {
     color: #53bb86;
+  }
+  .tool-reset {
+    color: #1989fa;
   }
   .tool-delete {
     color: #ee0a24;

@@ -64,7 +64,8 @@ class ResetModel(BaseModel):
     cid: int
 
 
-class ReadResetModel(ResetModel):
+class ReadResetModel(BaseModel):
+    id: int
     review_at: datetime = Field(None, alias="reviewAt")
     review_times: int = Field(None, alias="reviewTimes")
 

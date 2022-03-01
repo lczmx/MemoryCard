@@ -4,14 +4,20 @@
     <van-progress
       pivot-text=""
       color="#f2826a"
-      :percentage="percentage"
+      :percentage="
+        Math.round(
+          (useCurrentCardPlan(cardRef).reviewTimes /
+            useCurrentCardPlan(cardRef).allReviewTimes) *
+            100
+        )
+      "
       stroke-width="5"
     />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref } from "vue";
+import { defineComponent, PropType, ref, toRef } from "vue";
 import { ICard } from "@/types";
 import { useCurrentCardPlan } from "@/hook";
 export default defineComponent({
@@ -23,18 +29,10 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const active = ref(1);
-    const currentCardPlan = useCurrentCardPlan(props.card);
-
-    const pivotText = `${currentCardPlan.reviewTimes} / ${currentCardPlan.allReviewTimes}`;
-    const percentage = Math.round(
-      (currentCardPlan.reviewTimes / currentCardPlan.allReviewTimes) * 100
-    );
-
+    const cardRef = toRef(props, "card");
     return {
-      active,
-      pivotText,
-      percentage,
+      cardRef,
+      useCurrentCardPlan,
     };
   },
 });

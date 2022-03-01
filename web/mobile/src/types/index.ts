@@ -119,6 +119,7 @@ export interface IBatchPostCategoryData {
 
 export interface IResetCardReview {
   // 重置复习
+  id: number;
   reviewAt: Date;
   reviewTimes: number;
 }
