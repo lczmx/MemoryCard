@@ -3,7 +3,7 @@
 """
 import datetime
 import logging
-from typing import List, TypeVar, Optional, Dict
+from typing import List, TypeVar, Optional, Dict, Type, Union
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select, or_, not_, update, delete, func, desc
@@ -13,7 +13,8 @@ from pydantic import BaseModel
 from orm.database import Base
 from orm.models import Category, Plan, Card, User, Operation, Recode
 
-from orm.schemas.category import ReadCategoryModel
+from orm.schemas.category import ReadCategoryModel, ParamsCategoryModel
+from orm.schemas.card import ParamsCardModel
 from orm.schemas.generic import QueryLimit, CardDateQueryLimit
 from orm.schemas.analyse import WriteRecodeModel
 import settings
@@ -242,6 +243,60 @@ def update_data(session: Session, uid: int, target_id: int, model_class: ModelT,
         return None
 
 
+def update_category_data(session: Session, uid: int, cid: int,
+                         data: ParamsCategoryModel) -> Union[Type[Category], None]:
+    """
+    更新类别的数据
+    修改plan时 重置 review_at和review_times
+    :param session:
+    :param uid:
+    :param cid:
+    :param data:
+    :return:
+    """
+    try:
+        # 对比pid
+        old_category_data = query_one_data_by_user(session, uid, cid, Category)
+        if old_category_data.pid != data.pid:
+            # 重置卡片的review_at和review_times
+            for card in old_category_data.card:
+                card.review_times = 0
+                card.review_at = datetime.datetime.now()
+            session.commit()
+
+        return update_data(session=session, uid=uid, target_id=cid, model_class=Category, data=data)
+    except Exception as e:
+        logging.error(str(e))
+        session.rollback()
+        return None
+
+
+def update_card_data(session: Session, uid: int, cid: int, data: ParamsCardModel) -> Union[Type[Card], None]:
+    """
+    更新卡片的数据
+    修改plan时 重置 review_at和review_times
+    :param session:
+    :param uid:
+    :param cid:
+    :param data:
+    :return:
+    """
+    try:
+        # 对比pid
+        old_card_data = query_one_data_by_user(session, uid, cid, Card)
+        if old_card_data.cid != data.cid:
+            # 重置卡片的review_at和review_times=
+            old_card_data.review_times = 0
+            old_card_data.review_at = datetime.datetime.now()
+            session.commit()
+
+        return update_data(session=session, uid=uid, target_id=cid, model_class=Card, data=data)
+    except Exception as e:
+        logging.error(str(e))
+        session.rollback()
+        return None
+
+
 def update_review_times(session: Session, cid: int, review_times: int, review_at: datetime
                         ) -> int:
     """
@@ -437,7 +492,7 @@ def query_account_by_username_or_email(session: Session, username: str, email: s
         return []
 
 
-def query_user_by_id(session: Session, uid: int) -> User:
+def query_user_by_id(session: Session, uid: int) -> Union[User, None]:
     """
    获取用户对象
     :param session:
@@ -559,7 +614,7 @@ def update_user_profile_data(session: Session, uid: int, data: Dict) -> str:
     :return: 异常提示
     """
     try:
-        result = session.execute(
+        session.execute(
             update(User).where(User.id == uid).values(**data))
         session.commit()
         return ""

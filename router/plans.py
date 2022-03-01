@@ -1,6 +1,7 @@
 from typing import List, Dict
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
+from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 from dependencies.orm import get_session
 from dependencies.queryParams import get_limit_params
@@ -59,11 +60,7 @@ def get_plan(pid: int, session: Session = Depends(get_session), user: User = Dep
     uid = user.id
     plan = query_one_data_by_user(session=session, uid=uid, target_id=pid, model_class=Plan)
     if not plan:
-        return {
-            "status": 0,
-            "msg": "没有找到对应资源",
-            "data": plan
-        }
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的复习曲线")
 
     return {
         "status": 1,
@@ -81,11 +78,7 @@ def update_plan(pid: int, plan_data: ParamsPlanModel, session: Session = Depends
     uid = user.id
     plan = update_data(session=session, uid=uid, target_id=pid, model_class=Plan, data=plan_data)
     if not plan:
-        return {
-            "status": 0,
-            "msg": "修改失败",
-            "data": plan
-        }
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的复习曲线")
     return {
         "status": 1,
         "msg": "修改成功",
@@ -101,10 +94,7 @@ def delete_plan(pid: int, session: Session = Depends(get_session), user: User = 
     uid = user.id
     plan = delete_data_by_user(session=session, uid=uid, target_id=pid, model_class=Plan)
     if not plan:
-        return {
-            "status": 0,
-            "msg": "删除失败",
-        }
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的复习曲线")
     recode_operation(session=session, uid=uid, oid=settings.OPERATION_DATA["delete_plan"])
     return {
         "status": 1,

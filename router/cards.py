@@ -11,7 +11,7 @@ from orm.schemas.card import ParamsCardModel, ReadSummaryCardModel, \
 from orm.schemas.generic import GenericResponse, QueryLimit
 
 from orm.crud import save_one_to_db, query_all_data_by_user, toggle_star_status, \
-    query_one_data_by_user, update_data, delete_data_by_user, recode_operation
+    query_one_data_by_user, update_card_data, delete_data_by_user, recode_operation
 from orm.models import Card, User
 from dependencies.orm import get_session
 from dependencies.queryParams import get_limit_params, convert_card_order
@@ -160,8 +160,7 @@ async def update_card(cid: int, data: ParamsCardModel, session: Session = Depend
     """
 
     uid = user.id
-
-    card_data = update_data(session=session, uid=uid, target_id=cid, model_class=Card, data=data)
+    card_data = update_card_data(session=session, uid=uid, cid=cid, data=data)
     if not card_data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
 
@@ -183,10 +182,7 @@ async def delete_card(cid: int, session: Session = Depends(get_session), user: U
     rowcount = delete_data_by_user(session=session, uid=uid, target_id=cid, model_class=Card)
     # rowcount = 0 时
     if not rowcount:
-        return {
-            "status": 0,
-            "msg": "删除失败",
-        }
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
     recode_operation(session=session, uid=uid, oid=settings.OPERATION_DATA["delete_card"])
     return {
         "status": 1,

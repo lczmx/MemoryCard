@@ -8,7 +8,7 @@ from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 from orm.schemas.category import ParamsCategoryModel, WriteCategoryModel, ReadCategoryModel, StarModel, BatchCategory
 from orm.schemas.generic import GenericResponse, QueryLimit
-from orm.crud import save_one_to_db, query_all_data_by_user, query_one_data_by_user, update_data, \
+from orm.crud import save_one_to_db, query_all_data_by_user, query_one_data_by_user, update_category_data, \
     delete_category_data, toggle_star_status, query_category_by_user_order_card_count, recode_operation
 from orm.models import Category, User
 from dependencies.queryParams import get_limit_params, convert_category_order
@@ -168,9 +168,10 @@ async def update_category(cid: int, category_prams: ParamsCategoryModel, session
     更新一条分类
     """
     uid = user.id
-    # TODO: 修改plan时 重置 review_at和review_times
-    category_data = update_data(session=session, uid=uid, target_id=cid, model_class=Category, data=category_prams)
+    category_data = update_category_data(session=session, uid=uid, cid=cid, data=category_prams)
 
+    if not category_data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的分类")
     return {
         "status": 1,
         "msg": "更新成功",
@@ -187,10 +188,8 @@ async def delete_category(cid: int, session: Session = Depends(get_session),
     uid = user.id
     rowcount = delete_category_data(session=session, uid=uid, cid=cid)
     if not rowcount:
-        return {
-            "status": 0,
-            "msg": "删除失败",
-        }
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的分类")
+
     recode_operation(session=session, uid=uid, oid=settings.OPERATION_DATA["delete_category"])
     return {
         "status": 1,

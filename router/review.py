@@ -4,7 +4,8 @@
 from typing import List
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status as http_status
+from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 
 from orm.schemas.generic import QueryLimit, GenericResponse, CardDateQueryLimit
@@ -156,11 +157,7 @@ async def get_card(
     uid = user.id
     card_data = query_one_data_by_user(session=session, uid=uid, target_id=cid, model_class=Card)
     if not card_data:
-        return {
-            "status": 0,
-            "msg": "获取失败, 该卡片不存在",
-            "data": None
-        }
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
     # 必须是需要复习的
     if card_data.is_review_date:
         return {
@@ -186,11 +183,9 @@ async def review_done(
     """
     uid = user.id
     card_data = query_one_data_by_user(session=session, uid=uid, target_id=cid, model_class=Card)
+
     if not card_data:
-        return {
-            "status": 0,
-            "msg": "该卡片不存在",
-        }
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
     # 必须是需要复习的
     if card_data.is_review_date:
         # 可以完成复习
