@@ -69,4 +69,4 @@ class JWTModel(BaseModel):
 
 class UserProfileModel(BaseModel):
     username: str = Field("")
-    email: str = Field("")
+    email: EmailStr = Field("")

@@ -41,6 +41,7 @@
           v-model="editorValue"
           :label="editorTitle"
           :placeholder="editorPlaceholder"
+          center
         >
           <template #button>
             <van-button
@@ -54,6 +55,9 @@
       </van-cell-group>
     </div>
   </van-popup>
+  <div class="loading-profile" v-show="!user.username">
+    <van-loading color="#1989fa" />
+  </div>
 </template>
 
 <script lang="ts">
@@ -124,7 +128,13 @@ export default defineComponent({
         return;
       }
       // 发送数据
-      if (!editorPostKey.value || !editorValue.value) return;
+      if (!editorPostKey.value || !editorValue.value) {
+        Toast({
+          message: "请先输入数据",
+          position: "bottom",
+        });
+        return;
+      }
 
       //   创建数据
       let data = {};
@@ -132,9 +142,19 @@ export default defineComponent({
         case "username":
           data = { username: editorValue.value };
           break;
-        case "email":
+        case "email": {
+          // 检验邮箱格式
+          let pattern = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(.[a-zA-Z0-9_-])+/;
+          if (!pattern.test(editorValue.value)) {
+            Toast({
+              message: "邮箱格式错误",
+              position: "bottom",
+            });
+            return;
+          }
           data = { email: editorValue.value };
           break;
+        }
       }
       const config = {
         method: "POST" as Method,
@@ -145,10 +165,22 @@ export default defineComponent({
         .then(() => {
           Toast.success("修改成功");
           showEditor.value = false;
-          location.reload();
+          // 要修改的数据
+          switch (editorPostKey.value) {
+            case "username":
+              user.value.username = editorValue.value;
+              break;
+            case "email":
+              user.value.email = editorValue.value;
+              break;
+          }
         })
-        .catch(() => {
-          Toast.fail("修改失败");
+        .catch((response) => {
+          if (!response.msg) return;
+          Toast({
+            message: response.msg,
+            position: "bottom",
+          });
         });
     };
     onMounted(() => {
@@ -168,8 +200,21 @@ export default defineComponent({
 });
 </script>
 <style lang="scss">
+.loading-profile {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  position: fixed;
+  bottom: 0;
+  top: 46px;
+  right: 0;
+  left: 0;
+  background: #f4f3f5;
+}
+
 .profile-wrap {
-  min-height: calc(100vh - 56px);
+  min-height: calc(100vh - 66px);
   padding: 10px 0;
   background-color: #f4f3f5;
   .profile-item {

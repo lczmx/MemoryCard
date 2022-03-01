@@ -7,6 +7,8 @@ from typing import List, TypeVar, Optional, Dict
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select, or_, not_, update, delete, func, desc
+from sqlalchemy.exc import IntegrityError
+
 from pydantic import BaseModel
 from orm.database import Base
 from orm.models import Category, Plan, Card, User, Operation, Recode
@@ -547,21 +549,28 @@ def query_summary_analyse_data(session: Session, uid: int, ):
     return temp
 
 
-def update_user_profile_data(session: Session, uid: int, data: Dict) -> int:
+def update_user_profile_data(session: Session, uid: int, data: Dict) -> str:
     """
       更新用户配置
 
     :param session: 数据连接
     :param uid: 用户id
     :param data: 要要更新的数据
-    :return: rowcount
+    :return: 异常提示
     """
     try:
         result = session.execute(
             update(User).where(User.id == uid).values(**data))
         session.commit()
-        return result.rowcount
+        return ""
+
+    except IntegrityError as e:
+        logging.error(str(e))
+        session.rollback()
+        if e.orig.errno == 1062:
+            return "数据已经存在"
+        return "未知异常"
     except Exception as e:
         logging.error(str(e))
         session.rollback()
-        return 0
+        return "未知异常"

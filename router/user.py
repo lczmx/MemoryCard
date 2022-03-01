@@ -81,7 +81,7 @@ async def get_token(user: User = Depends(jwt_authenticate_user)):
     }
 
 
-@router.post("/profile", response_model=GenericResponse, response_model_exclude_unset=True)
+@router.post("/profile", response_model=GenericResponse[UserProfileModel])
 def update_user_profile(user_profile: UserProfileModel, session: Session = Depends(get_session),
                         user: User = Depends(jwt_get_current_user)):
     """
@@ -89,10 +89,11 @@ def update_user_profile(user_profile: UserProfileModel, session: Session = Depen
     """
     uid = user.id
     data = user_profile.dict(exclude_unset=True, exclude_defaults=True)
-    fail_res = {"status": 0, "msg": "数据不能为空"}
+
     if not data:
-        return fail_res
-    row = update_user_profile_data(session=session, uid=uid, data=data)
-    if not row:
-        return fail_res
-    return {"status": 1, "msg": "修改成功"}
+        return {"status": 0, "msg": "数据不能为空", "data": data}
+
+    error_msg = update_user_profile_data(session=session, uid=uid, data=data)
+    if error_msg:
+        return {"status": 0, "msg": error_msg, "data": data}
+    return {"status": 1, "msg": "修改成功", "data": data}

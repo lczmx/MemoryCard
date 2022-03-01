@@ -77,6 +77,16 @@ export async function request<T, D>(
           });
           break;
         case 404:
+          Toast.fail({
+            message: "路径异常",
+            duration: 1000,
+          });
+          break;
+        case 422:
+          Toast.fail({
+            message: "数据验证失败",
+            duration: 1000,
+          });
           break;
         default:
           console.log(status);

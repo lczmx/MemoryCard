@@ -1,16 +1,9 @@
 <template>
   <van-nav-bar title="设置" :fixed="true"> </van-nav-bar>
-  <div class="settings_body">
+  <div class="settings_body" v-if="user.username">
     <div class="user-info-wrap">
       <!-- 是否已经登录 -->
-      <div class="uer-login" v-if="!user.username">
-        <van-notice-bar color="#28414a" background="#ecf9ff" left-icon="info-o">
-          当前处于游客模式, 你可以
-          <router-link :to="{ name: 'LogIn' }">登录</router-link>或
-          <router-link :to="{ name: 'SignUp' }">注册</router-link>
-        </van-notice-bar>
-      </div>
-      <div class="user-info" v-else>
+      <div class="user-info">
         <van-cell-group inset>
           <van-cell class="user-info-cell">
             <template #title>
@@ -34,7 +27,7 @@
     <!-- 第一部分开始 -->
     <!-- 数据分析, 需要登录 -->
 
-    <van-cell-group inset v-if="user.username">
+    <van-cell-group inset>
       <van-cell value="" is-link :to="{ name: 'Profile' }">
         <template #icon>
           <van-icon
@@ -115,7 +108,7 @@
     <!-- 第二部分结束 -->
     <!-- 第三部分开始 -->
     <!-- 登录等, 用户操作, 需要登录 -->
-    <van-cell-group inset v-if="user.username">
+    <van-cell-group inset>
       <van-cell is-link @click="handlerClickLogout">
         <template #icon>
           <van-icon
@@ -132,6 +125,9 @@
       </van-cell>
     </van-cell-group>
     <!-- 第三部分结束 -->
+  </div>
+  <div class="loading-setting" v-show="!user.username">
+    <van-loading color="#1989fa" />
   </div>
 </template>
 <script lang="ts">
@@ -181,6 +177,19 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+.loading-setting {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  position: fixed;
+  bottom: 0;
+  top: 46px;
+  right: 0;
+  left: 0;
+  background: #f4f3f5;
+}
+
 .settings_body {
   background-color: #f4f3f5;
   padding-top: 10px;
@@ -188,8 +197,6 @@ export default defineComponent({
   margin-bottom: 50px;
   margin-top: 47px;
   .user-info-wrap {
-    .uer-login {
-    }
     .user-info {
       .user-info-cell {
         height: 80px;
