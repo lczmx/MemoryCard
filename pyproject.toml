@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "memorycard"
+version = "0.1.0"
+description = "记忆卡片"
+authors = ["lczmx <lczmx1739@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+gunicorn = "^20.1.0"
+alembic = "^1.7.5"
+psycopg2 = "^2.8.6"
+gino = {extras = ["starlette"], version = "^1.0.1"}
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+requests = "^2.25.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "163"
+url = "https://mirrors.163.com/pypi/simple/"
+default = true
