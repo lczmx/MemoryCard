@@ -1,13 +1,11 @@
 """
 用于接收query参数的依赖
 """
-from datetime import date as datetime_date
+import datetime
 
 from fastapi import Query
-from sqlalchemy import func
 
-from orm.models import Card, Category
-from orm.schemas.generic import QueryLimit, CardDateQueryLimit
+from service.schemas.generic import QueryLimit, CardDateQueryLimit
 
 
 def get_limit_params(limit: int = Query(10, ge=0, le=50, description="查询条数"),
@@ -19,7 +17,7 @@ def get_limit_params(limit: int = Query(10, ge=0, le=50, description="查询条�
 def get_card_by_date_limit_params(
         limit: int = Query(10, ge=0, le=50, description="查询条数"),
         offset: int = Query(0, ge=0, description="跳过多少条"),
-        date: datetime_date = Query(..., description="要查询的日期")
+        date: datetime.date = Query(..., description="要查询的日期")
 ) -> CardDateQueryLimit:
     data = {"limit": limit, "offset": offset, "date": date}
     return CardDateQueryLimit(**data)
@@ -32,12 +30,12 @@ def convert_card_order(order: str = Query("", description="排序方式")):
     :return:
     """
     convert_ref = {
-        "createAt": Card.created_at.asc,
-        "-createAt": Card.created_at.desc,
-        "title": Card.title.asc,
-        "-title": Card.title.desc,
-        "category": Card.cid.asc,
-        "-category": Card.cid.desc,
+        "createAt": "created_at",
+        "-createAt": "-created_at",
+        "title": "title",
+        "-title": "-title",
+        "category": "category",
+        "-category": "-category",
     }
     return convert_ref.get(order, None)
 
@@ -50,10 +48,10 @@ def convert_category_order(order: str = Query("", description="排序方式")):
     """
     convert_ref = {
         # createAt 替换为id
-        "createAt": Category.id.asc,
-        "-createAt": Category.id.desc,
-        "name": Category.name.asc,
-        "-name": Category.name.desc,
+        "createAt": "id",
+        "-createAt": "-id",
+        "name": "name",
+        "-name": "-name",
         "cardCount": "cardCount",
         "-cardCount": "-cardCount",
     }

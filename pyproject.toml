@@ -9,7 +9,9 @@ python = "^3.9"
 fastapi = {extras = ["all"], version = "^0.74.1"}
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
-sqlalchemy = "^1.4.31"
+aiomysql = "^0.0.22"
+fastapi-cache2 = {extras = ["redis"], version = "^0.1.8"}
+orm = {extras = ["mysql"], version = "^0.3.1"}
 
 [tool.poetry.dev-dependencies]
 

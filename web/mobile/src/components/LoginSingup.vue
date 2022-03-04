@@ -391,7 +391,7 @@ export default defineComponent({
       // 先检验数据
       new Promise((resolve, reject) => {
         isEmptyLoginAccount();
-        isEmptyLoginAccount();
+        isEmptyLoginPassword();
 
         if (loginAccountErrorMsg.value || loginPasswordErrorMsg.value) {
           return;

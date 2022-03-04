@@ -8,13 +8,15 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.exceptions import HTTPException
 from fastapi import status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError, jwt
 
-from orm.crud import query_account_by_username_or_email, query_user_by_id
-from orm.models import User
+from service.crud import query_account_by_username_or_email, query_user_by_id
+from service.models import User
 from dependencies.orm import get_session
 import settings
+# ##### orm
+from service.models import User
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -41,28 +43,37 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-def jwt_authenticate_user(session: Session = Depends(get_session),
-                          form_data: OAuth2PasswordRequestForm = Depends()) -> Union[User, None]:
+async def jwt_authenticate_user(form_data: OAuth2PasswordRequestForm = Depends()) -> Union[User, None]:
     """
     检验jwt是否合法
     获取当前用户
-    :param session:
+
     :param form_data:  jwt表单
     :return:
     """
 
     # 到数据库中获取
-    user_lst = query_account_by_username_or_email(session=session, username=form_data.username,
-                                                  email=form_data.username)
+
+    username_lst = await User.objects.filter(username=form_data.username).all()
     # 检验密码是否合法
-    for user in user_lst:
-        # 假如通过, 则符合用户对象
-        if settings.pwd_context.verify(form_data.password, user.hashed_pwd):
-            return user
+    valid_user = verify_user_lst_pwd(username_lst, form_data.password)
+    if valid_user and valid_user.active:
+        return valid_user
+
+    email_lst = await User.objects.filter(email=form_data.username).all()
+    valid_user = verify_user_lst_pwd(email_lst, form_data.password)
+    if valid_user and valid_user.active:
+        return valid_user
     return None
 
 
-async def jwt_get_current_user(session: Session = Depends(get_session),
+def verify_user_lst_pwd(user_lst, pwd):
+    for user in user_lst:
+        if settings.pwd_context.verify(pwd, user.hashed_pwd):
+            return user
+
+
+async def jwt_get_current_user(session: AsyncSession = Depends(get_session),
                                token: str = Depends(settings.oauth2_schema)) -> User:
     """
     根据jwt获取用户
@@ -84,7 +95,8 @@ async def jwt_get_current_user(session: Session = Depends(get_session),
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = query_user_by_id(session=session, uid=uid)
-    if not user:
+    user = await User.objects.filter(pk=uid, active=True).first()
+    # 必须active为true
+    if not user or not user.active:
         raise credentials_exception
     return user

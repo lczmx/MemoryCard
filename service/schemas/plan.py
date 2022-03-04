@@ -4,6 +4,7 @@
 from typing import Optional
 
 from pydantic import BaseModel
+from service.schemas.user import DBUserModel
 
 
 class BasePlanModel(BaseModel):
@@ -23,7 +24,7 @@ class ReadPlanModel(BasePlanModel):
     返回的
     """
     id: int
-    editable: bool
+    editable: Optional[bool] = None
 
     class Config:
         orm_mode = True
@@ -34,3 +35,18 @@ class WritePlanModel(BasePlanModel):
     写入数据库的
     """
     uid: Optional[int] = None
+
+
+class ReadNoLoadPlanID(BaseModel):
+    # 复习曲线ID
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+class DBPlanModel(BaseModel):
+    id: int
+    user: DBUserModel
+    title: str
+    content: str

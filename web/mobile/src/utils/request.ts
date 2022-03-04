@@ -70,13 +70,13 @@ export async function request<T, D>(
             router.go(-1);
           }, 1500);
           Toast.fail({
-            message: "无法访问",
+            message: "拒绝访问",
             duration: 1000,
           });
           break;
         case 404:
           Toast.fail({
-            message: "路径异常",
+            message: "未找到资源",
             duration: 1000,
           });
           break;
@@ -331,7 +331,6 @@ export async function getDataOfOne<R>(
 但没有响应体
 */
 export async function deleteData<D>(
-  // post 创建数据
   config: AxiosRequestConfig<D>,
   loading = false
 ): Promise<string> {

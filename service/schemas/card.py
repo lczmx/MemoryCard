@@ -4,7 +4,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from orm.schemas.category import ReadCategoryModel
+from service.schemas.user import DBUserModel
+from service.schemas.category import DBCategoryModel, ReadCategoryModel, ReadNoLoadPlanCategoryModel
 
 
 class StarModel(BaseModel):
@@ -45,10 +46,47 @@ class ReadSummaryCardModel(BaseCardModel, StarModel):
         allow_population_by_field_name = True
 
 
+class ReadNoLoadPlanCardModel(ReadSummaryCardModel):
+    """
+    只取复习曲线id的情况
+    """
+    category: ReadNoLoadPlanCategoryModel
+
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True
+
+
 class ReadDescriptionCardModel(ReadSummaryCardModel):
     # 详细的数据
     summary: str
     description: str
+
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True
+
+
+class ReadDescNoPlanCardModel(ReadDescriptionCardModel):
+    # 详细的数据, 没有复习曲线
+    summary: str
+    description: str
+    category: ReadNoLoadPlanCategoryModel
+
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True
+
+
+class OnlyCategoryID(BaseModel):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+class ReadNoCategoryCardModel(ReadDescriptionCardModel):
+    category: OnlyCategoryID
 
     class Config:
         orm_mode = True
@@ -72,3 +110,20 @@ class ReadResetModel(BaseModel):
     class Config:
         orm_mode = True
         allow_population_by_field_name = True
+
+
+class DBCardModel(BaseModel):
+    """
+    数据库模型
+    """
+    id: int
+    user: DBUserModel
+    category: DBCategoryModel
+    title: str
+    created_at: datetime
+    updated_at: datetime
+    review_at: datetime
+    review_times: int
+    summary: str
+    description: str
+    is_star: bool

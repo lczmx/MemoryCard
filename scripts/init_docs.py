@@ -4,13 +4,10 @@
 """
 import logging
 
-from orm import SessionLocal
-from orm.models import Doc
-from orm.crud import save_all_to_db, query_all_doc_title
-from orm.schemas.other import ReadDocModel
+from service.models import Doc
 
 
-def crate_docs():
+async def crate_docs():
     logging.info("初始化帮助文档数据中...")
     # 没有uid
     data = [
@@ -73,14 +70,9 @@ def crate_docs():
         }
     ]
 
-    with SessionLocal() as session:
-        # 跳过已经有的
-        exists_docs = query_all_doc_title(session=session)
-        docs = [ReadDocModel(**d) for d in data if d.get("title") not in exists_docs]
-        if docs:
-            # 正式初始化
-            save_all_to_db(session=session, model_class=Doc, data_list=docs)
-            logging.info("初始化完毕")
+    for d in data:
+        _, created = await Doc.objects.get_or_create(**d, defaults=d)
+        if created:
+            logging.info(f"已初始化{d.get('title')}")
         else:
-            # 已经初始化过了
-            logging.info("已经初始化了")
+            logging.info("跳过初始化")

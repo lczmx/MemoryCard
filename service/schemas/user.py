@@ -1,7 +1,10 @@
 from typing import Optional
 from pydantic import BaseModel, Field, EmailStr, validator
-from orm.crud import query_user_username_exists, query_user_email_exists
-from orm.database import SessionLocal
+
+
+# from service.database import SessionLocal
+class SessionLocal:
+    pass
 
 
 class ParamsSignUpModel(BaseModel):
@@ -10,27 +13,10 @@ class ParamsSignUpModel(BaseModel):
     password1: str
     password2: str
 
-    @validator('username')
-    def is_username_exists(cls, v, **kwargs):
-        with SessionLocal() as session:
-            # 跳过已经有的
-            exists = query_user_username_exists(session=session, username=v)
-            if exists:
-                raise ValueError('用户名已经存在')
-        return v
-
-    @validator('email')
-    def is_email_exists(cls, v, **kwargs):
-        with SessionLocal() as session:
-            # 跳过已经有的
-            exists = query_user_email_exists(session=session, email=v)
-            if exists:
-                raise ValueError('邮箱已经存在')
-        return v
-
     @validator('password2')
     def passwords_match(cls, v, values, **kwargs):
         """
+        比对两次密码
         :param v: 当前字段的值: zxcvbn2
         :param values: 已经验证的数据: {'username': 'scolvin', 'password1': 'zxcvbn'}
         :param kwargs: {'field': ModelField(name='password2', type=str, required=True),
@@ -70,3 +56,8 @@ class JWTModel(BaseModel):
 class UserProfileModel(BaseModel):
     username: str = Field("")
     email: EmailStr = Field("")
+
+
+class DBUserModel(WriteSignUpModel):
+    """数据库模型"""
+    id: int

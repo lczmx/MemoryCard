@@ -56,7 +56,7 @@ class WriteOperationModel(BaseModel):
     title: str
 
 
-class WriteRecodeModel(BaseModel):
+class WriteRecordModel(BaseModel):
     # 与记录相关
     uid: int
     oid: int

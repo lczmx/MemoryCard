@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from router import review_router, cards_router, category_router, \
-    analyse_router, plans_router, user_router, help_router
+from api import bind_router
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exception_handlers import request_validation_exception_handler
-import srcipts  # 执行自定义脚本
+from service import orm_database, create_all
+from scripts import start_init
 
 app = FastAPI()
 
@@ -30,7 +30,6 @@ async def http_exception_handler(request, exc: RequestValidationError):
         "status": 0,
         "msg": "验证失败",
         "data": {}
-
     }
     try:
         for error in exc.args[0][0].exc.args[0]:
@@ -43,10 +42,24 @@ async def http_exception_handler(request, exc: RequestValidationError):
         return await request_validation_exception_handler(request, exc)
 
 
-app.include_router(review_router)
-app.include_router(cards_router)
-app.include_router(category_router)
-app.include_router(analyse_router)
-app.include_router(plans_router)
-app.include_router(user_router)
-app.include_router(help_router)
+# 绑定路由
+bind_router(app)
+
+app.state.database = orm_database
+
+
+@app.on_event("startup")
+async def startup() -> None:
+    database_ = app.state.database
+    if not database_.is_connected:
+        await database_.connect()
+        # 连接数据库后才初始化
+    # await start_init()  # 执行离线脚本
+    # await create_all()  # 创建表关系
+
+
+@app.on_event("shutdown")
+async def shutdown() -> None:
+    database_ = app.state.database
+    if database_.is_connected:
+        await database_.disconnect()

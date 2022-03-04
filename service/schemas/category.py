@@ -1,9 +1,12 @@
 """
 定义分类数据模型
 """
-from typing import List
+from typing import Generic, TypeVar, List
+from pydantic.generics import GenericModel
 from pydantic import BaseModel, Field
-from orm.schemas.plan import ReadPlanModel
+
+from service.schemas.user import DBUserModel
+from service.schemas.plan import DBPlanModel, ReadPlanModel, ReadNoLoadPlanID
 
 
 class BaseCategoryModel(BaseModel):
@@ -32,8 +35,19 @@ class ReadCategoryModel(BaseCategoryModel, StarModel):
     返回的单个分类
     """
     id: int
-    plan: ReadPlanModel
+    plan: ReadPlanModel  # 用的时候才确定返回类型
     count: int = Field(None, alias='cardCount')  # 类别的卡片数量
+
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True
+
+
+class ReadNoLoadPlanCategoryModel(ReadCategoryModel):
+    """
+    只返回复习的id
+    """
+    plan: ReadNoLoadPlanID
 
     class Config:
         orm_mode = True
@@ -56,3 +70,14 @@ class BatchCategory(BaseModel):
 
 class ResetCardByCategory(BaseModel):
     id: int
+
+
+class DBCategoryModel(BaseModel):
+    id: int
+    user: DBUserModel
+    plan: DBPlanModel
+    name: str
+    icon: str
+    color: str
+    is_star: bool
+    phone_number: str

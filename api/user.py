@@ -5,22 +5,22 @@
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+from pymysql.err import IntegrityError
 
-from sqlalchemy.orm import Session
-
-from orm.schemas.user import ParamsSignUpModel, WriteSignUpModel, ReadUserModel, JWTModel, UserProfileModel
+import settings
+from service.schemas.user import DBUserModel, ParamsSignUpModel, ReadUserModel, JWTModel, UserProfileModel
+from service.schemas.generic import GenericResponse
+from service.models import User
 from dependencies.orm import get_session
 from dependencies.auth import jwt_authenticate_user, create_access_token, jwt_get_current_user
-from orm.schemas.generic import GenericResponse
-from orm.crud import save_one_to_db, update_user_profile_data, query_user_by_id
-from orm.models import User
-import settings
 
 router = APIRouter(prefix="/user", tags=["用户相关"])
 
 
 @router.get("/", response_model=GenericResponse[ReadUserModel])
-async def get_user(user: User = Depends(jwt_get_current_user)):
+async def get_user(user: DBUserModel = Depends(jwt_get_current_user)):
     """获取当前用户的数据"""
     return {
         "status": 1,
@@ -31,7 +31,7 @@ async def get_user(user: User = Depends(jwt_get_current_user)):
 
 
 @router.post("/signup", response_model=GenericResponse[ReadUserModel], response_model_exclude_unset=True)
-async def signup(sign_up_data: ParamsSignUpModel, session: Session = Depends(get_session)):
+async def signup(sign_up_data: ParamsSignUpModel, session: AsyncSession = Depends(get_session)):
     """
     注册用户
     """
@@ -43,17 +43,28 @@ async def signup(sign_up_data: ParamsSignUpModel, session: Session = Depends(get
         "hashed_pwd": settings.pwd_context.hash(sign_up_data.password1)
 
     }
+    error_res = {}
+    if await User.objects.filter(username=sign_up_data.username).first():
+        error_res["username"] = "用户名已经存在"
 
-    user = save_one_to_db(session=session, model_class=User, data=WriteSignUpModel(**data))
+    if await User.objects.filter(email=sign_up_data.email).first():
+        error_res["email"] = "邮箱已经存在"
+
+    if error_res:
+        return JSONResponse({"status": 0, "msg": "注册失败", "data": error_res})
+
+    # 保存数据
+    await User.objects.create(**data)
+
     return {
         "status": 1,
         "msg": "注册成功",
-        "data": user
+        "data": data
     }
 
 
 @router.post('/token', response_model=GenericResponse[JWTModel])
-async def get_token(user: User = Depends(jwt_authenticate_user)):
+async def get_token(user: DBUserModel = Depends(jwt_authenticate_user)):
     """
     获取token
     :return:
@@ -74,26 +85,23 @@ async def get_token(user: User = Depends(jwt_authenticate_user)):
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data=payload, expires_delta=access_token_expires)
     data = {"access_token": access_token, "token_type": "bearer"}
-    return {
-        "status": 1,
-        "msg": "登录成功",
-        "data": data
-    }
+    return {"status": 1, "msg": "登录成功", "data": data}
 
 
 @router.post("/profile", response_model=GenericResponse[UserProfileModel])
-def update_user_profile(user_profile: UserProfileModel, session: Session = Depends(get_session),
-                        user: User = Depends(jwt_get_current_user)):
+async def update_user_profile(user_profile: UserProfileModel, session: AsyncSession = Depends(get_session),
+                              user: DBUserModel = Depends(jwt_get_current_user)):
     """
     修改用户配置
     """
+
     uid = user.id
     data = user_profile.dict(exclude_unset=True, exclude_defaults=True)
-
     if not data:
         return {"status": 0, "msg": "数据不能为空", "data": data}
 
-    error_msg = update_user_profile_data(session=session, uid=uid, data=data)
-    if error_msg:
-        return {"status": 0, "msg": error_msg, "data": data}
-    return {"status": 1, "msg": "修改成功", "data": data}
+    try:
+        await User.objects.filter(pk=uid).update(**data)
+        return {"status": 1, "msg": "修改成功", "data": data}
+    except IntegrityError:
+        return {"status": 0, "msg": "数据已经存在", "data": data}

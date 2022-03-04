@@ -1,8 +1,6 @@
 .idea/
 __pycache__/
-原型图/
 node_modules/
-alembic/versions
 *.sqlite3
 test.*
 local_settings.py

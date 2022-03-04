@@ -183,7 +183,7 @@
         loading-text="加载中..."
       >
         <van-empty
-          description="没有类别?!"
+          description="没有类别"
           v-if="!filterCategoryLoading && filterCategoryData.length <= 0"
         />
         <van-cell-group
@@ -211,11 +211,7 @@
               </i>
             </template>
             <template #title>
-              <div
-                class="van-ellipsis item-title"
-                :tid="item.id"
-                v-touch:hold="touchHoldHandler"
-              >
+              <div class="van-ellipsis item-title" :tid="item.id">
                 {{ item.name }}
               </div>
             </template>
@@ -400,9 +396,13 @@ export default defineComponent({
       if (!field) return;
       const { width: fieldWidth } = field.getBoundingClientRect();
 
-      const contentItem = document.querySelectorAll(".content_item");
-      const titleNodes = document.querySelectorAll(".item-title");
-      const categoryNodes = document.querySelectorAll(".item-category");
+      const contentItem = document.querySelectorAll(
+        ".review_body .content_item"
+      );
+      const titleNodes = document.querySelectorAll(".review_body .item-title");
+      const categoryNodes = document.querySelectorAll(
+        ".review_body .item-category"
+      );
 
       contentItem.forEach((titleNode) => {
         const ele = titleNode as HTMLElement;
@@ -579,9 +579,13 @@ export default defineComponent({
       if (!field) return;
       const { width: fieldWidth } = field.getBoundingClientRect();
 
-      const contentItem = document.querySelectorAll(".content_item");
-      const titleNodes = document.querySelectorAll(".item-title");
-      const categoryNodes = document.querySelectorAll(".item-category");
+      const contentItem = document.querySelectorAll(
+        ".review_body .content_item"
+      );
+      const titleNodes = document.querySelectorAll(".review_body  .item-title");
+      const categoryNodes = document.querySelectorAll(
+        ".review_body .item-category"
+      );
       // 30 - 24 - 15
       // 代表 图标的两边margin - 图标大小 - 右边的空白
       contentItem.forEach((titleNode) => {
