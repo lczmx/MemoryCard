@@ -90,7 +90,7 @@
           <span class="custom-title">帮助中心</span>
         </template>
       </van-cell>
-      <van-cell value="" is-link :to="{ name: 'About' }">
+      <van-cell value="" is-link url="https://github.com/lczmx/MemoryCard">
         <template #icon>
           <van-icon
             class="iconfont item-icon"

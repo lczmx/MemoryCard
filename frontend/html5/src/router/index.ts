@@ -1,108 +1,146 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
-import Page from "@/views/Page.vue";
-import EditorPage from "@/views/EditorPage.vue";
-import CardReview from "@/views/cardReview.vue";
-import SettingsContent from "@/views/SettingsContent.vue";
-// 登录/注册
-import LogIn from "@/views/LogIn.vue";
-import SignUp from "@/views/SignUp.vue";
-
-import Review from "@/components/review.vue";
-import Cards from "@/components/cards.vue";
-import Category from "@/components/category.vue";
-import Settings from "@/components/settings.vue";
-import AddCategory from "@/components/addCategory.vue";
-import AddCard from "@/components/addCard.vue";
-import EditorCategory from "@/components/EditorCategory.vue";
-import EditorCard from "@/components/EditorCard.vue";
-// ---- 设置内部页面
-import About from "@/components/About.vue";
-import Help from "@/components/Help.vue";
-
-import Plan from "@/components/Plan.vue";
-import AddPlan from "@/components/AddPlan.vue";
-import EditorPlan from "@/components/EditorPlan.vue";
-import Analyse from "@/components/Analyse.vue";
-// ---- 分析页面
-import AnalyseReview from "@/components/AnalyseReview.vue";
-import AnalyseCreate from "@/components/AnalyseCreate.vue";
-// ---------- 配置页面
-import Profile from "@/components/Profile.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
     name: "Page",
-    component: Page,
+    component: () => import("@/views/Page.vue"),
     children: [
-      { path: "", component: Review, name: "review" },
-      { path: "/cards", component: Cards, name: "cards" },
-      { path: "/category", component: Category, name: "category" },
-      { path: "/settings", component: Settings, name: "settings" },
+      {
+        path: "",
+        component: () => import("@/components/review.vue"),
+        name: "review",
+      },
+      {
+        path: "/cards",
+        component: () => import("@/components/cards.vue"),
+        name: "cards",
+      },
+      {
+        path: "/category",
+        component: () => import("@/components/category.vue"),
+        name: "category",
+      },
+      {
+        path: "/settings",
+        component: () => import("@/components/settings.vue"),
+        name: "settings",
+      },
     ],
   },
   {
     path: "/add",
     name: "AddPage",
-    component: EditorPage,
+    component: () => import("@/views/EditorPage.vue"),
     children: [
-      { path: "category", component: AddCategory, name: "addCategory" },
-      { path: "card", component: AddCard, name: "addCard" },
-      { path: "plan", component: AddPlan, name: "addPlan" },
+      {
+        path: "category",
+        component: () => import("@/components/addCategory.vue"),
+        name: "addCategory",
+      },
+      {
+        path: "card",
+        component: () => import("@/components/addCard.vue"),
+        name: "addCard",
+      },
+      {
+        path: "plan",
+        component: () => import("@/components/AddPlan.vue"),
+        name: "addPlan",
+      },
     ],
   },
   {
     path: "/editor",
     name: "EditorPage",
-    component: EditorPage,
+    component: () => import("@/views/EditorPage.vue"),
     children: [
       {
         path: "category/:cid",
-        component: EditorCategory,
+        component: () => import("@/components/EditorCategory.vue"),
         name: "editorCategory",
       },
-      { path: "card/:cid", component: EditorCard, name: "editorCard" },
-      { path: "plan/:pid", component: EditorPlan, name: "editorPlan" },
+      {
+        path: "card/:cid",
+        component: () => import("@/components/EditorCard.vue"),
+        name: "editorCard",
+      },
+      {
+        path: "plan/:pid",
+        component: () => import("@/components/EditorPlan.vue"),
+        name: "editorPlan",
+      },
     ],
   },
   {
     path: "/review/review-mode",
     name: "CardReview",
-    component: CardReview,
+    component: () => import("@/views/cardReview.vue"),
   },
   {
     path: "/settings",
-    component: SettingsContent,
+    component: () => import("@/views/SettingsContent.vue"),
     children: [
-      { path: "plans", component: Plan, name: "Plan" },
-      { path: "analyse", component: Analyse, name: "Analyse" },
-      { path: "profile", component: Profile, name: "Profile" },
-      { path: "about", component: About, name: "About" },
-      { path: "help", component: Help, name: "Help" },
+      {
+        path: "plans",
+        component: () => import("@/components/Plan.vue"),
+        name: "Plan",
+      },
+      {
+        path: "analyse",
+        component: () => import("@/components/Analyse.vue"),
+        name: "Analyse",
+      },
+      {
+        path: "profile",
+        component: () => import("@/components/Profile.vue"),
+        name: "Profile",
+      },
+      {
+        path: "help",
+        component: () => import("@/components/Help.vue"),
+        name: "Help",
+      },
     ],
   },
   // 数据分析
   {
     path: "/analyse",
-    component: SettingsContent,
+    component: () => import("@/views/SettingsContent.vue"),
     children: [
       {
         path: "review",
-        component: AnalyseReview,
+        component: () => import("@/components/AnalyseReview.vue"),
         name: "analyseReview",
       },
-      { path: "create", component: AnalyseCreate, name: "analyseCreate" },
+      {
+        path: "create",
+        component: () => import("@/components/AnalyseCreate.vue"),
+        name: "analyseCreate",
+      },
     ],
   },
   {
     path: "/login",
-    component: LogIn,
+    component: () => import("@/views/LogIn.vue"),
     name: "LogIn",
   },
   {
     path: "/signup",
-    component: SignUp,
+    component: () => import("@/views/SignUp.vue"),
     name: "SignUp",
+  },
+  {
+    path: "/404",
+    name: "404",
+    meta: {
+      title: "无法访问",
+    },
+    component: () => import("@/views/NotFound.vue"),
+  },
+  {
+    path: "/:pathMatch(.*)",
+    redirect: "/404",
   },
 ];
 

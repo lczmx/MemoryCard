@@ -68,8 +68,8 @@ async def startup() -> None:
     if not database_.is_connected:
         await database_.connect()
         # 连接数据库后才初始化
-    await start_init()  # 执行离线脚本
-    await create_all()  # 创建表关系
+    # await start_init()  # 执行离线脚本
+    # await create_all()  # 创建表关系
 
 
 @app.on_event("shutdown")
