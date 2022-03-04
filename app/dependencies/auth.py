@@ -11,11 +11,7 @@ from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError, jwt
 
-from service.crud import query_account_by_username_or_email, query_user_by_id
-from service.models import User
-from dependencies.orm import get_session
 import settings
-# ##### orm
 from service.models import User
 
 
@@ -73,8 +69,7 @@ def verify_user_lst_pwd(user_lst, pwd):
             return user
 
 
-async def jwt_get_current_user(session: AsyncSession = Depends(get_session),
-                               token: str = Depends(settings.oauth2_schema)) -> User:
+async def jwt_get_current_user(token: str = Depends(settings.oauth2_schema)) -> User:
     """
     根据jwt获取用户
     通过 OAuth2PasswordBearer 获得

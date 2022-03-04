@@ -7,7 +7,21 @@ from fastapi.exception_handlers import request_validation_exception_handler
 from service import orm_database, create_all
 from scripts import start_init
 
-app = FastAPI()
+# 许可信息数据
+license_info = {
+    "name": "GPLv3.0",
+    "url": "https://www.gnu.org/licenses/gpl-3.0.html",
+}
+# 联系信息 数据
+contact = {
+    # 联系的名字
+    "name": "lczmx",
+    # 联系url
+    "url": "https://github.com/lczmx/MemoryCard",
+    # 联系的邮箱
+    "email": "lczmx@foxmail.com",
+}
+app = FastAPI(title="记忆卡片", description="记忆卡片后端服务", version="0.2.1", license_info=license_info, contact=contact)
 
 app.add_middleware(
     CORSMiddleware,
@@ -54,8 +68,8 @@ async def startup() -> None:
     if not database_.is_connected:
         await database_.connect()
         # 连接数据库后才初始化
-    # await start_init()  # 执行离线脚本
-    # await create_all()  # 创建表关系
+    await start_init()  # 执行离线脚本
+    await create_all()  # 创建表关系
 
 
 @app.on_event("shutdown")

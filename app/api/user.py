@@ -6,14 +6,12 @@ from datetime import timedelta
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 from pymysql.err import IntegrityError
 
 import settings
 from service.schemas.user import DBUserModel, ParamsSignUpModel, ReadUserModel, JWTModel, UserProfileModel
 from service.schemas.generic import GenericResponse
 from service.models import User
-from dependencies.orm import get_session
 from dependencies.auth import jwt_authenticate_user, create_access_token, jwt_get_current_user
 
 router = APIRouter(prefix="/user", tags=["用户相关"])
@@ -31,7 +29,7 @@ async def get_user(user: DBUserModel = Depends(jwt_get_current_user)):
 
 
 @router.post("/signup", response_model=GenericResponse[ReadUserModel], response_model_exclude_unset=True)
-async def signup(sign_up_data: ParamsSignUpModel, session: AsyncSession = Depends(get_session)):
+async def signup(sign_up_data: ParamsSignUpModel):
     """
     注册用户
     """
@@ -89,8 +87,7 @@ async def get_token(user: DBUserModel = Depends(jwt_authenticate_user)):
 
 
 @router.post("/profile", response_model=GenericResponse[UserProfileModel])
-async def update_user_profile(user_profile: UserProfileModel, session: AsyncSession = Depends(get_session),
-                              user: DBUserModel = Depends(jwt_get_current_user)):
+async def update_user_profile(user_profile: UserProfileModel, user: DBUserModel = Depends(jwt_get_current_user)):
     """
     修改用户配置
     """
