@@ -1,6 +1,7 @@
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 import os
+from loguru import logger
 
 # ####### 数据库链接
 
@@ -33,4 +34,21 @@ OPERATION_DATA = {
     "create_category": 5,
     "delete_plan": 6,
     "create_plan": 7,
+}
+# #### 日志路径
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+LOG_FILE_PATH = os.path.join(BASE_DIR, "logs")
+LOG_FILE_FORMATE = "MemoryCard_{time}.log"
+# 日志配置
+LOGGING_CONFIG = {
+    "logger": {
+        "path": LOG_FILE_PATH,
+        "filename": LOG_FILE_FORMATE,
+        "level": "info",
+        "rotation": "1 MB",
+        "retention": "1 months",
+        "format": "<level>{level: <8}</level> <green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> request id: {extra[request_id]} - <cyan>{name}</cyan>:<cyan>{function}</cyan> - <level>{message}</level>"
+
+    }
 }

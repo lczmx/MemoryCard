@@ -11,7 +11,7 @@ import settings
 from service import utils
 from service.models import Card, Record, Category
 from service.schemas.generic import QueryLimit, GenericResponse, CardDateQueryLimit
-from service.schemas.card import ReadSummaryCardModel, BatchCard, ReadNoLoadPlanCardModel
+from service.schemas.card import ReadSummaryCardModel, BatchCard, ReadDescNoPlanCardModel
 from service.schemas.category import ReadCategoryModel, ReadNoLoadPlanCategoryModel
 from service.schemas.plan import ReadPlanModel
 from service.schemas.user import DBUserModel
@@ -163,7 +163,7 @@ async def get_review_card_category(limit_params: QueryLimit = Depends(get_limit_
     }
 
 
-@router.get("/{cid}", response_model=GenericResponse[ReadNoLoadPlanCardModel])
+@router.get("/{cid}", response_model=GenericResponse[ReadDescNoPlanCardModel])
 async def get_card(cid: int, user: DBUserModel = Depends(jwt_get_current_user)):
     """
     获取一条需要复习卡片

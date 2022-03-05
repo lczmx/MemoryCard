@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -6,6 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exception_handlers import request_validation_exception_handler
 from service import orm_database, create_all
 from scripts import start_init
+from logger import CustomizeLogger
+import uvicorn
+
+logger = logging.getLogger(__name__)
 
 # 许可信息数据
 license_info = {
@@ -21,7 +26,16 @@ contact = {
     # 联系的邮箱
     "email": "lczmx@foxmail.com",
 }
-app = FastAPI(title="记忆卡片", description="记忆卡片后端服务", version="0.2.1", license_info=license_info, contact=contact)
+
+
+def create_app() -> FastAPI:
+    fast_api_app = FastAPI(title="记忆卡片", description="记忆卡片后端服务", version="0.2.1",
+                           license_info=license_info, contact=contact)
+    fast_api_app.logger = CustomizeLogger.make_logger()
+    return fast_api_app
+
+
+app = create_app()
 
 app.add_middleware(
     CORSMiddleware,
@@ -67,9 +81,10 @@ async def startup() -> None:
     database_ = app.state.database
     if not database_.is_connected:
         await database_.connect()
+
         # 连接数据库后才初始化
-    # await start_init()  # 执行离线脚本
-    # await create_all()  # 创建表关系
+    await create_all()  # 创建表关系
+    await start_init()
 
 
 @app.on_event("shutdown")
@@ -77,3 +92,7 @@ async def shutdown() -> None:
     database_ = app.state.database
     if database_.is_connected:
         await database_.disconnect()
+
+
+if __name__ == '__main__':
+    uvicorn.run(app, port=8000, host="192.168.0.110")

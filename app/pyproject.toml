@@ -12,6 +12,7 @@ passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 aiomysql = "^0.0.22"
 fastapi-cache2 = {extras = ["redis"], version = "^0.1.8"}
 orm = {extras = ["mysql"], version = "^0.3.1"}
+loguru = "^0.6.0"
 
 [tool.poetry.dev-dependencies]
 
