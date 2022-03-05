@@ -1,0 +1,7 @@
+.idea/
+__pycache__/
+node_modules/
+logs/*
+*.sqlite3
+test.*
+local_settings.py

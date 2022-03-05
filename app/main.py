@@ -1,4 +1,3 @@
-import logging
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -9,8 +8,6 @@ from service import orm_database, create_all
 from scripts import start_init
 from logger import CustomizeLogger
 import uvicorn
-
-logger = logging.getLogger(__name__)
 
 # 许可信息数据
 license_info = {
@@ -95,4 +92,4 @@ async def shutdown() -> None:
 
 
 if __name__ == '__main__':
-    uvicorn.run(app, port=8000, host="192.168.0.110")
+    uvicorn.run(app, port=8366, host="0.0.0.0")
