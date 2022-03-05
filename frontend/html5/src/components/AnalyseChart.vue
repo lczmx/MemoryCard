@@ -31,7 +31,7 @@
         >
       </div>
     </div>
-    <div id="container"></div>
+    <div id="container" ref="lineContainer"></div>
 
     <!-- 自定义时间选择 -->
     <div class="date-wrap" @click="showCalendar = true">
@@ -185,7 +185,14 @@ export default defineComponent({
       }
       activeDateIndex.value = index;
     };
+    // ------ 防止多次生成line实例
+    const lineContainer = ref<HTMLElement>();
+    const emptyLineContainer = () => {
+      if (!lineContainer.value) return;
+      lineContainer.value.innerHTML = ""; // 清空
+    };
     onMounted(() => {
+      emptyLineContainer();
       initDate();
       getAnalyseData();
     });
@@ -201,6 +208,7 @@ export default defineComponent({
       handlerClickDateBtn,
       loadingChart,
       dayjs,
+      lineContainer,
     };
   },
 });
@@ -262,7 +270,7 @@ export default defineComponent({
       flex: 1;
       display: flex;
       align-items: center;
-      font-size:14px;
+      font-size: 14px;
       .date-icon {
         margin-right: 5px;
         display: flex;
