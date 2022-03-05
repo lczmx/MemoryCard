@@ -4,7 +4,8 @@ import persistedState from "vuex-persistedstate"; // 持久化
 export default createStore({
   state: {
     // sever hostname
-    serverHost: "http://192.168.0.110:8000",
+    serverHost: "",
+    serverPort: "8366",
     // 用于记录当前页面是否被修改
     changeState: false,
     // 是否被提交
@@ -33,6 +34,10 @@ export default createStore({
     setToken(state, { accessToken, tokenType }) {
       state.token.accessToken = accessToken;
       state.token.tokenType = tokenType;
+    },
+    setServiceHost(state, host) {
+      // 动态设置serverHost
+      state.serverHost = `${host}:${state.serverPort}`;
     },
   },
   actions: {},
