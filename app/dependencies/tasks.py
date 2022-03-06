@@ -95,6 +95,8 @@ test_user = {1: {
 }
 }
 
+running_tasks = set()  # 防止抖动, 记录正在运行的任务
+
 
 class RollbackCardModel(BaseModel):
     """
@@ -143,13 +145,19 @@ def make_background_task(func: typing.Callable):
     """
     将任务放到后台
     """
+    func_id = id(func)
 
     def wrap(background_tasks: BackgroundTasks):
         async def wait_to_thread():
             await asyncio.sleep(await_sec)
             await func()
+            if func_id in running_tasks:
+                running_tasks.remove(func_id)
 
+        if func_id in running_tasks:
+            return
         background_tasks.add_task(wait_to_thread)
+        running_tasks.add(func_id)
 
     return wrap
 
