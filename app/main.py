@@ -32,7 +32,7 @@ def create_app() -> FastAPI:
     return fast_api_app
 
 
-app = create_app()
+app: FastAPI = create_app()
 
 app.add_middleware(
     CORSMiddleware,
