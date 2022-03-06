@@ -2,7 +2,7 @@
 
 [![image](https://badgen.net/badge/license/GPL-3.0/green)](https://github.com/lczmx/MemoryCard/blob/main/LICENSE)
 ## 简介
-记忆卡片使用 [FastAPI](https://github.com/tiangolo/fastapi) 作为后端, [vue3](https://github.com/youzan/vant) 作为前端, 是一个用于科学复习记忆的工具。  
+记忆卡片使用 [FastAPI](https://github.com/tiangolo/fastapi) 作为后端, [vue3](https://github.com/vuejs/core) 作为前端, 是一个用于科学复习记忆的工具。  
 记忆卡片默认有科学的复习计划，并且可以让用户自定制最适合自己的记忆曲线。提供HTML5端，无需下载APP，可以随时随地进行记忆/复习。
 ## 线上 DEMO
 扫描二维码访问demo:  
