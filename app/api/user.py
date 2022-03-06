@@ -13,8 +13,9 @@ from service.schemas.user import DBUserModel, ParamsSignUpModel, ReadUserModel, 
 from service.schemas.generic import GenericResponse
 from service.models import User
 from dependencies.auth import jwt_authenticate_user, create_access_token, jwt_get_current_user
+from dependencies import tasks
 
-router = APIRouter(prefix="/user", tags=["用户相关"])
+router = APIRouter(prefix="/user", tags=["用户相关"], dependencies=[Depends(tasks.rollback_test_user)])
 
 
 @router.get("/", response_model=GenericResponse[ReadUserModel])
@@ -24,7 +25,6 @@ async def get_user(user: DBUserModel = Depends(jwt_get_current_user)):
         "status": 1,
         "msg": "获取成功",
         "data": user
-
     }
 
 
@@ -99,6 +99,7 @@ async def update_user_profile(user_profile: UserProfileModel, user: DBUserModel 
 
     try:
         await User.objects.filter(pk=uid).update(**data)
+
         return {"status": 1, "msg": "修改成功", "data": data}
     except IntegrityError:
         return {"status": 0, "msg": "数据已经存在", "data": data}

@@ -1,62 +1,16 @@
 import time
 import typing
 import random
-from asyncio import sleep
-
-from fastapi import Depends
+import asyncio
+from fastapi import BackgroundTasks
 from dependencies.orm import get_no_login_user
 from service import orm_database
-from service.models import Card, Category, User, Plan, Record
+from service.models import Card, Category, User, Plan, Record, Operation
 import datetime
 from pydantic import BaseModel, EmailStr
 
-
-class RollbackCardModel(BaseModel):
-    """
-    数据库模型
-    """
-    id: int
-    user: int
-    category: int
-    title: str
-    created_at: datetime.datetime
-    updated_at: datetime.datetime
-    review_at: datetime.datetime
-    review_times: int
-    summary: str
-    description: str
-    is_star: int
-
-
-class RollbackCategoryModel(BaseModel):
-    id: int
-    user: int
-    plan: int
-    name: str
-    icon: str
-    color: str
-    is_star: int
-
-
-class RollbackUserModel(BaseModel):
-    id: int
-    username: str
-    email: EmailStr
-    hashed_pwd: str
-    phone_number: typing.Optional[str] = None
-    active: int
-
-
-class RollbackRecordModel(BaseModel):
-    id: int
-    user: int
-    operation: int
-    create_at: datetime.date
-
-
 # 10sec后复原
-await_sec = 10
-await_sec_short = 2
+await_sec = 5
 
 cards_data = {1: {
     "id": 1,
@@ -142,6 +96,64 @@ test_user = {1: {
 }
 
 
+class RollbackCardModel(BaseModel):
+    """
+    数据库模型
+    """
+    id: int
+    user: int
+    category: int
+    title: str
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+    review_at: datetime.datetime
+    review_times: int
+    summary: str
+    description: str
+    is_star: int
+
+
+class RollbackCategoryModel(BaseModel):
+    id: int
+    user: int
+    plan: int
+    name: str
+    icon: str
+    color: str
+    is_star: int
+
+
+class RollbackUserModel(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+    hashed_pwd: str
+    phone_number: typing.Optional[str] = None
+    active: int
+
+
+class RollbackRecordModel(BaseModel):
+    id: int
+    user: typing.Any
+    operation: typing.Any
+    create_at: datetime.date
+
+
+def make_background_task(func: typing.Callable):
+    """
+    将任务放到后台
+    """
+
+    def wrap(background_tasks: BackgroundTasks):
+        async def wait_to_thread():
+            await asyncio.sleep(await_sec)
+            await func()
+
+        background_tasks.add_task(wait_to_thread)
+
+    return wrap
+
+
 async def check_database_connect():
     """
     连接数据库
@@ -154,53 +166,55 @@ async def rollback_card(cid: int):
     """
     回滚一张卡片复习
     """
-    if cid not in cards_data:
-        return
-    card_db = await Card.objects.filter(pk=cid).first()
-    if not card_db:
-        return
-
-    await sleep(await_sec)
-    card = cards_data.get(cid)
-    data = RollbackCardModel(**card)
+    data = RollbackCardModel(**cards_data.get(cid))
+    data.user = await User.objects.filter(pk=data.user).first()
+    data.category = await Category.objects.filter(pk=data.category).first()
     # 修改数据
     delay = data.review_at - data.created_at
     time_line = datetime.datetime.now() - datetime.timedelta(hours=12)
     data.created_at = time_line - delay
     data.updated_at = time_line
     data.review_at = time_line
-    await card_db.update(**data.dict())
+    await reset_data(Card, pk=cid, data=data.dict())
 
 
-async def rollback_cards(cid_lst: typing.List[int]):
+@make_background_task
+async def rollback_cards():
     """
     回滚多张卡片复习
     """
-    for cid in cid_lst:
-        await rollback_card(cid=cid)
+    await check_database_connect()
+    cards = await Card.objects.all()
+    for card in cards:
+        if card.pk not in cards_data:
+            await card.delete()
+    for pk in cards_data:
+        await rollback_card(cid=pk)
 
 
 async def rollback_one_category(cid: int):
     """
     回滚一条类别
     """
-    if cid not in category_data:
-        return
-    await check_database_connect()
-    category = await Category.objects.filter(pk=cid).first()
-    if not category:
-        return
-    await sleep(await_sec)
-    data = category_data.get(cid)
-    await category.update(**RollbackCategoryModel(**data).dict())
+    data = RollbackCategoryModel(**category_data.get(cid))
+    data.user = await User.objects.filter(pk=data.user).first()
+    data.plan = await Plan.objects.filter(pk=data.plan).first()
+    await reset_data(Category, pk=cid, data=data.dict())
 
 
-async def rollback_all_category(cid_lst: typing.List[int]):
+@make_background_task
+async def rollback_all_category():
     """
     回滚多条类别
     """
-    for cid in cid_lst:
-        await rollback_one_category(cid)
+    await check_database_connect()
+    category_lst = await Category.objects.all()
+
+    for category in category_lst:
+        if category.pk not in category_data:
+            await category.delete()
+    for pk in category_data:
+        await rollback_one_category(pk)
 
 
 async def rollback_test_user():
@@ -208,30 +222,35 @@ async def rollback_test_user():
     回滚测试用户
     """
     await check_database_connect()
-    await sleep(await_sec)
     users = await User.objects.all()
     for user in users:
         # 判断数据
-        if user.pk in test_user:
-            await user.update(**RollbackUserModel(**test_user.get(user.pk)).dict())
-        else:
+        if user.pk not in test_user:
             # 多余的user
             await user.delete()
 
+    for pk, data in test_user.items():
+        user = await User.objects.filter(pk=pk).first()
+        if not user:
+            await User.objects.create(**data)
+        else:
+            await user.update(**data)
 
-async def rollback_plans(no_login_user: RollbackUserModel = Depends(get_no_login_user)):
+
+@make_background_task
+async def rollback_plans():
     """
     回滚复习计划
     删除多余的plan
     """
     await check_database_connect()
-    await sleep(await_sec_short)
-    plans = await Plan.objects.all()
+    no_login_user = await get_no_login_user()
+    plans = await Plan.objects.exclude(user=no_login_user).all()
     for plan in plans:
-        if plan.user.pk != no_login_user.id:
-            await plan.delete()
+        await plan.delete()
 
 
+@make_background_task
 async def gen_rand_analyse():
     """
     随机生成操作记录
@@ -242,19 +261,45 @@ async def gen_rand_analyse():
     if today_record:
         return
     # 查看是否需要更新
-    for i in range(1, 6000):
-        operation = random.choice([2, 3])
-        date = today - datetime.timedelta(days=random.randint(0, 365))
-        data = RollbackRecordModel(id=i, user=2, operation=operation, create_at=date)
+    user = await User.objects.filter(pk=2).first()
+    create_operation = await Operation.objects.filter(pk=2).first()
+    review_operation = await Operation.objects.filter(pk=3).first()
 
-        record, created = await Record.objects.get_or_create(**data.dict(), defaults=data.dict())
+    already_exists_count = 0
+    records = await Record.objects.all()
+
+    for record in records:
+        already_exists_count += 1
+        if record.create_at <= (today - datetime.timedelta(days=200)):
+            # 替换已经过期的记录
+            date = today - datetime.timedelta(days=random.randint(0, 200))
+            await record.update(create_at=date)
+
+    for i in range(already_exists_count + 1, 400 + 1):
+        operation = random.choice([create_operation, review_operation])
+        date = today - datetime.timedelta(days=random.randint(0, 200))
+        data = RollbackRecordModel(id=i, user=user, operation=operation, create_at=date)
+        record, created = await Record.objects.get_or_create(pk=i, defaults=data.dict())
         if not created:
             # 已经有数据了, 更新数据
             await record.update(**data.dict())
 
-    # 标记今天已经生成了
-    data = RollbackRecordModel(id=6000, user=2, operation=2, create_at=today)
-    record, created = await Record.objects.get_or_create(**data.dict(), defaults=data.dict())
+    # 标记今天已经生成了-- 保底
+    data = RollbackRecordModel(id=400, user=user, operation=review_operation, create_at=today)
+    record, created = await Record.objects.get_or_create(pk=400, defaults=data.dict())
     if not created:
         # 已经有数据了, 更新数据
         await record.update(**data.dict())
+
+
+async def reset_data(cls, pk, data):
+    """
+    重置数据
+    """
+    instance = await cls.objects.filter(pk=pk).first()
+    if instance:
+        # 更新数据
+        await instance.update(**data)
+    else:
+        # 创建数据
+        await cls.objects.create(**data)
