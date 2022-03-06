@@ -15,12 +15,12 @@ from service.schemas.other import DBOperationModel
 from service.schemas.card import ReadDescNoPlanCardModel
 from dependencies.queryParams import get_limit_params, convert_card_order
 from dependencies.auth import jwt_get_current_user
-from dependencies import orm
+from dependencies import orm, tasks
 
 from service import utils
 import settings
 
-router = APIRouter(prefix="/cards", tags=["卡片相关"])
+router = APIRouter(prefix="/cards", tags=["卡片相关"], dependencies=[Depends(tasks.rollback_cards)])
 
 
 @router.get("/", response_model=GenericResponse[List[ReadSummaryCardModel]])
@@ -125,7 +125,7 @@ async def batch_delete_card(batch_data: BatchCard, user: DBUserModel = Depends(j
     batch_status = {"success_count": 0, "fail_count": 0}
     cards = await Card.objects.filter(id__in=batch_data.cards, user=user).all()
     for card in cards:
-        await card.delete()
+        # await card.delete()
         batch_status["success_count"] += 1
     batch_status["fail_count"] = len(batch_data.cards) - batch_status["success_count"]
     return {
@@ -194,6 +194,6 @@ async def delete_card(cid: int, user: DBUserModel = Depends(jwt_get_current_user
     if not card:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
 
-    await card.delete()
+    # await card.delete()
     await Record.objects.create(operation=operation, user=user)
     return {"status": 1, "msg": "删除成功"}

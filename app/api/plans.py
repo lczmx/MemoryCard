@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 
 import settings
-from dependencies import orm
+from dependencies import orm, tasks
 from dependencies.queryParams import get_limit_params
 from dependencies.auth import jwt_get_current_user
 
@@ -15,7 +15,7 @@ from service.schemas.user import DBUserModel
 from service.schemas.other import DBOperationModel
 from service import utils
 
-router = APIRouter(prefix="/plans", tags=["复习计划相关"])
+router = APIRouter(prefix="/plans", tags=["复习计划相关"], dependencies=[Depends(tasks.rollback_plans)])
 
 
 @router.get('/', response_model=GenericResponse[List[ReadPlanModel]])
@@ -97,6 +97,7 @@ async def update_plan(pid: int, plan_data: ParamsPlanModel, user: DBUserModel = 
             await utils.reset_card_review(cards)
 
     await plan.update(**plan_data.dict())
+
     return {
         "status": 1,
         "msg": "修改成功",
@@ -125,6 +126,6 @@ async def delete_plan(pid: int, user: DBUserModel = Depends(jwt_get_current_user
         cards = await Card.objects.filter(category=c).all()
         await utils.reset_card_review(cards)
 
-    await plan.delete()
+    # await plan.delete()
 
     return {"status": 1, "msg": "删除成功"}

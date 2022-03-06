@@ -17,9 +17,9 @@ from service.schemas.other import DBOperationModel
 from service import utils
 from service.models import Category, Plan, Card, Record
 from orm.exceptions import NoMatch, MultipleMatches
-from dependencies import orm
+from dependencies import orm, tasks
 
-router = APIRouter(prefix="/category", tags=["分类相关"])
+router = APIRouter(prefix="/category", tags=["分类相关"], dependencies=[Depends(tasks.rollback_all_category)])
 
 
 @router.get("/", response_model=GenericResponse[List[ReadNoLoadPlanCategoryModel]])
@@ -78,7 +78,6 @@ async def create_category(category_params: ParamsCategoryModel, user: DBUserMode
     params = category_params.dict(exclude={"pid"})
     params.update({"user": user, "plan": plan})
     category = await Category.objects.create(**params)
-
     return {
         "status": 1,
         "msg": "创建类别成功",
@@ -138,7 +137,7 @@ async def batch_delete_category(batch_data: BatchCategory, user: DBUserModel = D
         if not category:
             batch_status["fail_count"] += 1
             continue
-        await category.delete()
+        # await category.delete()
         batch_status["success_count"] += 1
     return {
         "status": 1,
@@ -217,7 +216,7 @@ async def delete_category(cid: int, user: DBUserModel = Depends(jwt_get_current_
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的分类")
 
-    await category.delete()
+    # await category.delete()
     await Record.objects.create(user=user, operation=operation)
     return {
         "status": 1,

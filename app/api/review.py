@@ -12,16 +12,15 @@ from service import utils
 from service.models import Card, Record, Category
 from service.schemas.generic import QueryLimit, GenericResponse, CardDateQueryLimit
 from service.schemas.card import ReadSummaryCardModel, BatchCard, ReadDescNoPlanCardModel
-from service.schemas.category import ReadCategoryModel, ReadNoLoadPlanCategoryModel
-from service.schemas.plan import ReadPlanModel
+from service.schemas.category import ReadNoLoadPlanCategoryModel
 from service.schemas.user import DBUserModel
 from service.schemas.other import DBOperationModel
 
-from dependencies import orm
+from dependencies import orm, tasks
 from dependencies.queryParams import get_limit_params, get_card_by_date_limit_params
 from dependencies.auth import jwt_get_current_user
 
-router = APIRouter(prefix="/review", tags=["复习相关"])
+router = APIRouter(prefix="/review", tags=["复习相关"], dependencies=[Depends(tasks.rollback_cards)])
 
 
 @router.get("/", response_model=GenericResponse[List[ReadSummaryCardModel]])

@@ -12,8 +12,9 @@ from service.schemas.generic import GenericResponse
 from service.schemas.user import DBUserModel
 from service.models import Record, Category
 from dependencies.auth import jwt_get_current_user
+from dependencies import tasks
 
-router = APIRouter(prefix="/analyse", tags=["分析相关"])
+router = APIRouter(prefix="/analyse", tags=["分析相关"], dependencies=[Depends(tasks.gen_rand_analyse)])
 
 
 @router.get("/", response_model=GenericResponse[SummaryAnalyseModel])
