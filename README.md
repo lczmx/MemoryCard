@@ -50,7 +50,7 @@ cd /opt/MemoryCard
 # 启动项目
 docker-compose up -d
 ```
-## Q&A
+## FAQ
 1. 部署后无法访问?
    - 假如是本地环境, 确认防火墙是否开放端口
      ```base
