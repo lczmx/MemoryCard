@@ -76,7 +76,7 @@ docker-compose up -d
    修改后需要执行: `docker-compose up --build`, 重新构建容器
    
 ## TODO
-- [ ] 修改编辑器为[element-tiptap](https://github.com/sereneinserenade/tiptap-comment-extension) (等待适配Vue3中)
+- [ ] 修改编辑器为[element-tiptap](https://github.com/Leecason/element-tiptap) (等待适配Vue3中)
 - [ ] 使用ES为卡片等数据提供搜索功能
 
 
