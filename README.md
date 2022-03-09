@@ -74,6 +74,13 @@ docker-compose up -d
    mysql配置位于: `MemoryCard/compose/mysql/conf/my.cnf`, 配置详解见: [MySQL5.7配置文件详细说明](https://developer.aliyun.com/article/838873)  
    nginx配置位于: `MemoryCard/compose/nginx/nginx.conf`, 配置详解见: [nginx配置文件](https://www.cnblogs.com/lczmx/p/14978241.html#%E4%BA%86%E8%A7%A3%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)  
    修改后需要执行: `docker-compose up --build`, 重新构建容器
+   
+## TODO
+- [ ] 修改编辑器为[element-tiptap](https://github.com/sereneinserenade/tiptap-comment-extension) (等待适配Vue3中)
+- [ ] 使用ES为卡片等数据提供搜索功能
+
+
+
 ## commit规范
 假如想贡献自己的代码, 请按以下规范提交自己的`request`
 
