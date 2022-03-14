@@ -265,6 +265,19 @@ async def gen_rand_analyse():
     """
     random.seed(time.time())
     today = datetime.date.today()
+    records = await Record.objects.all()
+    already_exists_count = 0
+    for record in records:
+        already_exists_count += 1
+        if record.create_at <= (today - datetime.timedelta(days=200)):
+            # 替换已经过期的记录
+            # 在7day内有值
+            if already_exists_count % 2 == 1:
+                date = today - datetime.timedelta(days=random.randint(0, 10))
+            else:
+                date = today - datetime.timedelta(days=random.randint(0, 200))
+            await record.update(create_at=date)
+
     today_record = await Record.objects.filter(create_at=today).first()
     if today_record:
         return
@@ -272,16 +285,6 @@ async def gen_rand_analyse():
     user = await User.objects.filter(pk=2).first()
     create_operation = await Operation.objects.filter(pk=2).first()
     review_operation = await Operation.objects.filter(pk=3).first()
-
-    already_exists_count = 0
-    records = await Record.objects.all()
-
-    for record in records:
-        already_exists_count += 1
-        if record.create_at <= (today - datetime.timedelta(days=200)):
-            # 替换已经过期的记录
-            date = today - datetime.timedelta(days=random.randint(0, 200))
-            await record.update(create_at=date)
 
     for i in range(already_exists_count + 1, 400 + 1):
         operation = random.choice([create_operation, review_operation])
