@@ -15,13 +15,7 @@
 
 ## 项目截图
 
-![](https://raw.githubusercontent.com/lczmx/MemoryCard/main/static/images/review-page.png)
-![](https://raw.githubusercontent.com/lczmx/MemoryCard/main/static/images/review-page-category-filter.png)
-![](https://raw.githubusercontent.com/lczmx/MemoryCard/main/static/images/review-mode.png)
-![](https://raw.githubusercontent.com/lczmx/MemoryCard/main/static/images/card-page.png)
-![](https://raw.githubusercontent.com/lczmx/MemoryCard/main/static/images/category-page.png)
-![](https://raw.githubusercontent.com/lczmx/MemoryCard/main/static/images/settings-page.png)
-![](https://raw.githubusercontent.com/lczmx/MemoryCard/main/static/images/analyse-review.png)
+![2222](https://picx.zhimg.com/80/v2-23d671bf74a246c54b1256bd2322d461_720w.webp)
 
 ![11111](https://file.lczmx.top/afs/MemoryCard/analyse-review.png)
 
