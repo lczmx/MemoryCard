@@ -10,20 +10,20 @@
 ## 线上 DEMO
 
 扫描二维码访问demo(由于服务器过期，暂时失效):  
-![二维码](./static/images/QRcode.png)
+![二维码](https://file.lczmx.top/afs/QRcode.png)
 
 - 用户名: `lczmx@foxmail.com`
 - 密码: `lczmx@foxmail.com`
 
 ## 项目截图
 
-![复习](./static/images/review-page.png)
-![分类](./static/images/review-page-category-filter.png)
-![预览](./static/images/review-mode.png)
-![卡片](./static/images/card-page.png)
-![分类](./static/images/category-page.png)
-![设置](./static/images/settings-page.png)
-![分析](./static/images/analyse-review.png)
+![复习](https://file.lczmx.top/afs/review-page.png)
+![分类](https://file.lczmx.top/afs/review-page-category-filter.png)
+![预览](https://file.lczmx.top/afs/review-mode.png)
+![卡片](https://file.lczmx.top/afs/card-page.png)
+![分类](https://file.lczmx.top/afs/category-page.png)
+![设置](https://file.lczmx.top/afs/settings-page.png)
+![分析](https://file.lczmx.top/afs/analyse-review.png)
 
 ## 快速开始
 
