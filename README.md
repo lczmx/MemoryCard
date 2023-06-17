@@ -17,7 +17,7 @@
 
 ![2222](https://picx.zhimg.com/80/v2-23d671bf74a246c54b1256bd2322d461_720w.webp)
 
-![11111](https://file.lczmx.top/afs/MemoryCard/analyse-review.png)
+![11111](https://file.lczmx.top/tfs/632075.jpg)
 <img src="https://file.lczmx.top/afs/MemoryCard/analyse-review.png" style="max-width: 100%;">
 ## 快速开始
 ### 安装Docker和Docker Compose
