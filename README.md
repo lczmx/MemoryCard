@@ -1,6 +1,6 @@
 # 记忆卡片
 
-[![image](https://badgen.net/badge/license/GPL-3.0/green)](https://github.com/lczmx/MemoryCard/blob/main/LICENSE)
+[![](https://badgen.net/badge/license/GPL-3.0/green)](https://github.com/lczmx/MemoryCard/blob/main/LICENSE)
 
 ## 简介
 
@@ -10,20 +10,20 @@
 ## 线上 DEMO
 
 扫描二维码访问demo(由于服务器过期，暂时失效):  
-![二维码](https://file.lczmx.top/afs/MemoryCard/QRcode.png)
+![](https://file.lczmx.top/afs/MemoryCard/QRcode.png)
 
 - 用户名: `lczmx@foxmail.com`
 - 密码: `lczmx@foxmail.com`
 
 ## 项目截图
 
-![复习](https://file.lczmx.top/afs/MemoryCard/review-page.png)
-![分类](https://file.lczmx.top/afs/MemoryCard/review-page-category-filter.png)
-![预览](https://file.lczmx.top/afs/MemoryCard/review-mode.png)
-![卡片](https://file.lczmx.top/afs/MemoryCard/card-page.png)
-![分类](https://file.lczmx.top/afs/MemoryCard/category-page.png)
-![设置](https://file.lczmx.top/afs/MemoryCard/settings-page.png)
-![分析](https://file.lczmx.top/afs/MemoryCard/analyse-review.png)
+![](https://file.lczmx.top/afs/MemoryCard/review-page.png)
+![](https://file.lczmx.top/afs/MemoryCard/review-page-category-filter.png)
+![](https://file.lczmx.top/afs/MemoryCard/review-mode.png)
+![](https://file.lczmx.top/afs/MemoryCard/card-page.png)
+![](https://file.lczmx.top/afs/MemoryCard/category-page.png)
+![](https://file.lczmx.top/afs/MemoryCard/settings-page.png)
+![](https://file.lczmx.top/afs/MemoryCard/analyse-review.png)
 
 ## 快速开始
 
