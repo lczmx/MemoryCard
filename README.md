@@ -1,6 +1,6 @@
 # 记忆卡片
 
-[![](https://badgen.net/badge/license/GPL-3.0/green)](https://github.com/lczmx/MemoryCard/blob/main/LICENSE)
+[![](https://badgen.net/badge/license/GPL-3.0/green)](./LICENSE)
 
 ## 简介
 
