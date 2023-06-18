@@ -1,6 +1,6 @@
 # 记忆卡片
 
-[![](https://badgen.net/badge/license/GPL-3.0/green)](LICENSE)
+[![](https://badgen.net/badge/license/GPL-3.0/green)](https://www.gnu.org/licenses/gpl-3.0.en.html#license-text)
 
 ## 简介
 
