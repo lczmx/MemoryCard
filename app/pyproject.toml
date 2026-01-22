@@ -1,26 +1,14 @@
-[tool.poetry]
-name = "memorycard"
-version = "0.2.1"
-description = "记忆卡片"
-authors = ["lczmx <lczmx1739@gmail.com>"]
-
-[tool.poetry.dependencies]
-python = "^3.9"
-fastapi = {extras = ["all"], version = "^0.74.1"}
-python-jose = {extras = ["cryptography"], version = "^3.3.0"}
-passlib = {extras = ["bcrypt"], version = "^1.7.4"}
-aiomysql = "^0.0.22"
-fastapi-cache2 = {extras = ["redis"], version = "^0.1.8"}
-orm = {extras = ["mysql"], version = "^0.3.1"}
-loguru = "^0.6.0"
-
-[tool.poetry.dev-dependencies]
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[[tool.poetry.source]]
-name = "aliyun"
-url = "http://mirrors.aliyun.com/pypi/simple"
-default = true
+[project]
+name = "app"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "bcrypt>=5.0.0",
+    "fastapi>=0.128.0",
+    "loguru>=0.7.3",
+    "orm>=0.3.1",
+    "passlib[bcrypt]>=1.7.4",
+    "uvicorn>=0.40.0",
+]
