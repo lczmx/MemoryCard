@@ -7,7 +7,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Query, status as http_status
 from fastapi.exceptions import HTTPException
 
-import settings
+from settings import OPERATION_DATA
 from service import utils
 from service.models import Card, Record, Category
 from service.schemas.generic import QueryLimit, GenericResponse, CardDateQueryLimit
@@ -53,7 +53,7 @@ async def get_review(
 @router.post("/batch-review", response_model=GenericResponse, response_model_exclude_unset=True)
 async def batch_review_card(review_cards: BatchCard, user: DBUserModel = Depends(jwt_get_current_user),
                             operation: DBOperationModel = Depends(
-                                orm.get_operation(settings.OPERATION_DATA["review_card"]))):
+                                orm.get_operation(OPERATION_DATA["review_card"]))):
     """
     批量复习卡片
     """
@@ -181,7 +181,7 @@ async def get_card(cid: int, user: DBUserModel = Depends(jwt_get_current_user)):
 @router.post("/{cid}", response_model=GenericResponse, response_model_exclude_none=True)
 async def review_done(cid: int, user: DBUserModel = Depends(jwt_get_current_user),
                       operation: DBOperationModel = Depends(
-                          orm.get_operation(settings.OPERATION_DATA["review_card"]))):
+                          orm.get_operation(OPERATION_DATA["review_card"]))):
     """
     完成卡片复习
     """

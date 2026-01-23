@@ -80,7 +80,7 @@ async def get_token(user: DBUserModel = Depends(jwt_authenticate_user)):
         "email": user.email,
         "phoneNumber": user.phone_number,
     }
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=settings.settings.access_token_expire_minutes)
     access_token = create_access_token(data=payload, expires_delta=access_token_expires)
     data = {"access_token": access_token, "token_type": "bearer"}
     return {"status": 1, "msg": "登录成功", "data": data}

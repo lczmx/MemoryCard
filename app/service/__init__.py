@@ -3,9 +3,9 @@
 """
 import databases
 import orm
-from settings import ASYNC_SQLALCHEMY_DATABASE_URL
+from settings import settings
 
-orm_database = databases.Database(ASYNC_SQLALCHEMY_DATABASE_URL)
+orm_database = databases.Database(settings.async_sqlalchemy_database_url)
 orm_models = orm.ModelRegistry(database=orm_database)
 metadata = orm_models.metadata
 

@@ -35,7 +35,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     # claims     指定payload
     # key        指定signature的加密秘钥
     # algorithm  指定signature的加密算法
-    encoded_jwt = jwt.encode(claims=to_encode, key=settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    encoded_jwt = jwt.encode(claims=to_encode, key=settings.settings.secret_key, algorithm=settings.settings.algorithm)
     return encoded_jwt
 
 
@@ -84,7 +84,7 @@ async def jwt_get_current_user(token: str = Depends(settings.oauth2_schema)) -> 
 
         # decode jwt token
         # 得到payload, 即 create_access_token 中的 to_encode
-        payload = jwt.decode(token=token, key=settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(token=token, key=settings.settings.secret_key, algorithms=[settings.settings.algorithm])
         uid = payload.get("uid")
         if uid is None:
             raise credentials_exception

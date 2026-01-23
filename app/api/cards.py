@@ -18,7 +18,7 @@ from dependencies.auth import jwt_get_current_user
 from dependencies import orm
 
 from service import utils
-import settings
+from settings import OPERATION_DATA
 
 router = APIRouter(prefix="/cards", tags=["卡片相关"])
 
@@ -47,7 +47,7 @@ async def get_cards(limit_params: QueryLimit = Depends(get_limit_params), order=
 @router.post("/", status_code=status.HTTP_201_CREATED,
              response_model=GenericResponse[ReadNoCategoryCardModel])
 async def create_card(card_data: ParamsCardModel, user: DBUserModel = Depends(jwt_get_current_user),
-                      operation: DBOperationModel = Depends(orm.get_operation(settings.OPERATION_DATA["create_card"]))):
+                      operation: DBOperationModel = Depends(orm.get_operation(OPERATION_DATA["create_card"]))):
     """
     创建卡片
     """
@@ -186,7 +186,7 @@ async def update_card(cid: int, data: ParamsCardModel, user: DBUserModel = Depen
 
 @router.delete("/{cid}", response_model=GenericResponse, response_model_exclude_unset=True)
 async def delete_card(cid: int, user: DBUserModel = Depends(jwt_get_current_user),
-                      operation: DBOperationModel = Depends(orm.get_operation(settings.OPERATION_DATA["delete_card"]))):
+                      operation: DBOperationModel = Depends(orm.get_operation(OPERATION_DATA["delete_card"]))):
     """
     删除一条卡片的数据
     """

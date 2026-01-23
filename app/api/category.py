@@ -10,7 +10,7 @@ from service.schemas.category import ParamsCategoryModel, ReadCategoryModel, Sta
 from service.schemas.generic import GenericResponse, QueryLimit
 from dependencies.queryParams import get_limit_params, convert_category_order
 from dependencies.auth import jwt_get_current_user
-import settings
+from settings import OPERATION_DATA
 
 from service.schemas.user import DBUserModel
 from service.schemas.other import DBOperationModel
@@ -209,7 +209,7 @@ async def update_category(cid: int, category_prams: ParamsCategoryModel,
 @router.delete("/{cid}", response_model=GenericResponse, response_model_exclude_unset=True)
 async def delete_category(cid: int, user: DBUserModel = Depends(jwt_get_current_user),
                           operation: DBOperationModel = Depends(
-                              orm.get_operation(settings.OPERATION_DATA["delete_category"]))):
+                              orm.get_operation(OPERATION_DATA["delete_category"]))):
     """
     删除一条分类
     """

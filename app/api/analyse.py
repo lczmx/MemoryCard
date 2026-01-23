@@ -6,7 +6,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
-import settings
+from settings import OPERATION_DATA
 from service.schemas.analyse import ParamsAnalyseModel, ReadAnalyseModel, SummaryAnalyseModel
 from service.schemas.generic import GenericResponse
 from service.schemas.user import DBUserModel
@@ -30,17 +30,17 @@ async def get_summary_analyse_data(user: DBUserModel = Depends(jwt_get_current_u
     yesterday = (now - datetime.timedelta(days=1)).date()
     # TODO: 能否使用 count & group_by ?
     # 查询创建卡片的操作记录
-    today_recode_review_data = await Record.objects.filter(operation=settings.OPERATION_DATA["review_card"],
+    today_recode_review_data = await Record.objects.filter(operation=OPERATION_DATA["review_card"],
                                                            create_at=today, user=user).all()
-    yesterday_recode_review_data = await Record.objects.filter(operation=settings.OPERATION_DATA["review_card"],
+    yesterday_recode_review_data = await Record.objects.filter(operation=OPERATION_DATA["review_card"],
                                                                create_at=yesterday, user=user).all()
     temp["review"]["today"] = len(today_recode_review_data)
     # ## 同比增加 = 今日 - 昨日
     temp["review"]["incr"] = len(today_recode_review_data) - len(yesterday_recode_review_data)
 
-    today_recode_create_data = await Record.objects.filter(operation=settings.OPERATION_DATA["create_card"],
+    today_recode_create_data = await Record.objects.filter(operation=OPERATION_DATA["create_card"],
                                                            create_at=today, user=user).all()
-    yesterday_recode_create_data = await Record.objects.filter(operation=settings.OPERATION_DATA["create_card"],
+    yesterday_recode_create_data = await Record.objects.filter(operation=OPERATION_DATA["create_card"],
                                                                create_at=yesterday, user=user).all()
 
     temp["create"]["today"] = len(today_recode_create_data)
@@ -63,7 +63,7 @@ async def analyse_review(data: ParamsAnalyseModel, user: DBUserModel = Depends(j
     """
 
     result = await Record.objects.filter(user=user, create_at__lte=data.end_date, create_at__gte=data.start_date,
-                                         operation=settings.OPERATION_DATA["review_card"]).order_by("create_at").all()
+                                         operation=OPERATION_DATA["review_card"]).order_by("create_at").all()
 
     date_and_count = {}  # key: date  value: count
     for r in result:
@@ -84,7 +84,7 @@ async def analyse_create(data: ParamsAnalyseModel, user: DBUserModel = Depends(j
     """
     # ###### 同上面的函数
     result = await Record.objects.filter(user=user, create_at__lte=data.end_date, create_at__gte=data.start_date,
-                                         operation=settings.OPERATION_DATA["create_card"]).order_by("create_at").all()
+                                         operation=OPERATION_DATA["create_card"]).order_by("create_at").all()
 
     date_and_count = {}  # key: date  value: count
     for r in result:

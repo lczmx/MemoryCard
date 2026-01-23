@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 
-import settings
+from settings import OPERATION_DATA
 from dependencies import orm
 from dependencies.queryParams import get_limit_params
 from dependencies.auth import jwt_get_current_user
@@ -46,7 +46,7 @@ async def get_plans(query_limit_params: QueryLimit = Depends(get_limit_params),
 @router.post('/', response_model=GenericResponse[ReadPlanModel])
 async def create_plan(plan_data: ParamsPlanModel, user: DBUserModel = Depends(jwt_get_current_user),
                       operation: DBOperationModel = Depends(
-                          orm.get_operation(settings.OPERATION_DATA["create_plan"]))):
+                          orm.get_operation(OPERATION_DATA["create_plan"]))):
     """
     创建复习曲线
     """

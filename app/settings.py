@@ -1,63 +1,77 @@
 import os
+from pydantic_settings import BaseSettings
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
-from loguru import logger
 
-from exceptions import MissingRequireConfig
-
-# #### 日志路径
+# 获取项目根目录
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
 LOG_FILE_PATH = os.path.join(BASE_DIR, "logs")
 LOG_FILE_FORMATE = "MemoryCard_{time}.log"
+
+
+class Settings(BaseSettings):
+    """配置模型类"""
+    # 数据库配置
+    db_type: str = "pgsql"  # 支持的数据库类型: pgsql, mysql, sqlite
+    
+    # PostgreSQL配置
+    db_host: str = "localhost"
+    db_port: int = 5432
+    db_name: str = "memorycard"
+    db_user: str = "admin"
+    db_password: str = "password"
+    
+    # SQLite配置
+    db_file: str = "memorycard.db"
+    
+    # JWT配置
+    secret_key: str
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 360
+    
+    # 日志配置
+    log_level: str = "info"
+    log_rotation: str = "1 MB"
+    log_retention: str = "1 months"
+    
+    @property
+    def async_sqlalchemy_database_url(self) -> str:
+        """根据数据库类型动态构建数据库URL"""
+        if self.db_type == "pgsql":
+            return f"postgresql+asyncpg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+        elif self.db_type == "mysql":
+            return f"mysql+aiomysql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+        elif self.db_type == "sqlite":
+            return f"sqlite+aiosqlite:///{os.path.join(BASE_DIR, self.db_file)}"
+        else:
+            raise ValueError(f"不支持的数据库类型: {self.db_type}")
+    
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
+        env_nested_delimiter = "_"
+
+
+# 创建配置实例
+settings = Settings()
+
+# JWT相关配置
+oauth2_schema = OAuth2PasswordBearer(tokenUrl="/user/token")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 # 日志配置
 LOGGING_CONFIG = {
     "logger": {
         "path": LOG_FILE_PATH,
         "filename": LOG_FILE_FORMATE,
-        "level": "info",
-        "rotation": "1 MB",
-        "retention": "1 months",
+        "level": settings.log_level,
+        "rotation": settings.log_rotation,
+        "retention": settings.log_retention,
         "format": "<level>{level: <8}</level> <green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> request id: {extra[request_id]} - <cyan>{name}</cyan>:<cyan>{function}</cyan> - <level>{message}</level>"
-
     }
 }
 
-# ####### 数据库链接
-ASYNC_SQLALCHEMY_DATABASE_URL = ''
-
-# ######### jwt
-SECRET_KEY = ""
-ALGORITHM = "HS256"  # jwt加密算法
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 6  # 访问令牌过期分钟, 默认6小时
-oauth2_schema = OAuth2PasswordBearer(tokenUrl="/user/token")
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# ###### 检验配置
-if os.path.isfile("local_settings.py"):
-    from local_settings import *
-else:
-    f = open("local_settings.py", mode="w", encoding="utf-8")
-    f.close()
-
-if not SECRET_KEY:
-    f = open("local_settings.py", mode="a", encoding="utf-8")
-    # 动态 生成 SECRET_KEY
-    import secrets
-
-    SECRET_KEY = secrets.token_hex(32)
-    f.write(f"\nSECRET_KEY = '{SECRET_KEY}'\n")
-    f.close()
-    logger.add(os.path.join(LOG_FILE_PATH, "init_settings.log"), rotation="1 MB",
-               format=LOGGING_CONFIG["logger"]["format"])  # 滚动大日志文件
-    logger.warning("初始化SECRET_KEY")
-
-if not ASYNC_SQLALCHEMY_DATABASE_URL:
-    raise MissingRequireConfig("ASYNC_SQLALCHEMY_DATABASE_URL")
-
-# ######### 一些初始数据
-
+# 一些初始数据
 OPERATION_DATA = {
     "delete_card": 1,
     "create_card": 2,
