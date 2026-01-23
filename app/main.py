@@ -1,3 +1,9 @@
+import sys
+import os
+
+# 添加当前文件所在目录到 sys.path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from fastapi import FastAPI
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
@@ -7,7 +13,7 @@ from tortoise.contrib.fastapi import register_tortoise
 
 from api import bind_router
 from logger import CustomizeLogger
-from settings import settings
+from settings import TORTOISE_ORM
 
 # 许可信息数据
 license_info = {
@@ -72,20 +78,7 @@ bind_router(app)
 
 # 初始化数据库
 register_tortoise(
-    app,
-    config={
-        "connections": {
-            "default": settings.async_sqlalchemy_database_url
-        },
-        "apps": {
-            "models": {
-                "models": ["models"],
-                "default_connection": "default",
-            }
-        },
-        "use_tz": True,  # 启用时区支持
-        "timezone": "Asia/Shanghai"
-    },
+    app, config=TORTOISE_ORM,
     generate_schemas=True,  # 自动生成表结构
     add_exception_handlers=True  # 启用ORM异常处理
 )

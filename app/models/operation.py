@@ -16,8 +16,8 @@ from tortoise.models import Model
 
 
 class Operation(Model):
-    id = fields.IntField(pk=True)
-    title = fields.CharField(max_length=32, null=False)  # 操作记录
+    id = fields.IntField(pk=True, name="操作ID")
+    title = fields.CharField(max_length=32, name="操作说明")
 
     class Meta:
         table = "Operation"

@@ -5,6 +5,7 @@ description = "记忆卡片后端服务"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aerich[toml]>=0.9.2",
     "asyncmy>=0.2.11",
     "asyncodbc>=0.1.1",
     "asyncpg>=0.31.0",
@@ -20,3 +21,8 @@ dependencies = [
     "python-multipart>=0.0.21",
     "tortoise-orm>=0.25.3",
 ]
+
+[tool.aerich]
+tortoise_orm = "settings.TORTOISE_ORM"
+location = "./migrations"
+src_folder = "./."

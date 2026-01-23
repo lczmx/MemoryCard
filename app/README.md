@@ -10,6 +10,28 @@
    ```shell
    uv sync
    ```
+3. 启动服务
+    ```shell
+    uvicorn main:app --reload
+    # 或
+    python -m fastapi dev main.py
+    ```
+4. 更改数据库表结构
+   如果修改了model，需要同步到数据库，重新执行migrate和upgrade的命令
+   ```shell
+   # 初始化配置文件和迁移文件位置
+   aerich init -t settings.TORTOISE_ORM
+   # 初始化数据库
+   aerich init-db
+   # 更新模型并进行迁移
+   # --name指定说明
+   aerich migrate --name add_column
+   # 更新数据库到最新模型
+   aerich upgrade
+   ```
+   如果想要重新做迁移，删除`.migrations`和`migrations`目录，安装顺序执行上面4个命令即可
+   其他命令将官方文档：[aerich](https://github.com/tortoise/aerich)
+
 
 ## 注意
 关于`local_settings.py`, 里面定义一些私有的配置, 比如数据库链接, 比如:

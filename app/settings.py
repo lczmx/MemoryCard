@@ -13,39 +13,39 @@ class Settings(BaseSettings):
     """配置模型类"""
     # 数据库配置
     db_type: str = "pgsql"  # 支持的数据库类型: pgsql, mysql, sqlite
-    
+
     # PostgreSQL配置
     db_host: str = "localhost"
     db_port: int = 5432
     db_name: str = "memorycard"
     db_user: str = "admin"
     db_password: str = "password"
-    
+
     # SQLite配置
     db_file: str = "memorycard.db"
-    
+
     # JWT配置
     secret_key: str
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 360
-    
+
     # 日志配置
     log_level: str = "info"
     log_rotation: str = "1 MB"
     log_retention: str = "1 months"
-    
+
     @property
     def async_sqlalchemy_database_url(self) -> str:
         """根据数据库类型动态构建数据库URL"""
         if self.db_type == "pgsql":
-            return f"postgresql+asyncpg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+            return f"postgres://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
         elif self.db_type == "mysql":
-            return f"mysql+aiomysql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+            return f"mysql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
         elif self.db_type == "sqlite":
-            return f"sqlite+aiosqlite:///{os.path.join(BASE_DIR, self.db_file)}"
+            return f"sqlite://{os.path.join(BASE_DIR, self.db_file)}"
         else:
             raise ValueError(f"不支持的数据库类型: {self.db_type}")
-    
+
     class Config:
         env_file = ".env"
         case_sensitive = False
@@ -54,6 +54,21 @@ class Settings(BaseSettings):
 
 # 创建配置实例
 settings = Settings()
+
+# Tortoise-ORM配置
+TORTOISE_ORM = {
+    "connections": {
+        "default": settings.async_sqlalchemy_database_url
+    },
+    "apps": {
+        "models": {
+            "models": ["models"],
+            "default_connection": "default",
+        }
+    },
+    "use_tz": True,  # 启用时区支持
+    "timezone": "Asia/Shanghai"
+}
 
 # JWT相关配置
 oauth2_schema = OAuth2PasswordBearer(tokenUrl="/user/token")
