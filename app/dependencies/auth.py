@@ -8,11 +8,10 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.exceptions import HTTPException
 from fastapi import status
-from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError, jwt
 
 import settings
-from service.models import User
+from models import User
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -50,13 +49,13 @@ async def jwt_authenticate_user(form_data: OAuth2PasswordRequestForm = Depends()
 
     # 到数据库中获取
 
-    username_lst = await User.objects.filter(username=form_data.username).all()
+    username_lst = await User.filter(username=form_data.username).all()
     # 检验密码是否合法
     valid_user = verify_user_lst_pwd(username_lst, form_data.password)
     if valid_user and valid_user.active:
         return valid_user
 
-    email_lst = await User.objects.filter(email=form_data.username).all()
+    email_lst = await User.filter(email=form_data.username).all()
     valid_user = verify_user_lst_pwd(email_lst, form_data.password)
     if valid_user and valid_user.active:
         return valid_user
@@ -90,7 +89,7 @@ async def jwt_get_current_user(token: str = Depends(settings.oauth2_schema)) -> 
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = await User.objects.filter(pk=uid, active=True).first()
+    user = await User.filter(pk=uid, active=True).first()
     # 必须active为true
     if not user or not user.active:
         raise credentials_exception

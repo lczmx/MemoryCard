@@ -4,7 +4,7 @@
 import typing
 import datetime
 
-from service.models import Plan, Card
+from models import Plan, Card
 
 
 async def use_need_review_cards(cards: typing.List[typing.Any]) -> typing.List[typing.Any]:
@@ -41,7 +41,7 @@ async def get_card_plan(card: typing.Any) -> typing.Any:
     :return:
     """
     await card.category.load()
-    return await Plan.objects.get(pk=card.category.plan.pk)
+    return await Plan.get(pk=card.category.plan.pk)
 
 
 async def card_can_review_by_date(card: typing.Any, query_date: datetime.date) -> bool:

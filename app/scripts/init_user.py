@@ -1,4 +1,4 @@
-from service.models import User
+from models import User
 from uuid import uuid4
 from settings import pwd_context
 import logging
@@ -9,7 +9,7 @@ nologin_user = {"username": "nologin", "email": "nologin@email.com", "active": F
 async def create_user():
     # 初始化内置账号
     logging.info("初始化内置用户中...")
-    user, created = await User.objects.get_or_create(
+    user, created = await User.get_or_create(
         username="nologin", email="nologin@email.com",
         defaults=dict(**nologin_user, hashed_pwd=pwd_context.hash(str(uuid4()))))
     if created:

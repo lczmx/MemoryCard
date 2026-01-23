@@ -4,7 +4,7 @@
 """
 import logging
 
-from service.models import Doc
+from models import Doc
 
 
 async def crate_docs():
@@ -71,7 +71,7 @@ async def crate_docs():
     ]
 
     for d in data:
-        _, created = await Doc.objects.get_or_create(**d, defaults=d)
+        _, created = await Doc.get_or_create(**d, defaults=d)
         if created:
             logging.info(f"已初始化{d.get('title')}")
         else:

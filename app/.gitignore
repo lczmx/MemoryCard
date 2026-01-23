@@ -5,3 +5,7 @@ logs/*
 *.sqlite3
 test.*
 local_settings.py
+.venv
+.env
+.env.local
+.env.*.local

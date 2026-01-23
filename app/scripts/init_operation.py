@@ -4,7 +4,7 @@
 """
 import logging
 
-from service.models import Operation
+from models import Operation
 
 
 async def crate_operation():
@@ -15,7 +15,7 @@ async def crate_operation():
         {"id": 4, "title": "delete_category"}, {"id": 5, "title": "create_category"}, {"id": 6, "title": "delete_plan"},
         {"id": 7, "title": "create_plan"}]
     for d in data:
-        _, created = await Operation.objects.get_or_create(**d, defaults=d)
+        _, created = await Operation.get_or_create(**d, defaults=d)
         if created:
             logging.info(f"已初始化{d.get('title')}")
         else:

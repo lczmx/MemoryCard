@@ -5,7 +5,7 @@ import datetime
 
 from fastapi import Query
 
-from service.schemas.generic import QueryLimit, CardDateQueryLimit
+from schemas.generic import QueryLimit, CardDateQueryLimit
 
 
 def get_limit_params(limit: int = Query(10, ge=0, le=50, description="查询条数"),

@@ -1,24 +1,21 @@
-# mobile
+# 记忆卡片前端
 
-## Project setup
+## 开发
 ```
-npm install
+pnpm install
 ```
 
 ### Compiles and hot-reloads for development
 ```
-npm run serve
+pnpm serve
 ```
 
 ### Compiles and minifies for production
 ```
-npm run build
+pnpm build
 ```
 
 ### Lints and fixes files
 ```
-npm run lint
+pnpm lint
 ```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).

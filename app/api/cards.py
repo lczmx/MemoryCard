@@ -5,14 +5,14 @@ from typing import List
 
 from fastapi import APIRouter, status, Depends
 from fastapi.exceptions import HTTPException
-from service.schemas.card import ParamsCardModel, ReadSummaryCardModel, ReadNoLoadPlanCardModel, \
-    ReadNoCategoryCardModel, StarModel, BatchCard, ResetModel, ReadResetModel
-from service.schemas.generic import GenericResponse, QueryLimit
+from schemas.card import ParamsCardModel, ReadSummaryCardModel, ReadNoCategoryCardModel, StarModel, BatchCard, \
+    ResetModel, ReadResetModel
+from schemas.generic import GenericResponse, QueryLimit
 
-from service.models import Card, Category, Record
-from service.schemas.user import DBUserModel
-from service.schemas.other import DBOperationModel
-from service.schemas.card import ReadDescNoPlanCardModel
+from models import Card, Category, Record
+from schemas.user import DBUserModel
+from schemas.other import DBOperationModel
+from schemas.card import ReadDescNoPlanCardModel
 from dependencies.queryParams import get_limit_params, convert_card_order
 from dependencies.auth import jwt_get_current_user
 from dependencies import orm
@@ -30,10 +30,10 @@ async def get_cards(limit_params: QueryLimit = Depends(get_limit_params), order=
     获取多个卡片
     """
     if order:
-        cards = await Card.objects.filter(user=user).limit(limit_params.limit).offset(limit_params.offset).order_by(
+        cards = await Card.filter(user=user).limit(limit_params.limit).offset(limit_params.offset).order_by(
             order).all()
     else:
-        cards = await Card.objects.filter(user=user).limit(limit_params.limit).offset(limit_params.offset).all()
+        cards = await Card.filter(user=user).limit(limit_params.limit).offset(limit_params.offset).all()
     for card in cards:
         await card.category.load()
         await card.category.plan.load()
@@ -52,13 +52,13 @@ async def create_card(card_data: ParamsCardModel, user: DBUserModel = Depends(jw
     创建卡片
     """
 
-    category = await Category.objects.filter(pk=card_data.cid, user=user).first()
+    category = await Category.filter(pk=card_data.cid, user=user).first()
     if not category:
         return {"status": 0, "msg": "不存在的类别", "data": None}
-    card = await Card.objects.create(**card_data.dict(exclude={"cid"}), user=user, category=category)
+    card = await Card.create(**card_data.dict(exclude={"cid"}), user=user, category=category)
     if not card:
         return {"status": 0, "msg": "创建失败", "data": None}
-    await Record.objects.create(user=user, operation=operation)
+    await Record.create(user=user, operation=operation)
 
     return {"status": 1, "msg": "创建成功", "data": card}
 
@@ -68,7 +68,7 @@ async def reset_card(reset_data: ResetModel, user: DBUserModel = Depends(jwt_get
     """
     重置卡片的复习
     """
-    card = await Card.objects.filter(user=user, pk=reset_data.cid).first()
+    card = await Card.filter(user=user, pk=reset_data.cid).first()
     if not card:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
     await utils.reset_card_review([card, ])
@@ -86,7 +86,7 @@ async def batch_star_card(batch_data: BatchCard, user: DBUserModel = Depends(jwt
     """
 
     batch_status = {"success_count": 0, "fail_count": 0, }
-    cards = await Card.objects.filter(id__in=batch_data.cards, user=user).all()
+    cards = await Card.filter(id__in=batch_data.cards, user=user).all()
     for card in cards:
         await card.update(is_star=True)
         batch_status["success_count"] += 1
@@ -106,7 +106,7 @@ async def batch_star_card(batch_data: BatchCard, user: DBUserModel = Depends(jwt
     """
 
     batch_status = {"success_count": 0, "fail_count": 0}
-    cards = await Card.objects.filter(id__in=batch_data.cards, user=user).all()
+    cards = await Card.filter(id__in=batch_data.cards, user=user).all()
 
     batch_status["success_count"] = await utils.reset_card_review(cards)
     batch_status["fail_count"] = len(batch_data.cards) - batch_status["success_count"]
@@ -123,7 +123,7 @@ async def batch_delete_card(batch_data: BatchCard, user: DBUserModel = Depends(j
     批量删除卡片
     """
     batch_status = {"success_count": 0, "fail_count": 0}
-    cards = await Card.objects.filter(id__in=batch_data.cards, user=user).all()
+    cards = await Card.filter(id__in=batch_data.cards, user=user).all()
     for card in cards:
         await card.delete()
         batch_status["success_count"] += 1
@@ -139,12 +139,13 @@ async def toggle_star(cid: int, star_status: StarModel, user: DBUserModel = Depe
     """
     切换分类星标状态
     """
-    card = await Card.objects.filter(pk=cid, user=user).first()
+    card = await Card.filter(pk=cid, user=user).first()
     if not card:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
 
-    await card.update(is_star=not card.is_star)
-    now_status = card.is_star
+    now_status = not card.is_star
+    card.is_star = now_status
+    await card.save()
     msg = "切换成功" if now_status != star_status.is_star else "切换失败"
     return {
         "status": 1,
@@ -157,7 +158,7 @@ async def retrieve_card(cid: int, user: DBUserModel = Depends(jwt_get_current_us
     """
     获取一条卡片的数据
     """
-    card = await Card.objects.filter(pk=cid, user=user).first()
+    card = await Card.filter(pk=cid, user=user).first()
     if not card:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
     await card.category.load()
@@ -170,10 +171,10 @@ async def update_card(cid: int, data: ParamsCardModel, user: DBUserModel = Depen
     """
     修改一条卡片的数据
     """
-    category = await Category.objects.filter(pk=data.cid, user=user).first()
+    category = await Category.filter(pk=data.cid, user=user).first()
     if not category:
         return {"status": 0, "msg": "不存在的类别", "data": None}
-    card = await Card.objects.filter(pk=cid, user=user).first()
+    card = await Card.filter(pk=cid, user=user).first()
     if not card:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
 
@@ -190,10 +191,10 @@ async def delete_card(cid: int, user: DBUserModel = Depends(jwt_get_current_user
     """
     删除一条卡片的数据
     """
-    card = await Card.objects.filter(pk=cid, user=user).first()
+    card = await Card.filter(pk=cid, user=user).first()
     if not card:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
 
     await card.delete()
-    await Record.objects.create(operation=operation, user=user)
+    await Record.create(operation=operation, user=user)
     return {"status": 1, "msg": "删除成功"}

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import date
-from service.schemas.user import DBUserModel
+from schemas.user import DBUserModel
 
 
 class ReadDocModel(BaseModel):

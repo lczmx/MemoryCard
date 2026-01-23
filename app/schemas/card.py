@@ -4,8 +4,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from service.schemas.user import DBUserModel
-from service.schemas.category import DBCategoryModel, ReadCategoryModel, ReadNoLoadPlanCategoryModel
+from schemas.user import DBUserModel
+from schemas.category import DBCategoryModel, ReadCategoryModel, ReadNoLoadPlanCategoryModel
 
 
 class StarModel(BaseModel):

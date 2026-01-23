@@ -1,12 +1,12 @@
 """
 定义分类数据模型
 """
-from typing import Generic, TypeVar, List
+from typing import List
 from pydantic.generics import GenericModel
 from pydantic import BaseModel, Field
 
-from service.schemas.user import DBUserModel
-from service.schemas.plan import DBPlanModel, ReadPlanModel, ReadNoLoadPlanID
+from schemas.user import DBUserModel
+from schemas.plan import DBPlanModel, ReadPlanModel, ReadNoLoadPlanID
 
 
 class BaseCategoryModel(BaseModel):

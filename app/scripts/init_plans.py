@@ -3,8 +3,8 @@
 """
 import logging
 
-from service.models import Plan
-from service.models import User
+from models import Plan
+from models import User
 from scripts import init_user
 
 
@@ -30,9 +30,9 @@ async def crate_plans():
         }
     ]
     # 跳过已经有的
-    nologin_user = await User.objects.filter(**init_user.nologin_user).first()
+    nologin_user = await User.filter(**init_user.nologin_user).first()
     for d in data:
-        _, created = await Plan.objects.get_or_create(user=nologin_user, **d, defaults=dict(**d, user=nologin_user))
+        _, created = await Plan.get_or_create(user=nologin_user, **d, defaults=dict(**d, user=nologin_user))
         if created:
             logging.info(f"已初始化{d.get('title')}")
         else:

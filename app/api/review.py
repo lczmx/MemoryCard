@@ -9,13 +9,12 @@ from fastapi.exceptions import HTTPException
 
 from settings import OPERATION_DATA
 from service import utils
-from service.models import Card, Record, Category
-from service.schemas.generic import QueryLimit, GenericResponse, CardDateQueryLimit
-from service.schemas.card import ReadSummaryCardModel, BatchCard, ReadDescNoPlanCardModel
-from service.schemas.category import ReadCategoryModel, ReadNoLoadPlanCategoryModel
-from service.schemas.plan import ReadPlanModel
-from service.schemas.user import DBUserModel
-from service.schemas.other import DBOperationModel
+from models import Card, Record, Category
+from schemas.generic import QueryLimit, GenericResponse, CardDateQueryLimit
+from schemas.card import ReadSummaryCardModel, BatchCard, ReadDescNoPlanCardModel
+from schemas.category import ReadNoLoadPlanCategoryModel
+from schemas.user import DBUserModel
+from schemas.other import DBOperationModel
 
 from dependencies import orm
 from dependencies.queryParams import get_limit_params, get_card_by_date_limit_params
@@ -33,9 +32,9 @@ async def get_review(
     获取所有需要复习卡片
     """
     if not cid:
-        cards = await Card.objects.filter(user=user).limit(limit_params.limit).offset(limit_params.offset).all()
+        cards = await Card.filter(user=user).limit(limit_params.limit).offset(limit_params.offset).all()
     else:
-        cards = await Card.objects.filter(user=user, category__id=cid).limit(limit_params.limit).offset(
+        cards = await Card.filter(user=user, category__id=cid).limit(limit_params.limit).offset(
             limit_params.offset).all()
     # 判断可以复习
     need_review_cards = await utils.use_need_review_cards(cards)
@@ -63,7 +62,7 @@ async def batch_review_card(review_cards: BatchCard, user: DBUserModel = Depends
     }
     plans = {}  # key: plan ID  value: plan分割后的列表
     for cid in review_cards.cards:
-        card = await Card.objects.filter(pk=cid).first()
+        card = await Card.filter(pk=cid).first()
         if not card:
             status["fail_count"] += 1
             continue
@@ -86,7 +85,7 @@ async def batch_review_card(review_cards: BatchCard, user: DBUserModel = Depends
             continue
         new_times = old_times + 1
         await card.update(review_at=datetime.now(), review_times=new_times)
-        await Record.objects.create(user=user, operation=operation)
+        await Record.create(user=user, operation=operation)
         status["success_count"] += 1
     # 返回
     return {
@@ -102,7 +101,7 @@ async def get_need_card_id(limit_params: QueryLimit = Depends(get_limit_params),
     获取需要复习的卡片的ID
     """
     # TODO: 优化查询, 可以跳过offset
-    cards = await Card.objects.filter(user=user).all()
+    cards = await Card.filter(user=user).all()
     cards_id_lst = [card.pk for card in cards if await utils.card_can_review(card)]
 
     return {
@@ -119,7 +118,7 @@ async def get_card_by_date(query_params: CardDateQueryLimit = Depends(get_card_b
     根据日期获取需要复习的卡片
     """
     # TODO: 优化一下 offset
-    cards = await Card.objects.filter(user=user).all()
+    cards = await Card.filter(user=user).all()
 
     can_review_cards = [card for card in cards if
                         await utils.card_can_review_by_date(card, query_date=query_params.date)]
@@ -143,13 +142,13 @@ async def get_review_card_category(limit_params: QueryLimit = Depends(get_limit_
     """
     获取要复习卡片的类别
     """
-    category_lst = await Category.objects.filter(user=user).all()
+    category_lst = await Category.filter(user=user).all()
     # TODO: 优化一下 offset
     result = []
     for category in category_lst:
         # 对比数据
         # 查询需要复习的卡片
-        cards = await Card.objects.filter(user=user, category=category).all()
+        cards = await Card.filter(user=user, category=category).all()
         need_review_cards = await utils.use_need_review_cards(cards)
         if need_review_cards:
             res = ReadNoLoadPlanCategoryModel.from_orm(category)
@@ -168,7 +167,7 @@ async def get_card(cid: int, user: DBUserModel = Depends(jwt_get_current_user)):
     """
     获取一条需要复习卡片
     """
-    card = await Card.objects.filter(user=user, pk=cid).first()
+    card = await Card.filter(user=user, pk=cid).first()
     if not card:
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
     # 必须是需要复习的
@@ -185,7 +184,7 @@ async def review_done(cid: int, user: DBUserModel = Depends(jwt_get_current_user
     """
     完成卡片复习
     """
-    card = await Card.objects.filter(user=user, pk=cid).first()
+    card = await Card.filter(user=user, pk=cid).first()
     if not card:
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
     # 必须是需要复习的
@@ -203,5 +202,5 @@ async def review_done(cid: int, user: DBUserModel = Depends(jwt_get_current_user
     # ## 完成复习, 更新数据
     new_times = old_times + 1
     await card.update(review_at=datetime.now(), review_times=new_times)
-    await Record.objects.create(user=user, operation=operation)
+    await Record.create(user=user, operation=operation)
     return {"status": 1, "msg": "复习成功"}

@@ -1,13 +1,13 @@
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from api import bind_router
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exception_handlers import request_validation_exception_handler
-from service import orm_database, create_all
-from scripts import start_init
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from tortoise.contrib.fastapi import register_tortoise
+
+from api import bind_router
 from logger import CustomizeLogger
-import uvicorn
+from settings import settings
 
 # 许可信息数据
 license_info = {
@@ -70,26 +70,22 @@ async def http_exception_handler(request, exc: RequestValidationError):
 # 绑定路由
 bind_router(app)
 
-app.state.database = orm_database
-
-
-@app.on_event("startup")
-async def startup() -> None:
-    database_ = app.state.database
-    if not database_.is_connected:
-        await database_.connect()
-
-        # 连接数据库后才初始化
-    await create_all()  # 创建表关系
-    await start_init()
-
-
-@app.on_event("shutdown")
-async def shutdown() -> None:
-    database_ = app.state.database
-    if database_.is_connected:
-        await database_.disconnect()
-
-
-if __name__ == '__main__':
-    uvicorn.run(app, port=8366, host="0.0.0.0")
+# 初始化数据库
+register_tortoise(
+    app,
+    config={
+        "connections": {
+            "default": settings.async_sqlalchemy_database_url
+        },
+        "apps": {
+            "models": {
+                "models": ["models"],
+                "default_connection": "default",
+            }
+        },
+        "use_tz": True,  # 启用时区支持
+        "timezone": "Asia/Shanghai"
+    },
+    generate_schemas=True,  # 自动生成表结构
+    add_exception_handlers=True  # 启用ORM异常处理
+)

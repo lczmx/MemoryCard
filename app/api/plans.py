@@ -8,11 +8,11 @@ from dependencies import orm
 from dependencies.queryParams import get_limit_params
 from dependencies.auth import jwt_get_current_user
 
-from service.models import Plan, Card, Record, Category
-from service.schemas.generic import QueryLimit, GenericResponse
-from service.schemas.plan import ReadPlanModel, ParamsPlanModel
-from service.schemas.user import DBUserModel
-from service.schemas.other import DBOperationModel
+from models import Plan, Card, Record, Category
+from schemas.generic import QueryLimit, GenericResponse
+from schemas.plan import ReadPlanModel, ParamsPlanModel
+from schemas.user import DBUserModel
+from schemas.other import DBOperationModel
 from service import utils
 
 router = APIRouter(prefix="/plans", tags=["复习计划相关"])
@@ -24,8 +24,8 @@ async def get_plans(query_limit_params: QueryLimit = Depends(get_limit_params),
                     no_login_user: DBUserModel = Depends(orm.get_no_login_user)):
     plans = []
     # TODO: 优化offset
-    default_plans = await Plan.objects.filter(user=no_login_user).all()
-    user_plans = await Plan.objects.filter(user=user).all()
+    default_plans = await Plan.filter(user=no_login_user).all()
+    user_plans = await Plan.filter(user=user).all()
     for p in default_plans:
         temp = ReadPlanModel.from_orm(p)
         temp.editable = False
@@ -50,11 +50,11 @@ async def create_plan(plan_data: ParamsPlanModel, user: DBUserModel = Depends(jw
     """
     创建复习曲线
     """
-    plan = await Plan.objects.create(**plan_data.dict(), user=user)
+    plan = await Plan.create(**plan_data.dict(), user=user)
 
     if not plan:
         return {"status": 0, "msg": "创建失败", "data": plan}
-    await Record.objects.create(user=user, operation=operation)
+    await Record.create(user=user, operation=operation)
     return {"status": 1, "msg": "创建成功", "data": plan}
 
 
@@ -65,8 +65,8 @@ async def get_plan(pid: int, user: DBUserModel = Depends(jwt_get_current_user),
     获取一条复习曲线数据
 
     """
-    user_plan = await Plan.objects.filter(pk=pid, user=user).first()
-    default_plan = await Plan.objects.filter(pk=pid, user=no_login_user).first()
+    user_plan = await Plan.filter(pk=pid, user=user).first()
+    default_plan = await Plan.filter(pk=pid, user=no_login_user).first()
 
     if not user_plan and not default_plan:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的复习曲线")
@@ -82,7 +82,7 @@ async def update_plan(pid: int, plan_data: ParamsPlanModel, user: DBUserModel = 
     """
     修改一条复习曲线数据
     """
-    plan = await Plan.objects.filter(pk=pid).first()
+    plan = await Plan.filter(pk=pid).first()
     if not plan:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的复习曲线")
     if plan.user.pk != user.id:
@@ -90,10 +90,10 @@ async def update_plan(pid: int, plan_data: ParamsPlanModel, user: DBUserModel = 
 
     if plan_data.content != plan.content:
         # 重置
-        category = await Category.objects.filter(plan=plan).all()
+        category = await Category.filter(plan=plan).all()
         # 重置卡片复习次数
         for c in category:
-            cards = await Card.objects.filter(category=c).all()
+            cards = await Card.filter(category=c).all()
             await utils.reset_card_review(cards)
 
     await plan.update(**plan_data.dict())
@@ -110,19 +110,19 @@ async def delete_plan(pid: int, user: DBUserModel = Depends(jwt_get_current_user
     """
     删除一条复习计划
     """
-    plan = await Plan.objects.filter(user=user, pk=pid).first()
+    plan = await Plan.filter(user=user, pk=pid).first()
     if not plan:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的复习曲线")
     # 设置类别的默认复习曲线
-    category = await Category.objects.filter(plan=plan).all()
-    default_category = await Plan.objects.filter(user=no_login_user).first()
+    category = await Category.filter(plan=plan).all()
+    default_category = await Plan.filter(user=no_login_user).first()
     if not default_category:
         return {"status": 0, "msg": "删除失败, 没有默认复习曲线"}
 
     # 重置卡片复习次数
     for c in category:
         await c.update(plan=default_category)
-        cards = await Card.objects.filter(category=c).all()
+        cards = await Card.filter(category=c).all()
         await utils.reset_card_review(cards)
 
     await plan.delete()

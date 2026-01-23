@@ -4,7 +4,7 @@
 from typing import Optional
 
 from pydantic import BaseModel
-from service.schemas.user import DBUserModel
+from schemas.user import DBUserModel
 
 
 class BasePlanModel(BaseModel):

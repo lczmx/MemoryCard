@@ -6,12 +6,11 @@ from datetime import timedelta
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
-from pymysql.err import IntegrityError
-
+from tortoise.exceptions import IntegrityError
 import settings
-from service.schemas.user import DBUserModel, ParamsSignUpModel, ReadUserModel, JWTModel, UserProfileModel
-from service.schemas.generic import GenericResponse
-from service.models import User
+from schemas.user import DBUserModel, ParamsSignUpModel, ReadUserModel, JWTModel, UserProfileModel
+from schemas.generic import GenericResponse
+from models import User
 from dependencies.auth import jwt_authenticate_user, create_access_token, jwt_get_current_user
 
 router = APIRouter(prefix="/user", tags=["用户相关"])
@@ -42,17 +41,17 @@ async def signup(sign_up_data: ParamsSignUpModel):
 
     }
     error_res = {}
-    if await User.objects.filter(username=sign_up_data.username).first():
+    if await User.filter(username=sign_up_data.username).first():
         error_res["username"] = "用户名已经存在"
 
-    if await User.objects.filter(email=sign_up_data.email).first():
+    if await User.filter(email=sign_up_data.email).first():
         error_res["email"] = "邮箱已经存在"
 
     if error_res:
         return JSONResponse({"status": 0, "msg": "注册失败", "data": error_res})
 
     # 保存数据
-    await User.objects.create(**data)
+    await User.create(**data)
 
     return {
         "status": 1,
@@ -98,7 +97,7 @@ async def update_user_profile(user_profile: UserProfileModel, user: DBUserModel 
         return {"status": 0, "msg": "数据不能为空", "data": data}
 
     try:
-        await User.objects.filter(pk=uid).update(**data)
+        await User.filter(pk=uid).update(**data)
         return {"status": 1, "msg": "修改成功", "data": data}
     except IntegrityError:
         return {"status": 0, "msg": "数据已经存在", "data": data}
