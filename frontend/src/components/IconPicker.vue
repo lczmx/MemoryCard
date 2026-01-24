@@ -24,43 +24,41 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, toRef, ref } from "vue";
+<script setup lang="ts">
+import { toRef, ref, type PropType } from "vue";
 
-export default defineComponent({
-  name: "IconPicker",
-  props: {
-    iconArray: {
-      type: Array,
-    },
-    // 默认选中项
-    selectIcon: {
-      type: String,
-      default: "",
-    },
+// 定义props
+interface Props {
+  iconArray?: string[];
+  selectIcon?: string;
+}
+const props = defineProps({
+  iconArray: {
+    type: Array as PropType<string[]>,
+    default: () => []
   },
-  emits: ["picked"],
+  selectIcon: {
+    type: String,
+    default: "",
+  },
+})
 
-  setup(props, context) {
-    const iconData = toRef(props, "iconArray");
-    const nowSelectedIcon = ref(props.selectIcon);
-    const handlerClick = (event: MouseEvent) => {
-      const ele = event.target as HTMLElement;
-      let icon = ele.getAttribute("icon") as string;
-      nowSelectedIcon.value = icon;
-    };
-    const onClickLeft = () => {
-      context.emit("picked", nowSelectedIcon.value);
-    };
-    return {
-      // 返回的数据
-      handlerClick,
-      onClickLeft,
-      iconData,
-      nowSelectedIcon,
-    };
-  },
-});
+const emit = defineEmits<{(e: "picked", icon: string)}>();
+// 响应式数据
+
+  const iconData = toRef(props, "iconArray");
+  const nowSelectedIcon = ref(props.selectIcon);
+// 事件处理
+
+const handlerClick = (event: MouseEvent) => {
+  const ele = event.target as HTMLElement;
+  let icon = ele.getAttribute("icon") as string;
+  nowSelectedIcon.value = icon;
+};
+const onClickLeft = () => {
+  emit("picked", nowSelectedIcon.value);
+};
+
 </script>
 
 <style lang="scss" scoped>

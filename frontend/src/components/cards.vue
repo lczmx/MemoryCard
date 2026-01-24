@@ -244,7 +244,7 @@
 <script lang="ts">
 import { defineComponent, ref, watch } from "vue";
 import { useStore } from "vuex";
-import { PopoverAction, Toast, Dialog } from "vant";
+import { PopoverAction, showToast, showSuccessToast, showConfirmDialog } from "vant";
 import type {
   CheckboxInstance,
   CheckboxGroupInstance,
@@ -324,7 +324,7 @@ export default defineComponent({
       };
       deleteData(config, false).then(() => {
         // 提示
-        Toast.success("已删除");
+        showSuccessToast("已删除");
         // 移除
         for (let index in data.value) {
           // index 为string
@@ -411,7 +411,7 @@ export default defineComponent({
     const handlerClickBatchStar = () => {
       if (!checkedCard.value || checkedCard.value.length <= 0) {
         // 提示先选择
-        Toast("请先选择卡片");
+        showToast("请先选择卡片");
         return;
       }
 
@@ -425,7 +425,7 @@ export default defineComponent({
 
       postCreateData<null, IBatchPostCardData>(config, false).then(() => {
         // 提示
-        Toast.success("已批量星标");
+        showSuccessToast("已批量星标");
         // 切换选中的星标状态
         const shouldStarCount = checkedCard.value.length; // 应该星标的数量
         let currentStarCount = 0;
@@ -447,7 +447,7 @@ export default defineComponent({
     const handlerClickBatchReset = () => {
       if (!checkedCard.value || checkedCard.value.length <= 0) {
         // 提示先选择
-        Toast("请先选择卡片");
+        showToast("请先选择卡片");
         return;
       }
 
@@ -461,7 +461,7 @@ export default defineComponent({
 
       postCreateData<null, IBatchPostCardData>(config, false).then(() => {
         // 提示
-        Toast.success("已批量重置");
+        showSuccessToast("已批量重置");
         // 切换选中的星标状态
         const shouldStarCount = checkedCard.value.length; // 应该重置的数量
         let currentStarCount = 0;
@@ -481,11 +481,11 @@ export default defineComponent({
     const handlerClickBatchDelete = () => {
       if (!checkedCard.value || checkedCard.value.length <= 0) {
         // 提示先选择
-        Toast("请先选择卡片");
+        showToast("请先选择卡片");
         return;
       }
 
-      Dialog.confirm({
+      showConfirmDialog({
         title: "警告",
         message: "删除后无法恢复, 你确定要继续吗?",
       })
@@ -500,7 +500,7 @@ export default defineComponent({
 
           deleteData<IBatchPostCardData>(config, false).then(() => {
             // 提示
-            Toast.success("已批量删除");
+            showSuccessToast("已批量删除");
             // 删除选中
             const shouldDeleteCount = checkedCard.value.length;
             let currentDeleteCount = 0;
@@ -522,7 +522,7 @@ export default defineComponent({
           });
         })
         .catch(() => {
-          Toast("已经取消");
+          showToast("已经取消");
         });
     };
 
@@ -633,7 +633,7 @@ export default defineComponent({
         if (data.value[index] && data.value[index].id === response.id) {
           data.value[index].reviewAt = response.reviewAt;
           data.value[index].reviewTimes = response.reviewTimes;
-          Toast.success("已重置复习");
+          showSuccessToast("已重置复习");
         }
       });
     };

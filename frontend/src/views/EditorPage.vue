@@ -16,7 +16,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { useStore } from "vuex";
-import { Dialog } from "vant";
+import { showConfirmDialog } from "vant";
 
 export default defineComponent({
   name: "EditorPage",
@@ -32,7 +32,7 @@ export default defineComponent({
     const backTopPage = () => {
       //  本页面数据是否被修改
       if (store.state.changeState) {
-        Dialog.confirm({
+        showConfirmDialog({
           title: "注意",
           message: "你尚未保存, 本页面修改的数据将不会被记录",
         })

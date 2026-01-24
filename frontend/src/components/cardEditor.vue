@@ -183,7 +183,7 @@ import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { useWindowSize } from "@vant/use";
 import type { FormInstance } from "vant";
-import { Toast } from "vant";
+import { showSuccessToast, closeToast } from "vant";
 import { Method } from "axios";
 
 import { ICard, IPostCard, ICategory } from "@/types";
@@ -351,9 +351,9 @@ export default defineComponent({
               };
               postCreateData<ICard, IPostCard>(postConfig, false).then(() => {
                 // 成功创建了
-                Toast.success(props.successText);
+                showSuccessToast(props.successText);
                 setTimeout(() => {
-                  Toast.clear();
+                  closeToast();
                   router.go(-1);
                 }, 1000);
               });

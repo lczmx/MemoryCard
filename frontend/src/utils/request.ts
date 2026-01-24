@@ -9,7 +9,7 @@ import {
   IResponse,
   IGetReviewByDateClientStatus,
 } from "@/types";
-import { Toast } from "vant";
+import { showToast, showFailToast, showLoadingToast, closeToast } from "vant";
 
 export async function request<T, D>(
   config: AxiosRequestConfig<D>,
@@ -17,7 +17,7 @@ export async function request<T, D>(
 ): Promise<T> {
   // 加载中
   if (loading) {
-    Toast.loading({
+    showLoadingToast({
       message: "加载中...",
       forbidClick: true,
       loadingType: "spinner",
@@ -37,7 +37,7 @@ export async function request<T, D>(
     .request<T>(config)
     .then((res) => {
       // 请求成功返回
-      Toast.clear(); // 取消 加载中
+      closeToast(); // 取消 加载中
       if (!res.data) {
         throw new Error("请求错误");
       }
@@ -58,7 +58,7 @@ export async function request<T, D>(
           setTimeout(() => {
             router.push({ name: "LogIn" });
           }, 1500);
-          Toast.fail({
+          showFailToast({
             message: "请先登录",
             duration: 1000,
           });
@@ -69,26 +69,26 @@ export async function request<T, D>(
           setTimeout(() => {
             router.go(-1);
           }, 1500);
-          Toast.fail({
+          showFailToast({
             message: "拒绝访问",
             duration: 1000,
           });
           break;
         case 404:
-          Toast.fail({
+          showFailToast({
             message: "未找到资源",
             duration: 1000,
           });
           break;
         case 422:
-          Toast.fail({
+          showFailToast({
             message: "数据验证失败",
             duration: 1000,
           });
           break;
         default:
           console.log(status);
-          Toast.fail({
+          showFailToast({
             message: "未知错误",
             duration: 1000,
           });
@@ -135,7 +135,7 @@ export async function getDataOfPage<R>(
     typeof clientStatus.hasMore !== "undefined" &&
     loading
   ) {
-    Toast({
+    showToast({
       message: "已经到底了",
       position: "bottom",
     });
@@ -165,7 +165,7 @@ export async function getDataOfPage<R>(
           // 没数据了
           clientStatus.hasMore = false;
           if (loading) {
-            Toast({
+            showToast({
               message: "已经到底了",
               position: "bottom",
             });
@@ -180,7 +180,7 @@ export async function getDataOfPage<R>(
         }
         return Promise.resolve(response.data);
       } else {
-        Toast.fail(response.msg);
+        showFailToast(response.msg);
         return Promise.reject(response.msg);
       }
     }
@@ -201,7 +201,7 @@ export async function getReviewDataOfPage<R>(
     typeof clientStatus.hasMore !== "undefined" &&
     loading
   ) {
-    Toast({
+    showToast({
       message: "已经到底了",
       position: "bottom",
     });
@@ -231,7 +231,7 @@ export async function getReviewDataOfPage<R>(
           // 没数据了
           clientStatus.hasMore = false;
           if (loading) {
-            Toast({
+            showToast({
               message: "已经到底了",
               position: "bottom",
             });
@@ -246,7 +246,7 @@ export async function getReviewDataOfPage<R>(
         }
         return Promise.resolve(response.data);
       } else {
-        Toast.fail(response.msg);
+        showFailToast(response.msg);
         return Promise.reject(response.msg);
       }
     }
@@ -270,9 +270,9 @@ const postConfig = {
 postCreateData<ICategory, IPostCategory>(postConfig, false).then(
   (response) => {
     // 成功创建了
-    Toast.success("已创建");
+    showSuccessToast("已创建");
     setTimeout(() => {
-      Toast.clear();
+      closeToast();
       router.push({ name: "category" });
     }, 1000);
   }
@@ -296,7 +296,7 @@ export async function postCreateData<R, D>(
       // status为1时, 为正常情况
       return Promise.resolve(response.data);
     } else {
-      Toast.fail(response.msg);
+      showFailToast(response.msg);
       return Promise.reject(response);
     }
   });
@@ -319,7 +319,7 @@ export async function getDataOfOne<R>(
       // status为1时, 为正常情况
       return Promise.resolve(response.data);
     } else {
-      Toast.fail(response.msg);
+      showFailToast(response.msg);
       return Promise.reject(response.msg);
     }
   });
@@ -339,7 +339,7 @@ export async function deleteData<D>(
       // status为1时, 为正常情况
       return Promise.resolve(response.msg);
     } else {
-      Toast.fail(response.msg);
+      showFailToast(response.msg);
       return Promise.reject(response.msg);
     }
   });
@@ -359,7 +359,7 @@ export async function getReviewCardByDateData<R>(
     typeof clientStatus.hasMore !== "undefined" &&
     loading
   ) {
-    Toast({
+    showToast({
       message: "已经到底了",
       position: "bottom",
     });
@@ -389,7 +389,7 @@ export async function getReviewCardByDateData<R>(
           // 没数据了
           clientStatus.hasMore = false;
           if (loading) {
-            Toast({
+            showToast({
               message: "已经到底了",
               position: "bottom",
             });
@@ -404,7 +404,7 @@ export async function getReviewCardByDateData<R>(
         }
         return Promise.resolve(response.data);
       } else {
-        Toast.fail(response.msg);
+        showFailToast(response.msg);
         return Promise.reject(response.msg);
       }
     }

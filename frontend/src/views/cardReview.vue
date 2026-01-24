@@ -451,7 +451,6 @@ export default defineComponent({
 
     const store = useStore();
     const router = useRouter();
-
     const getCardData = (cid: number) => {
       loading.value = true;
       const config = {
@@ -556,15 +555,15 @@ export default defineComponent({
       }
     };
     onMounted(() => {
-      const cid = Number(router.currentRoute.value.query.cid);
-      console.log(router.currentRoute.value.query.cid);
-
-      if (!isNaN(cid)) {
+        const cid = Number(router.currentRoute.value.query.cid);
+        console.log(router.currentRoute.value.query.cid);
+        if (!isNaN(cid)) {
         getCardData(cid); // 获取本页面的卡片数据
         getNeedReviewCardID(); // 获取所有ID, 内部获取上下卡片
       } else {
         Dialog.alert({
-          message: "需要卡牌的ID",
+          title: '错误',
+          message: '请提供有效的卡片ID'
         }).then(() => {
           // on close
           handlerClickBack();

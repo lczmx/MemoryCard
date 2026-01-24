@@ -4,7 +4,7 @@
     :finished="!status.hasMore"
     @load="getPlanData"
   >
-  <template #loading></template>
+    <template #loading></template>
     <van-empty
       description="复习曲线为空"
       :style="{ backgroundColor: '#f4f3f5' }"
@@ -149,7 +149,7 @@ import { getDataOfPage, deleteData } from "@/utils/request";
 import { IPlan, IPlanStep } from "@/types";
 import { convert_sec_to_string } from "@/hook";
 import { Method } from "axios";
-import { Toast } from "vant";
+import { showSuccessToast, showFailToast } from "vant";
 export default defineComponent({
   name: "Plan",
 
@@ -158,7 +158,7 @@ export default defineComponent({
     const store = useStore();
     store.commit("changeSettingsPageTitle", "复习曲线");
     // --------- 获取数据
-    const loadingPlanData = ref(true);
+    const loadingPlanData = ref(false);
     let status = {
       method: "GET" as Method,
       limit: 50,
@@ -196,7 +196,7 @@ export default defineComponent({
       deleteData(config, false)
         .then(() => {
           // 提示
-          Toast.success("已删除");
+          showSuccessToast("已删除");
           // 移除
           for (let index in planData.value) {
             // index 为string
@@ -208,7 +208,7 @@ export default defineComponent({
           }
         })
         .catch(() => {
-          Toast.fail("删除失败");
+          showFailToast("删除失败");
         });
     };
     // ----------- 显示曲线

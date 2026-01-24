@@ -4,26 +4,26 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
     name: "Page",
-    component: () => import("@/views/Page.vue"),
+    component: () => import("../views/Page.vue"),
     children: [
       {
         path: "",
-        component: () => import("@/components/review.vue"),
+        component: () => import("../components/review.vue"),
         name: "review",
       },
       {
         path: "/cards",
-        component: () => import("@/components/cards.vue"),
+        component: () => import("../components/cards.vue"),
         name: "cards",
       },
       {
         path: "/category",
-        component: () => import("@/components/category.vue"),
+        component: () => import("../components/category.vue"),
         name: "category",
       },
       {
         path: "/settings",
-        component: () => import("@/components/settings.vue"),
+        component: () => import("../components/settings.vue"),
         name: "settings",
       },
     ],
@@ -31,21 +31,21 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/add",
     name: "AddPage",
-    component: () => import("@/views/EditorPage.vue"),
+    component: () => import("../views/EditorPage.vue"),
     children: [
       {
         path: "category",
-        component: () => import("@/components/addCategory.vue"),
+        component: () => import("../components/addCategory.vue"),
         name: "addCategory",
       },
       {
         path: "card",
-        component: () => import("@/components/addCard.vue"),
+        component: () => import("../components/addCard.vue"),
         name: "addCard",
       },
       {
         path: "plan",
-        component: () => import("@/components/AddPlan.vue"),
+        component: () => import("../components/AddPlan.vue"),
         name: "addPlan",
       },
     ],
@@ -53,21 +53,21 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/editor",
     name: "EditorPage",
-    component: () => import("@/views/EditorPage.vue"),
+    component: () => import("../views/EditorPage.vue"),
     children: [
       {
         path: "category/:cid",
-        component: () => import("@/components/EditorCategory.vue"),
+        component: () => import("../components/EditorCategory.vue"),
         name: "editorCategory",
       },
       {
         path: "card/:cid",
-        component: () => import("@/components/EditorCard.vue"),
+        component: () => import("../components/EditorCard.vue"),
         name: "editorCard",
       },
       {
         path: "plan/:pid",
-        component: () => import("@/components/EditorPlan.vue"),
+        component: () => import("../components/EditorPlan.vue"),
         name: "editorPlan",
       },
     ],
@@ -75,30 +75,30 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/review/review-mode",
     name: "CardReview",
-    component: () => import("@/views/cardReview.vue"),
+    component: () => import("../views/cardReview.vue"),
   },
   {
     path: "/settings",
-    component: () => import("@/views/SettingsContent.vue"),
+    component: () => import("../views/SettingsContent.vue"),
     children: [
       {
         path: "plans",
-        component: () => import("@/components/Plan.vue"),
+        component: () => import("../components/Plan.vue"),
         name: "Plan",
       },
       {
         path: "analyse",
-        component: () => import("@/components/Analyse.vue"),
+        component: () => import("../components/Analyse.vue"),
         name: "Analyse",
       },
       {
         path: "profile",
-        component: () => import("@/components/Profile.vue"),
+        component: () => import("../components/Profile.vue"),
         name: "Profile",
       },
       {
         path: "help",
-        component: () => import("@/components/Help.vue"),
+        component: () => import("../components/Help.vue"),
         name: "Help",
       },
     ],
@@ -106,28 +106,28 @@ const routes: Array<RouteRecordRaw> = [
   // 数据分析
   {
     path: "/analyse",
-    component: () => import("@/views/SettingsContent.vue"),
+    component: () => import("../views/SettingsContent.vue"),
     children: [
       {
         path: "review",
-        component: () => import("@/components/AnalyseReview.vue"),
+        component: () => import("../components/AnalyseReview.vue"),
         name: "analyseReview",
       },
       {
         path: "create",
-        component: () => import("@/components/AnalyseCreate.vue"),
+        component: () => import("../components/AnalyseCreate.vue"),
         name: "analyseCreate",
       },
     ],
   },
   {
     path: "/login",
-    component: () => import("@/views/LogIn.vue"),
+    component: () => import("../views/LogIn.vue"),
     name: "LogIn",
   },
   {
     path: "/signup",
-    component: () => import("@/views/SignUp.vue"),
+    component: () => import("../views/SignUp.vue"),
     name: "SignUp",
   },
   {
@@ -136,7 +136,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       title: "无法访问",
     },
-    component: () => import("@/views/NotFound.vue"),
+    component: () => import("../views/NotFound.vue"),
   },
   {
     path: "/:pathMatch(.*)",
@@ -145,7 +145,7 @@ const routes: Array<RouteRecordRaw> = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(),
   routes,
 });
 

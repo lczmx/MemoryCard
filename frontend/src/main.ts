@@ -4,6 +4,8 @@ import router from "./router";
 import store from "./store";
 import "./assets/font_3172792_1kvy3pljzhb/iconfont.css"; // 前端页面图标
 import "./assets/font_3188311_1wipkj1s0u8/iconfont.css"; // 分类图标
+import "./assets/css/remixicon.css"; // Remix 图标库
+import "vant/lib/index.css"; // Vant 组件库样式
 
 import { Tabbar, TabbarItem } from "vant";
 import { Icon } from "vant"; // 图标
@@ -25,7 +27,7 @@ import { Empty } from "vant"; // 空状态
 import { List } from "vant"; // 列表, 用于触底事件
 import { Step, Steps } from "vant"; // 步骤条
 import { Progress } from "vant"; // 进度条
-import { Loading } from "vant";
+import { Loading } from "vant"; // 长列表
 import { Skeleton } from "vant"; // 骨架
 import { Switch } from "vant"; // 开关
 import { Checkbox, CheckboxGroup } from "vant"; // 复选框

@@ -131,7 +131,7 @@
             注册
           </button>
         </div>
-        <img :src="require('@/assets/images/log.svg')" class="image" alt="" />
+        <img :src="getAssetsFile('@/assets/images/log.svg')" class="image" alt="" />
       </div>
       <div class="panel right-panel">
         <div class="content">
@@ -148,7 +148,7 @@
           </button>
         </div>
         <img
-          :src="require('@/assets/images/register.svg')"
+          :src="getAssetsFile('@/assets/images/register.svg')"
           class="image"
           alt=""
         />
@@ -161,7 +161,7 @@
 import { defineComponent, ref } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-import { Toast } from "vant";
+import { showSuccessToast } from "vant";
 import {
   IUserSignUpPostData,
   IUserLoginPostData,
@@ -170,6 +170,8 @@ import {
 } from "@/types";
 import { postCreateData } from "@/utils/request";
 import qs from "qs";
+import { getAssetsFile } from '@/utils/assets'
+
 export default defineComponent({
   name: "LoginSingup",
   props: {
@@ -340,7 +342,7 @@ export default defineComponent({
         )
           .then((response) => {
             // 创建成功
-            Toast.success("注册成功");
+            showSuccessToast("注册成功");
             // 跳到对应页面
             handlerClickLoginBtn();
             // 设置login账号数据
@@ -417,7 +419,7 @@ export default defineComponent({
 
             // 保存到store
             store.commit("setToken", { accessToken, tokenType });
-            Toast.success("登录成功");
+            showSuccessToast("登录成功");
             // 跳转上一个页面
             router.go(-1);
           })
@@ -459,6 +461,7 @@ export default defineComponent({
       onBlurLoginPassword,
       onChangeLoginPassword,
       handlerClickLoginSubmitBtn, /// 提交
+      getAssetsFile
     };
   },
 });

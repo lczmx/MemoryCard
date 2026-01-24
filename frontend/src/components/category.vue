@@ -205,7 +205,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { PopoverAction, ActionSheetAction, Toast, Dialog } from "vant";
+import { PopoverAction, ActionSheetAction, showToast, showSuccessToast, showConfirmDialog } from "vant";
 import type { CheckboxInstance, CheckboxGroupInstance } from "vant";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
@@ -329,7 +329,7 @@ export default defineComponent({
     const handlerClickBatchStar = () => {
       if (!checkedCategory.value || checkedCategory.value.length <= 0) {
         // 提示先选择
-        Toast("请先选择卡片");
+        showToast("请先选择卡片");
         return;
       }
 
@@ -343,7 +343,7 @@ export default defineComponent({
 
       postCreateData<null, IBatchPostCategoryData>(config, false).then(() => {
         // 提示
-        Toast.success("已批量星标");
+        showSuccessToast("已批量星标");
         // 切换选中的星标状态
         const shouldStarCount = checkedCategory.value.length; // 应该星标的数量
         let currentStarCount = 0;
@@ -365,11 +365,11 @@ export default defineComponent({
     const handlerClickBatchDelete = () => {
       if (!checkedCategory.value || checkedCategory.value.length <= 0) {
         // 提示先选择
-        Toast("请先选择卡片");
+        showToast("请先选择卡片");
         return;
       }
 
-      Dialog.confirm({
+      showConfirmDialog({
         title: "警告",
         message: "删除后无法恢复, 你确定要继续吗?",
       })
@@ -384,7 +384,7 @@ export default defineComponent({
 
           deleteData<IBatchPostCategoryData>(config, false).then(() => {
             // 提示
-            Toast.success("已批量删除");
+            showSuccessToast("已批量删除");
             // 删除选中
             const shouldDeleteCount = checkedCategory.value.length;
             let currentDeleteCount = 0;
@@ -406,7 +406,7 @@ export default defineComponent({
           });
         })
         .catch(() => {
-          Toast("已经取消");
+          showToast("已经取消");
         });
     };
 
@@ -465,7 +465,7 @@ export default defineComponent({
       };
       postCreateData<null, Record<string, number>>(config, false).then(() => {
         // 提示
-        Toast.success("重置卡片");
+        showSuccessToast("重置卡片");
         // 移除
       });
     };
@@ -477,7 +477,7 @@ export default defineComponent({
       };
       deleteData(config, false).then(() => {
         // 提示
-        Toast.success("已删除");
+        showSuccessToast("已删除");
         // 移除
         for (let index in data.value) {
           // index 为string

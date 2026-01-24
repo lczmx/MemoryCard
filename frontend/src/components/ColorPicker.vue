@@ -29,43 +29,40 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, toRef, ref } from "vue";
+<script setup lang="ts">
+import { toRef, ref, type PropType } from "vue";
 
-export default defineComponent({
-  name: "ColorPicker",
-  props: {
-    colorArray: {
-      type: Array,
-    },
-    // 默认选中项
-    selectColor: {
-      type: String,
-      default: "",
-    },
+// 定义 props
+const props = defineProps({
+  colorArray: {
+    type: Array as PropType<string[]>,
+    default: () => []
   },
-  emits: ["picked"],
-
-  setup(props, context) {
-    const colorData = toRef(props, "colorArray");
-    const nowSelectedColor = ref(props.selectColor);
-    const handlerClick = (event: MouseEvent) => {
-      const ele = event.target as HTMLElement;
-      let color = ele.getAttribute("color") as string;
-      nowSelectedColor.value = color;
-    };
-    const onClickLeft = () => {
-      context.emit("picked", nowSelectedColor.value);
-    };
-    return {
-      // 返回的数据
-      handlerClick,
-      onClickLeft,
-      colorData,
-      nowSelectedColor,
-    };
-  },
+  selectColor: {
+    type: String,
+    default: ""
+  }
 });
+
+// 定义 emits
+const emit = defineEmits<{
+  (e: "picked", color: string): void;
+}>();
+
+// 响应式数据
+const colorData = toRef(props, "colorArray");
+const nowSelectedColor = ref(props.selectColor);
+
+// 事件处理
+const handlerClick = (event: MouseEvent) => {
+  const ele = event.target as HTMLElement;
+  const color = ele.getAttribute("color") as string;
+  nowSelectedColor.value = color;
+};
+
+const onClickLeft = () => {
+  emit("picked", nowSelectedColor.value);
+};
 </script>
 
 <style lang="scss" scoped>

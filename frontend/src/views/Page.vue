@@ -247,7 +247,7 @@ export default defineComponent({
     // 根据路由的name, 动态修改active
     const router = useRouter();
     const currentRoute = router.currentRoute.value.name;
-    const active = ref(currentRoute);
+    const active = ref<string>(currentRoute.toString());
 
     return {
       active,

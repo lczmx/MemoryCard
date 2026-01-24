@@ -158,7 +158,7 @@
 import { defineComponent, ref, reactive, watch } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-import { Toast } from "vant";
+import { showSuccessToast, showFailToast, closeToast } from "vant";
 import type { ActionSheetAction, FormInstance } from "vant";
 import { postCreateData } from "@/utils/request";
 import { IPlan, IPostPlan } from "@/types";
@@ -308,7 +308,7 @@ export default defineComponent({
           if (plans.value.length > 0) {
             planText.value = " ".repeat(plans.value.length);
           } else {
-            Toast.fail("请先添加复习时间");
+            showFailToast("请先添加复习时间");
             return;
           }
 
@@ -331,9 +331,9 @@ export default defineComponent({
               };
               postCreateData<IPlan, IPostPlan>(postConfig, false).then(() => {
                 // 成功创建了
-                Toast.success(props.successText);
+                showSuccessToast(props.successText);
                 setTimeout(() => {
-                  Toast.clear();
+                  closeToast();
                   router.go(-1);
                 }, 1000);
               });

@@ -130,7 +130,7 @@ import ColorPicker from "@/components/ColorPicker.vue";
 import IconPicker from "@/components/IconPicker.vue";
 import { IPlan, ICategory, IPostCategory } from "@/types";
 import { getDataOfPage, postCreateData } from "@/utils/request";
-import { Toast } from "vant";
+import { showSuccessToast, closeToast } from "vant";
 import userIcons from "@/assets/data/icons";
 import useColors from "@/assets/data/colors";
 export default defineComponent({
@@ -297,9 +297,9 @@ export default defineComponent({
               postCreateData<ICategory, IPostCategory>(postConfig, false).then(
                 () => {
                   // 成功创建了
-                  Toast.success(props.successText);
+                  showSuccessToast(props.successText);
                   setTimeout(() => {
-                    Toast.clear();
+                    closeToast();
                     router.go(-1);
                   }, 1000);
                 }

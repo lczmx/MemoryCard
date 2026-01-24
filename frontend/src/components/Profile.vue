@@ -63,7 +63,7 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted } from "vue";
 import { useStore } from "vuex";
-import { Toast } from "vant";
+import { showToast, showSuccessToast } from "vant";
 import { postCreateData, getDataOfOne } from "@/utils/request";
 import { Method } from "axios";
 import { IUserData } from "@/types";
@@ -121,7 +121,7 @@ export default defineComponent({
     const handlerClickEditorSubmit = () => {
       if (editorValue.value === editorOriginValue.value) {
         // 未修改
-        Toast({
+        showToast({
           message: "未修改",
           position: "bottom",
         });
@@ -129,7 +129,7 @@ export default defineComponent({
       }
       // 发送数据
       if (!editorPostKey.value || !editorValue.value) {
-        Toast({
+        showToast({
           message: "请先输入数据",
           position: "bottom",
         });
@@ -146,7 +146,7 @@ export default defineComponent({
           // 检验邮箱格式
           let pattern = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(.[a-zA-Z0-9_-])+/;
           if (!pattern.test(editorValue.value)) {
-            Toast({
+            showToast({
               message: "邮箱格式错误",
               position: "bottom",
             });
@@ -163,7 +163,7 @@ export default defineComponent({
       };
       postCreateData<null, Record<string, string>>(config, true)
         .then(() => {
-          Toast.success("修改成功");
+          showSuccessToast("修改成功");
           showEditor.value = false;
           // 要修改的数据
           switch (editorPostKey.value) {
@@ -177,7 +177,7 @@ export default defineComponent({
         })
         .catch((response) => {
           if (!response.msg) return;
-          Toast({
+          showToast({
             message: response.msg,
             position: "bottom",
           });

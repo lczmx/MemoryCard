@@ -235,7 +235,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, watch } from "vue";
-import { PopoverAction, Toast } from "vant";
+import { PopoverAction, showToast, showSuccessToast } from "vant";
 import { useWindowSize } from "@vant/use";
 import type { CheckboxInstance, CheckboxGroupInstance } from "vant";
 import { useStore } from "vuex";
@@ -463,7 +463,7 @@ export default defineComponent({
     const handlerClickSuccessReview = () => {
       if (!checkedCard.value || checkedCard.value.length <= 0) {
         // 提示先选择
-        Toast("请先选择卡片");
+        showToast("请先选择卡片");
         return;
       }
       const postConfig = {
@@ -476,7 +476,7 @@ export default defineComponent({
 
       postCreateData<null, IBatchPostCardData>(postConfig, false).then(() => {
         // 提示
-        Toast.success("已批量复习");
+        showSuccessToast("已批量复习");
         // 删除选中
         const shouldDeleteCount = checkedCard.value.length;
         let currentDeleteCount = 0;
@@ -509,7 +509,7 @@ export default defineComponent({
 
       postCreateData<null, null>(postConfig, false).then(() => {
         // 提示
-        Toast.success("已跳过");
+        showSuccessToast("已跳过");
         // 移除
         for (let index in data.value) {
           // index 为string
