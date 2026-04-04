@@ -1,14 +1,11 @@
 from datetime import date as datetime_date
-from typing import Optional, Generic, TypeVar, Type
-from pydantic.generics import GenericModel
+from typing import Optional, Generic, TypeVar
 from pydantic import BaseModel, Field
-
-# ##### orm
 
 DataT = TypeVar("DataT")
 
 
-class GenericResponse(GenericModel, Generic[DataT]):
+class GenericResponse(BaseModel, Generic[DataT]):
     """
     通用返回数据
     单个数据时:

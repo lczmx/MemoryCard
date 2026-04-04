@@ -12,8 +12,8 @@ class StarModel(BaseModel):
     is_star: bool = Field(..., alias="isStar")
 
     class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+        from_attributes = True
+        validate_by_name = True
 
 
 class BaseCardModel(BaseModel):
@@ -31,7 +31,7 @@ class WriteCardModel(ParamsCardModel):
     uid: int
 
     class Config:
-        allow_population_by_field_name = True
+        validate_by_name = True
 
 
 class ReadSummaryCardModel(BaseCardModel, StarModel):
@@ -42,8 +42,8 @@ class ReadSummaryCardModel(BaseCardModel, StarModel):
     category: ReadCategoryModel
 
     class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+        from_attributes = True
+        validate_by_name = True
 
 
 class ReadNoLoadPlanCardModel(ReadSummaryCardModel):
@@ -53,8 +53,8 @@ class ReadNoLoadPlanCardModel(ReadSummaryCardModel):
     category: ReadNoLoadPlanCategoryModel
 
     class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+        from_attributes = True
+        validate_by_name = True
 
 
 class ReadDescriptionCardModel(ReadSummaryCardModel):
@@ -63,8 +63,8 @@ class ReadDescriptionCardModel(ReadSummaryCardModel):
     description: str
 
     class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+        from_attributes = True
+        validate_by_name = True
 
 
 class ReadDescNoPlanCardModel(ReadDescriptionCardModel):
@@ -74,23 +74,23 @@ class ReadDescNoPlanCardModel(ReadDescriptionCardModel):
     category: ReadNoLoadPlanCategoryModel
 
     class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+        from_attributes = True
+        validate_by_name = True
 
 
 class OnlyCategoryID(BaseModel):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ReadNoCategoryCardModel(ReadDescriptionCardModel):
     category: OnlyCategoryID
 
     class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+        from_attributes = True
+        validate_by_name = True
 
 
 class BatchCard(BaseModel):
@@ -108,8 +108,8 @@ class ReadResetModel(BaseModel):
     review_times: int = Field(None, alias="reviewTimes")
 
     class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+        from_attributes = True
+        validate_by_name = True
 
 
 class DBCardModel(BaseModel):

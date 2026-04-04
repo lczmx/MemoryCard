@@ -18,7 +18,6 @@ from dependencies.auth import jwt_get_current_user
 from dependencies import orm
 
 from service import utils
-from settings import OPERATION_DATA
 
 router = APIRouter(prefix="/cards", tags=["卡片相关"])
 
@@ -29,14 +28,11 @@ async def get_cards(limit_params: QueryLimit = Depends(get_limit_params), order=
     """
     获取多个卡片
     """
+    # 先预加载 category 和 category__plan 关系
+    cards = Card.filter(user=user).prefetch_related("category__plan")
     if order:
-        cards = await Card.filter(user=user).limit(limit_params.limit).offset(limit_params.offset).order_by(
-            order).all()
-    else:
-        cards = await Card.filter(user=user).limit(limit_params.limit).offset(limit_params.offset).all()
-    for card in cards:
-        await card.category.load()
-        await card.category.plan.load()
+        cards = cards.order_by(order)
+    cards = await cards.limit(limit_params.limit).offset(limit_params.offset).all()
     return {
         "status": 1,
         "msg": "获取成功",
@@ -47,7 +43,7 @@ async def get_cards(limit_params: QueryLimit = Depends(get_limit_params), order=
 @router.post("/", status_code=status.HTTP_201_CREATED,
              response_model=GenericResponse[ReadNoCategoryCardModel])
 async def create_card(card_data: ParamsCardModel, user: DBUserModel = Depends(jwt_get_current_user),
-                      operation: DBOperationModel = Depends(orm.get_operation(OPERATION_DATA["create_card"]))):
+                      operation: DBOperationModel = Depends(orm.get_operation("create_card"))):
     """
     创建卡片
     """
@@ -88,7 +84,8 @@ async def batch_star_card(batch_data: BatchCard, user: DBUserModel = Depends(jwt
     batch_status = {"success_count": 0, "fail_count": 0, }
     cards = await Card.filter(id__in=batch_data.cards, user=user).all()
     for card in cards:
-        await card.update(is_star=True)
+        card.is_star = True
+        await card.save()
         batch_status["success_count"] += 1
 
     batch_status["fail_count"] = len(batch_data.cards) - batch_status["success_count"]
@@ -158,10 +155,9 @@ async def retrieve_card(cid: int, user: DBUserModel = Depends(jwt_get_current_us
     """
     获取一条卡片的数据
     """
-    card = await Card.filter(pk=cid, user=user).first()
+    card = await Card.filter(pk=cid, user=user).prefetch_related("category__plan").first()
     if not card:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
-    await card.category.load()
 
     return {"status": 1, "msg": "获取成功", "data": card}
 
@@ -174,20 +170,23 @@ async def update_card(cid: int, data: ParamsCardModel, user: DBUserModel = Depen
     category = await Category.filter(pk=data.cid, user=user).first()
     if not category:
         return {"status": 0, "msg": "不存在的类别", "data": None}
-    card = await Card.filter(pk=cid, user=user).first()
+    card = await Card.filter(pk=cid, user=user).prefetch_related("category").first()
     if not card:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的卡片")
 
     # 查看是否修改了类别, 重置卡片复习
     if card.category.pk != category.pk:
         await utils.reset_card_review([card, ])
-    await card.update(**data.dict(exclude={"cid"}), user=user, category=category)
+    await card.update_from_dict(data.dict(exclude={"cid"}))
+    card.user = user
+    card.category = category
+    await card.save()
     return {"status": 1, "msg": "更新成功", "data": card}
 
 
 @router.delete("/{cid}", response_model=GenericResponse, response_model_exclude_unset=True)
 async def delete_card(cid: int, user: DBUserModel = Depends(jwt_get_current_user),
-                      operation: DBOperationModel = Depends(orm.get_operation(OPERATION_DATA["delete_card"]))):
+                      operation: DBOperationModel = Depends(orm.get_operation("delete_card"))):
     """
     删除一条卡片的数据
     """

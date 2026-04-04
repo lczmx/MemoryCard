@@ -10,7 +10,6 @@ from schemas.analyse import ParamsAnalyseModel, ReadAnalyseModel, SummaryAnalyse
 from schemas.generic import GenericResponse
 from schemas.user import DBUserModel
 from service import record_service, category_service
-from settings import OPERATION_DATA
 
 router = APIRouter(prefix="/analyse", tags=["分析相关"])
 
@@ -27,21 +26,21 @@ async def get_summary_analyse_data(user: DBUserModel = Depends(jwt_get_current_u
 
     # 查询创建卡片的操作记录
     today_recode_review_data, yesterday_recode_review_data = await record_service.get_review_card_record_analyse(
-        operation=OPERATION_DATA["review_card"], user=user)
+        title="review_card", user=user)
     data["review"]["today"] = len(today_recode_review_data)
     # ## 同比增加 = 今日 - 昨日
     data["review"]["incr"] = len(today_recode_review_data) - len(yesterday_recode_review_data)
 
     today_recode_create_data, yesterday_recode_create_data = await record_service.get_review_card_record_analyse(
-        operation=OPERATION_DATA["create_card"], user=user)
+        title="create_card", user=user)
     data["create"]["today"] = len(today_recode_create_data)
     # ## 同比增加 = 今日 - 昨日
     data["create"]["incr"] = len(today_recode_create_data) - len(yesterday_recode_create_data)
 
     # TODO: 使用count
     category_data = await category_service.get_category_by_user(user=user)
-    if category_data:
-        data["category_count"] = len(category_data)
+    category_count = await category_data.count()
+    data["category_count"] = category_count
 
     return {"status": 1, "msg": "获取成功", "data": data}
 

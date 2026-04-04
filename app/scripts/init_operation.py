@@ -1,22 +1,32 @@
 """
-初始化复习曲线数据
+初始化操作数据
 
 """
 import logging
 
 from models import Operation
+from settings import update_operation_data
 
 
 async def crate_operation():
     logging.info("初始化操作数据中...")
-    # 没有uid
     data = [
-        {"id": 1, "title": "delete_card"}, {"id": 2, "title": "create_card"}, {"id": 3, "title": "review_card"},
-        {"id": 4, "title": "delete_category"}, {"id": 5, "title": "create_category"}, {"id": 6, "title": "delete_plan"},
-        {"id": 7, "title": "create_plan"}]
+        {"title": "delete_card"},
+        {"title": "create_card"},
+        {"title": "review_card"},
+        {"title": "delete_category"},
+        {"title": "create_category"},
+        {"title": "delete_plan"},
+        {"title": "create_plan"}
+    ]
+    operation_id_map = {}
     for d in data:
-        _, created = await Operation.get_or_create(**d, defaults=d)
+        op, created = await Operation.get_or_create(**d, defaults=d)
+        operation_id_map[d["title"]] = op.id
         if created:
             logging.info(f"已初始化{d.get('title')}")
         else:
             logging.info("跳过初始化")
+    # 更新全局 OPERATION_DATA
+    update_operation_data(operation_id_map)
+    logging.info("操作数据初始化完成")

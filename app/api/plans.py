@@ -3,7 +3,6 @@ from typing import List
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 
-from settings import OPERATION_DATA
 from dependencies import orm
 from dependencies.queryParams import get_limit_params
 from dependencies.auth import jwt_get_current_user
@@ -46,7 +45,7 @@ async def get_plans(query_limit_params: QueryLimit = Depends(get_limit_params),
 @router.post('/', response_model=GenericResponse[ReadPlanModel])
 async def create_plan(plan_data: ParamsPlanModel, user: DBUserModel = Depends(jwt_get_current_user),
                       operation: DBOperationModel = Depends(
-                          orm.get_operation(OPERATION_DATA["create_plan"]))):
+                          orm.get_operation("create_plan"))):
     """
     创建复习曲线
     """
@@ -63,10 +62,10 @@ async def get_plan(pid: int, user: DBUserModel = Depends(jwt_get_current_user),
                    no_login_user: DBUserModel = Depends(orm.get_no_login_user)):
     """
     获取一条复习曲线数据
-
     """
-    user_plan = await Plan.filter(pk=pid, user=user).first()
-    default_plan = await Plan.filter(pk=pid, user=no_login_user).first()
+    # 使用 prefetch_related 预加载 user 关系
+    user_plan = await Plan.filter(pk=pid, user=user).prefetch_related("user").first()
+    default_plan = await Plan.filter(pk=pid, user=no_login_user).prefetch_related("user").first()
 
     if not user_plan and not default_plan:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的复习曲线")
@@ -82,7 +81,8 @@ async def update_plan(pid: int, plan_data: ParamsPlanModel, user: DBUserModel = 
     """
     修改一条复习曲线数据
     """
-    plan = await Plan.filter(pk=pid).first()
+    # 使用 prefetch_related 预加载 user 关系
+    plan = await Plan.filter(pk=pid).prefetch_related("user").first()
     if not plan:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的复习曲线")
     if plan.user.pk != user.id:
@@ -96,7 +96,8 @@ async def update_plan(pid: int, plan_data: ParamsPlanModel, user: DBUserModel = 
             cards = await Card.filter(category=c).all()
             await utils.reset_card_review(cards)
 
-    await plan.update(**plan_data.dict())
+    await plan.update_from_dict(plan_data.dict())
+    await plan.save()
     return {
         "status": 1,
         "msg": "修改成功",
@@ -115,13 +116,14 @@ async def delete_plan(pid: int, user: DBUserModel = Depends(jwt_get_current_user
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的复习曲线")
     # 设置类别的默认复习曲线
     category = await Category.filter(plan=plan).all()
-    default_category = await Plan.filter(user=no_login_user).first()
-    if not default_category:
+    default_plan = await Plan.filter(user=no_login_user).first()
+    if not default_plan:
         return {"status": 0, "msg": "删除失败, 没有默认复习曲线"}
 
     # 重置卡片复习次数
     for c in category:
-        await c.update(plan=default_category)
+        c.plan = default_plan
+        await c.save()
         cards = await Card.filter(category=c).all()
         await utils.reset_card_review(cards)
 

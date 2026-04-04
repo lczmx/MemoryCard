@@ -16,7 +16,7 @@ class SummaryAnalyseModel(BaseModel):
     category_count: int = Field(..., alias="categoryCount")
 
     class Config:
-        allow_population_by_field_name = True
+        validate_by_name = True
 
 
 class ReadAnalyseModel(BaseModel):
@@ -25,8 +25,8 @@ class ReadAnalyseModel(BaseModel):
     create_at: date = Field(..., alias="date")
 
     class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+        from_attributes = True
+        validate_by_name = True
 
 
 class ParamsAnalyseModel(BaseModel):

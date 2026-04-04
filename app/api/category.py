@@ -10,7 +10,6 @@ from schemas.category import ParamsCategoryModel, ReadCategoryModel, StarModel, 
 from schemas.generic import GenericResponse, QueryLimit
 from dependencies.queryParams import get_limit_params, convert_category_order
 from dependencies.auth import jwt_get_current_user
-from settings import OPERATION_DATA
 
 from schemas.user import DBUserModel
 from schemas.other import DBOperationModel
@@ -29,17 +28,18 @@ async def get_category(query_limit_params: QueryLimit = Depends(get_limit_params
     """
     获取全部分类
     """
-    # uid = user.id
+    # 使用 prefetch_related 预加载 plan 关系
+    category_query = Category.filter(user=user).prefetch_related("plan")
+
     if order and order not in ["cardCount", "-cardCount"]:
-        category_data = await Category.filter(user=user).limit(query_limit_params.limit).offset(
+        category_data = await category_query.limit(query_limit_params.limit).offset(
             query_limit_params.offset).order_by(order).all()
     elif order in ["cardCount", "-cardCount"]:
-        # TODO: 优化
-        category_lst = await Category.filter(user=user).all()
+        # 获取所有分类及其卡片数量
+        category_lst = await category_query.all()
         result = []
         for category in category_lst:
-            # 对比数据
-            # 查询需要复习的卡片
+            # 查询需要复习的卡片数量
             cards = await Card.filter(user=user, category=category).all()
             res = ReadNoLoadPlanCategoryModel.from_orm(category)
             res.count = len(cards)
@@ -50,11 +50,8 @@ async def get_category(query_limit_params: QueryLimit = Depends(get_limit_params
         else:
             category_data = sorted(result, key=lambda x: x.get('count'), reverse=True)[
                 query_limit_params.offset:query_limit_params.offset + query_limit_params.limit]
-
-
-
     else:
-        category_data = await Category.filter(user=user).limit(query_limit_params.limit).offset(
+        category_data = await category_query.limit(query_limit_params.limit).offset(
             query_limit_params.offset).all()
 
     return {
@@ -117,7 +114,8 @@ async def batch_star_category(batch_data: BatchCategory, user: DBUserModel = Dep
         if not category:
             batch_status["fail_count"] += 1
             continue
-        await category.update(is_star=True)
+        category.is_star = True
+        await category.save()
         batch_status["success_count"] += 1
     return {
         "status": 1,
@@ -155,7 +153,8 @@ async def toggle_star(cid: int, star_status: StarModel, user: DBUserModel = Depe
     category = await Category.filter(pk=cid, user=user).first()
     if not category:
         return {"status": 0, "msg": "切换失败", "data": {"is_star": star_status.is_star}}
-    await category.update(is_star=not star_status.is_star)
+    category.is_star = not star_status.is_star
+    await category.save()
     return {"status": 1, "msg": "切换成功", "data": {"is_star": not star_status.is_star}}
 
 
@@ -164,11 +163,11 @@ async def retrieve_category(cid: int, user: DBUserModel = Depends(jwt_get_curren
     """
     检索一条分类
     """
-    category = await Category.filter(user=user, pk=cid).first()
+    # 使用 prefetch_related 预加载 plan 关系
+    category = await Category.filter(user=user, pk=cid).prefetch_related("plan").first()
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的分类")
 
-    await category.plan.load()
     return {
         "status": 1,
         "msg": "获取成功",
@@ -183,11 +182,12 @@ async def update_category(cid: int, category_prams: ParamsCategoryModel,
     """
     更新一条分类
     """
-    category = await Category.filter(user=user, pk=cid).first()
+    # 使用 prefetch_related 预加载 plan 和 user 关系
+    category = await Category.filter(user=user, pk=cid).prefetch_related("plan").first()
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的分类")
 
-    plan = await Plan.filter(pk=category_prams.pid).first()
+    plan = await Plan.filter(pk=category_prams.pid).prefetch_related("user").first()
     # 确保复习曲线是用户的
     if not plan:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="不存在的复习曲线")
@@ -199,7 +199,9 @@ async def update_category(cid: int, category_prams: ParamsCategoryModel,
         await utils.reset_card_review(cards)
 
     data = category_prams.dict(exclude={"pid"})
-    await category.update(**data, plan=plan)
+    await category.update_from_dict(data)
+    category.plan = plan
+    await category.save()
     return {
         "status": 1,
         "msg": "更新成功",
@@ -210,7 +212,7 @@ async def update_category(cid: int, category_prams: ParamsCategoryModel,
 @router.delete("/{cid}", response_model=GenericResponse, response_model_exclude_unset=True)
 async def delete_category(cid: int, user: DBUserModel = Depends(jwt_get_current_user),
                           operation: DBOperationModel = Depends(
-                              orm.get_operation(OPERATION_DATA["delete_category"]))):
+                              orm.get_operation("delete_category"))):
     """
     删除一条分类
     """

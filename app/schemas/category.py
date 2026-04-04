@@ -2,7 +2,6 @@
 定义分类数据模型
 """
 from typing import List
-from pydantic.generics import GenericModel
 from pydantic import BaseModel, Field
 
 from schemas.user import DBUserModel
@@ -26,8 +25,8 @@ class StarModel(BaseModel):
     is_star: bool = Field(..., alias="isStar")
 
     class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+        from_attributes = True
+        validate_by_name = True
 
 
 class ReadCategoryModel(BaseCategoryModel, StarModel):
@@ -39,8 +38,8 @@ class ReadCategoryModel(BaseCategoryModel, StarModel):
     count: int = Field(None, alias='cardCount')  # 类别的卡片数量
 
     class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+        from_attributes = True
+        validate_by_name = True
 
 
 class ReadNoLoadPlanCategoryModel(ReadCategoryModel):
@@ -50,8 +49,8 @@ class ReadNoLoadPlanCategoryModel(ReadCategoryModel):
     plan: ReadNoLoadPlanID
 
     class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+        from_attributes = True
+        validate_by_name = True
 
 
 class WriteCategoryModel(BaseCategoryModel):

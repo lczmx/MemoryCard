@@ -1,7 +1,7 @@
 """
 用户相关路由
 """
-
+from contextlib import nullcontext
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends
@@ -19,12 +19,7 @@ router = APIRouter(prefix="/user", tags=["用户相关"])
 @router.get("/", response_model=GenericResponse[ReadUserModel])
 async def get_user(user: DBUserModel = Depends(jwt_get_current_user)):
     """获取当前用户的数据"""
-    return {
-        "status": 1,
-        "msg": "获取成功",
-        "data": user
-
-    }
+    return {"status": 1, "msg": "获取成功", "data": user}
 
 
 @router.post("/signup", response_model=GenericResponse[ReadUserModel], response_model_exclude_unset=True)
@@ -38,7 +33,6 @@ async def signup(sign_up_data: ParamsSignUpModel):
         "username": sign_up_data.username,
         "email": sign_up_data.email,
         "hashed_pwd": settings.pwd_context.hash(sign_up_data.password1)
-
     }
     error_res = {}
     if await User.filter(username=sign_up_data.username).first():

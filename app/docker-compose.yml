@@ -1,0 +1,122 @@
+# ==================== MemoryCard docker-compose.yml ====================
+# 提供三种数据库配置的示例：
+#   1. docker-compose.postgresql.yml - PostgreSQL (生产环境推荐)
+#   2. docker-compose.mysql.yml - MySQL
+#   3. docker-compose.sqlite.yml - SQLite (开发环境)
+#
+# 使用方式:
+#   PostgreSQL: docker-compose -f docker-compose.yml -f docker-compose.postgresql.yml up -d
+#   MySQL:      docker-compose -f docker-compose.yml -f docker-compose.mysql.yml up -d
+#   SQLite:     docker-compose -f docker-compose.yml -f docker-compose.sqlite.yml up -d
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: memorycard-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8366}:8366"
+    environment:
+      # 数据库配置
+      - DB_TYPE=${DB_TYPE:-pgsql}
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-memorycard}
+      - DB_USER=${DB_USER:-memorycard}
+      - DB_PASSWORD=${DB_PASSWORD:-memorycard_secure_password}
+      - DB_FILE=${DB_FILE:-memorycard.db}
+      # JWT 配置
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
+      - ALGORITHM=${ALGORITHM:-HS256}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-360}
+      # 日志配置
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_ROTATION=${LOG_ROTATION:-10 MB}
+      - LOG_RETENTION=${LOG_RETENTION:-30 days}
+    volumes:
+      # 持久化 SQLite 数据库文件
+      - memorycard-data:/app/data
+      # 持久化日志
+      - memorycard-logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8366/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - memorycard-network
+
+  # -------------------- PostgreSQL --------------------
+  db:
+    image: postgres:16-alpine
+    container_name: memorycard-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER:-memorycard}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-memorycard_secure_password}
+      - POSTGRES_DB=${DB_NAME:-memorycard}
+    volumes:
+      - memorycard-postgres:/var/lib/postgresql/data
+    ports:
+      - "${DB_EXPOSE_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-memorycard} -d ${DB_NAME:-memorycard}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - memorycard-network
+    profiles:
+      - postgresql
+
+  # -------------------- MySQL --------------------
+  mysql:
+    image: mysql:8.0
+    container_name: memorycard-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_password}
+      - MYSQL_DATABASE=${DB_NAME:-memorycard}
+      - MYSQL_USER=${DB_USER:-memorycard}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-memorycard_secure_password}
+    volumes:
+      - memorycard-mysql:/var/lib/mysql
+    ports:
+      - "${DB_EXPOSE_PORT:-3306}:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root_password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - memorycard-network
+    profiles:
+      - mysql
+
+volumes:
+  memorycard-data:
+    driver: local
+  memorycard-logs:
+    driver: local
+  memorycard-postgres:
+    driver: local
+  memorycard-mysql:
+    driver: local
+
+networks:
+  memorycard-network:
+    driver: bridge

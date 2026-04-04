@@ -6,14 +6,14 @@
 # from settings import settings
 
 # orm_database = databases.Database(settings.async_sqlalchemy_database_url)
-# orm_models = orm.ModelRegistry(database=orm_database)
-# metadata = orm_models.metadata
+# from_attributesls = orm.ModelRegistry(database=orm_database)
+# metadata = from_attributesls.metadata
 #
 #
 # async def create_all():
 #     # 创建数据库
-#     await orm_models.create_all()
+#     await from_attributesls.create_all()
 #
 #
 # async def drop_all():
-#     await orm_models.drop_all()
+#     await from_attributesls.drop_all()

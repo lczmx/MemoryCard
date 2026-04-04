@@ -1,10 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, Field, EmailStr, validator
-
-
-# from service.database import SessionLocal
-class SessionLocal:
-    pass
+from pydantic import BaseModel, Field, EmailStr, field_validator, model_validator, ValidationInfo
 
 
 class ParamsSignUpModel(BaseModel):
@@ -13,17 +8,13 @@ class ParamsSignUpModel(BaseModel):
     password1: str
     password2: str
 
-    @validator('password2')
-    def passwords_match(cls, v, values, **kwargs):
+    @field_validator('password2')
+    @classmethod
+    def passwords_match(cls, v, info: ValidationInfo):
         """
         比对两次密码
-        :param v: 当前字段的值: zxcvbn2
-        :param values: 已经验证的数据: {'username': 'scolvin', 'password1': 'zxcvbn'}
-        :param kwargs: {'field': ModelField(name='password2', type=str, required=True),
-                            'config': <class '__main__.Config'>}
-        :return:
         """
-        if 'password1' in values and v != values['password1']:
+        if 'password1' in info.data and v != info.data['password1']:
             raise ValueError('两次密码不一致')
         return v
 
@@ -38,11 +29,11 @@ class WriteSignUpModel(BaseModel):
 class ReadUserModel(BaseModel):
     username: str
     email: EmailStr
-    phone_number: str = Field(None, alias="phoneNumber")
+    phone_number: Optional[str] = Field(None, alias="phoneNumber")
 
     class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+        from_attributes = True
+        validate_by_name = True
 
 
 class JWTModel(BaseModel):
@@ -50,7 +41,7 @@ class JWTModel(BaseModel):
     token_type: str = Field("", alias="tokenType")
 
     class Config:
-        allow_population_by_field_name = True  # 使用字段名设置数据
+        validate_by_name = True  # 使用字段名设置数据
 
 
 class UserProfileModel(BaseModel):

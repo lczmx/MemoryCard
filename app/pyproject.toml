@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "aerich[toml]>=0.9.2",
+    "aiomysql>=0.3.2",
+    "aiosqlite>=0.22.1",
     "asyncmy>=0.2.11",
     "asyncodbc>=0.1.1",
     "asyncpg>=0.31.0",
@@ -20,9 +22,23 @@ dependencies = [
     "python-jose>=3.5.0",
     "python-multipart>=0.0.21",
     "tortoise-orm>=0.25.3",
+    "uvicorn>=0.40.0",
 ]
+
+[project.scripts]
+# 数据库迁移命令
+migrate-init = "scripts.migrate:main"
+migrate-upgrade = "scripts.migrate:full_upgrade"
+migrate-rollback = "scripts.migrate:rollback"
+migrate-status = "scripts.migrate:status"
+# 数据库初始化命令
+db-init = "scripts.init_db:main"
 
 [tool.aerich]
 tortoise_orm = "settings.TORTOISE_ORM"
 location = "./migrations"
-src_folder = "./."
+src_folder = "."
+
+[tool.aerich.migrate]
+# 迁移文件命名格式
+naming_format = "version_{timestamp}"

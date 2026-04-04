@@ -1,11 +1,62 @@
-.idea/
+# ==================== Python ====================
 __pycache__/
-node_modules/
-logs/*
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ==================== 虚拟环境 ====================
+.venv/
+venv/
+ENV/
+env/
+
+# ==================== IDE ====================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ==================== 项目特定 ====================
+logs/*.log
+*.db
+*.sqlite
 *.sqlite3
-test.*
-local_settings.py
-.venv
 .env
 .env.local
 .env.*.local
+.env.docker
+.env.docker.example
+local_settings.py
+
+# ==================== 测试 ====================
+test.*
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ==================== Docker ====================
+.dockerignore
+
+# ==================== 迁移文件 ====================
+# 保留目录结构但不跟踪迁移文件
+migrations/models/*.py
+!migrations/models/__init__.py
+

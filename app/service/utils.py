@@ -3,8 +3,20 @@
 """
 import typing
 import datetime
+from zoneinfo import ZoneInfo
 
-from models import Plan, Card
+from models import Card
+
+# 项目配置的时区
+PROJECT_TIMEZONE = ZoneInfo("Asia/Shanghai")
+
+
+def get_now_with_timezone() -> datetime.datetime:
+    """
+    获取当前时间（带时区信息）
+    :return:
+    """
+    return datetime.datetime.now(PROJECT_TIMEZONE)
 
 
 async def use_need_review_cards(cards: typing.List[typing.Any]) -> typing.List[typing.Any]:
@@ -31,7 +43,7 @@ async def card_can_review(card: typing.Any):
         return False
     sec = int(plan_sec[card.review_times])
     res_date = card.review_at + datetime.timedelta(seconds=sec)
-    return res_date <= datetime.datetime.now()
+    return res_date <= get_now_with_timezone()
 
 
 async def get_card_plan(card: typing.Any) -> typing.Any:
@@ -40,8 +52,9 @@ async def get_card_plan(card: typing.Any) -> typing.Any:
     :param card:
     :return:
     """
-    await card.category.load()
-    return await Plan.get(pk=card.category.plan.pk)
+    # 使用 fetch_related 预加载嵌套关系 category__plan
+    await card.fetch_related("category__plan")
+    return card.category.plan
 
 
 async def card_can_review_by_date(card: typing.Any, query_date: datetime.date) -> bool:
@@ -67,6 +80,8 @@ async def reset_card_review(cards: typing.List[Card]) -> int:
     """
     review_count = 0
     for card in cards:
-        await card.update(review_times=0, review_at=datetime.datetime.now())
+        card.review_times = 0
+        card.review_at = get_now_with_timezone()
+        await card.save()
         review_count += 1
     return review_count

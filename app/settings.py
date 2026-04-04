@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from pydantic_settings import BaseSettings
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
@@ -7,6 +8,10 @@ from passlib.context import CryptContext
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_FILE_PATH = os.path.join(BASE_DIR, "logs")
 LOG_FILE_FORMATE = "MemoryCard_{time}.log"
+
+# 迁移相关配置
+MIGRATIONS_DIR = Path(BASE_DIR) / "migrations"
+AERICH_LOCATION = "./migrations"
 
 
 class Settings(BaseSettings):
@@ -40,11 +45,20 @@ class Settings(BaseSettings):
         if self.db_type == "pgsql":
             return f"postgres://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
         elif self.db_type == "mysql":
-            return f"mysql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+            return f"mysql+aiomysql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
         elif self.db_type == "sqlite":
             return f"sqlite://{os.path.join(BASE_DIR, self.db_file)}"
         else:
             raise ValueError(f"不支持的数据库类型: {self.db_type}")
+
+    @property
+    def db_driver_name(self) -> str:
+        """获取数据库驱动名称"""
+        return {
+            "pgsql": "asyncpg",
+            "mysql": "aiomysql",
+            "sqlite": "aiosqlite"
+        }.get(self.db_type, "asyncpg")
 
     class Config:
         env_file = ".env"
@@ -70,6 +84,17 @@ TORTOISE_ORM = {
     "timezone": "Asia/Shanghai"
 }
 
+# Aerich 配置 (与 Tortoise-ORM 保持一致)
+AERICH_CONFIG = {
+    "connections": {
+        "default": settings.async_sqlalchemy_database_url
+    },
+    "app": {
+        "models": ["models"],
+    },
+    "location": AERICH_LOCATION,
+}
+
 # JWT相关配置
 oauth2_schema = OAuth2PasswordBearer(tokenUrl="/user/token")
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
@@ -86,13 +111,19 @@ LOGGING_CONFIG = {
     }
 }
 
-# 一些初始数据
+# 一些初始数据 - 操作类型会在初始化时动态更新
 OPERATION_DATA = {
-    "delete_card": 1,
-    "create_card": 2,
-    "review_card": 3,
-    "delete_category": 4,
-    "create_category": 5,
-    "delete_plan": 6,
-    "create_plan": 7,
+    "delete_card": None,
+    "create_card": None,
+    "review_card": None,
+    "delete_category": None,
+    "create_category": None,
+    "delete_plan": None,
+    "create_plan": None,
 }
+
+
+def update_operation_data(operation_id_map: dict):
+    """更新 OPERATION_DATA"""
+    global OPERATION_DATA
+    OPERATION_DATA.update(operation_id_map)

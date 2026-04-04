@@ -7,7 +7,6 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Query, status as http_status
 from fastapi.exceptions import HTTPException
 
-from settings import OPERATION_DATA
 from service import utils
 from models import Card, Record, Category
 from schemas.generic import QueryLimit, GenericResponse, CardDateQueryLimit
@@ -31,16 +30,13 @@ async def get_review(
     """
     获取所有需要复习卡片
     """
-    if not cid:
-        cards = await Card.filter(user=user).limit(limit_params.limit).offset(limit_params.offset).all()
-    else:
-        cards = await Card.filter(user=user, category__id=cid).limit(limit_params.limit).offset(
-            limit_params.offset).all()
+    # 使用 prefetch_related 预加载 category 和 category__plan
+    cards_query = Card.filter(user=user).prefetch_related("category__plan")
+    if cid:
+        cards_query = cards_query.filter(category__id=cid)
+    cards = await cards_query.limit(limit_params.limit).offset(limit_params.offset).all()
     # 判断可以复习
     need_review_cards = await utils.use_need_review_cards(cards)
-    for card in need_review_cards:
-        await card.category.load()
-        await card.category.plan.load()
 
     return {
         "status": 1,
@@ -52,7 +48,7 @@ async def get_review(
 @router.post("/batch-review", response_model=GenericResponse, response_model_exclude_unset=True)
 async def batch_review_card(review_cards: BatchCard, user: DBUserModel = Depends(jwt_get_current_user),
                             operation: DBOperationModel = Depends(
-                                orm.get_operation(OPERATION_DATA["review_card"]))):
+                                orm.get_operation("review_card"))):
     """
     批量复习卡片
     """
@@ -62,7 +58,8 @@ async def batch_review_card(review_cards: BatchCard, user: DBUserModel = Depends
     }
     plans = {}  # key: plan ID  value: plan分割后的列表
     for cid in review_cards.cards:
-        card = await Card.filter(pk=cid).first()
+        # 使用 prefetch_related 预加载 category__plan
+        card = await Card.filter(pk=cid).prefetch_related("category__plan").first()
         if not card:
             status["fail_count"] += 1
             continue
@@ -73,9 +70,6 @@ async def batch_review_card(review_cards: BatchCard, user: DBUserModel = Depends
             continue
 
         # 可以完成复习, 判断是否已经复习完了
-        await card.category.load()
-        await card.category.plan.load()
-
         plan_lst = plans.setdefault(card.category.plan.pk, [i for i in card.category.plan.content.split("-") if i])
 
         old_times = card.review_times
@@ -84,7 +78,9 @@ async def batch_review_card(review_cards: BatchCard, user: DBUserModel = Depends
             status["fail_count"] += 1
             continue
         new_times = old_times + 1
-        await card.update(review_at=datetime.now(), review_times=new_times)
+        card.review_at = datetime.now()
+        card.review_times = new_times
+        await card.save()
         await Record.create(user=user, operation=operation)
         status["success_count"] += 1
     # 返回
@@ -117,17 +113,13 @@ async def get_card_by_date(query_params: CardDateQueryLimit = Depends(get_card_b
     """
     根据日期获取需要复习的卡片
     """
-    # TODO: 优化一下 offset
-    cards = await Card.filter(user=user).all()
+    # 使用 prefetch_related 预加载 category__plan
+    cards = await Card.filter(user=user).prefetch_related("category__plan").all()
 
     can_review_cards = [card for card in cards if
                         await utils.card_can_review_by_date(card, query_date=query_params.date)]
 
     need_review_cards = can_review_cards[query_params.offset: query_params.offset + query_params.limit]
-
-    for card in need_review_cards:
-        await card.category.load()
-        await card.category.plan.load()
 
     return {
         "status": 1,
@@ -142,11 +134,10 @@ async def get_review_card_category(limit_params: QueryLimit = Depends(get_limit_
     """
     获取要复习卡片的类别
     """
-    category_lst = await Category.filter(user=user).all()
-    # TODO: 优化一下 offset
+    # 使用 prefetch_related 预加载 plan 关系
+    category_lst = await Category.filter(user=user).prefetch_related("plan").all()
     result = []
     for category in category_lst:
-        # 对比数据
         # 查询需要复习的卡片
         cards = await Card.filter(user=user, category=category).all()
         need_review_cards = await utils.use_need_review_cards(cards)
@@ -180,7 +171,7 @@ async def get_card(cid: int, user: DBUserModel = Depends(jwt_get_current_user)):
 @router.post("/{cid}", response_model=GenericResponse, response_model_exclude_none=True)
 async def review_done(cid: int, user: DBUserModel = Depends(jwt_get_current_user),
                       operation: DBOperationModel = Depends(
-                          orm.get_operation(OPERATION_DATA["review_card"]))):
+                          orm.get_operation("review_card"))):
     """
     完成卡片复习
     """
@@ -201,6 +192,8 @@ async def review_done(cid: int, user: DBUserModel = Depends(jwt_get_current_user
         return {"status": 0, "msg": "该卡片已复习完毕"}
     # ## 完成复习, 更新数据
     new_times = old_times + 1
-    await card.update(review_at=datetime.now(), review_times=new_times)
+    card.review_at = datetime.now()
+    card.review_times = new_times
+    await card.save()
     await Record.create(user=user, operation=operation)
     return {"status": 1, "msg": "复习成功"}

@@ -27,7 +27,7 @@ class ReadPlanModel(BasePlanModel):
     editable: Optional[bool] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class WritePlanModel(BasePlanModel):
@@ -42,7 +42,7 @@ class ReadNoLoadPlanID(BaseModel):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class DBPlanModel(BaseModel):

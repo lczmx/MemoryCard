@@ -1,0 +1,16 @@
+# ==================== SQLite 开发环境配置 ====================
+# 使用方式: docker-compose -f docker-compose.yml -f docker-compose.sqlite.yml up -d
+
+version: '3.8'
+
+services:
+  app:
+    environment:
+      - DB_TYPE=sqlite
+      - DB_FILE=memorycard.db
+    volumes:
+      # SQLite 数据卷
+      - memorycard-data:/app
+    depends_on: []
+
+# SQLite 不需要外部数据库服务，使用默认卷
