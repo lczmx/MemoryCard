@@ -5,6 +5,24 @@ export interface IResponse<T> {
   msg: string;
   data?: T;
 }
+
+// 分页元数据
+export interface IPaginationMeta {
+  total: number;
+  limit: number;
+  offset: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
+// 分页响应数据
+export interface IPaginatedData<T> {
+  items: T[];
+  meta: IPaginationMeta;
+}
 // -------------------- 分类相关
 export interface IPostCategory {
   // 新增分类接口

@@ -8,6 +8,7 @@ import {
   IGetReviewClientStatus,
   IResponse,
   IGetReviewByDateClientStatus,
+  IPaginatedData,
 } from "@/types";
 import { showToast, showFailToast, showLoadingToast, closeToast } from "vant";
 
@@ -152,7 +153,7 @@ export async function getDataOfPage<R>(
     },
   };
 
-  return request<IResponse<R[]>, undefined>(RequestConfig, loading).then(
+  return request<IResponse<IPaginatedData<R>>, undefined>(RequestConfig, loading).then(
     (response) => {
       if (!response.data) {
         // undefined
@@ -161,8 +162,11 @@ export async function getDataOfPage<R>(
 
       if (response.status === 1) {
         // status为1时, 为正常情况
-        if (response.data.length <= 0) {
-          // 没数据了
+        const items = response.data.items;
+        const hasNext = response.data.meta.has_next;
+
+        // 使用 has_next 判断是否还有下一页
+        if (!hasNext) {
           clientStatus.hasMore = false;
           if (loading) {
             showToast({
@@ -178,7 +182,7 @@ export async function getDataOfPage<R>(
         ) {
           clientStatus.offset += clientStatus.limit;
         }
-        return Promise.resolve(response.data);
+        return Promise.resolve(items);
       } else {
         showFailToast(response.msg);
         return Promise.reject(response.msg);
@@ -218,7 +222,7 @@ export async function getReviewDataOfPage<R>(
     },
   };
 
-  return request<IResponse<R[]>, undefined>(RequestConfig, loading).then(
+  return request<IResponse<IPaginatedData<R>>, undefined>(RequestConfig, loading).then(
     (response) => {
       if (!response.data) {
         // undefined
@@ -227,8 +231,11 @@ export async function getReviewDataOfPage<R>(
 
       if (response.status === 1) {
         // status为1时, 为正常情况
-        if (response.data.length <= 0) {
-          // 没数据了
+        const items = response.data.items;
+        const hasNext = response.data.meta.has_next;
+
+        // 使用 has_next 判断是否还有下一页
+        if (!hasNext) {
           clientStatus.hasMore = false;
           if (loading) {
             showToast({
@@ -244,7 +251,7 @@ export async function getReviewDataOfPage<R>(
         ) {
           clientStatus.offset += clientStatus.limit;
         }
-        return Promise.resolve(response.data);
+        return Promise.resolve(items);
       } else {
         showFailToast(response.msg);
         return Promise.reject(response.msg);
@@ -376,7 +383,7 @@ export async function getReviewCardByDateData<R>(
     },
   };
 
-  return request<IResponse<R[]>, undefined>(RequestConfig, loading).then(
+  return request<IResponse<IPaginatedData<R>>, undefined>(RequestConfig, loading).then(
     (response) => {
       if (!response.data) {
         // undefined
@@ -385,8 +392,11 @@ export async function getReviewCardByDateData<R>(
 
       if (response.status === 1) {
         // status为1时, 为正常情况
-        if (response.data.length <= 0) {
-          // 没数据了
+        const items = response.data.items;
+        const hasNext = response.data.meta.has_next;
+
+        // 使用 has_next 判断是否还有下一页
+        if (!hasNext) {
           clientStatus.hasMore = false;
           if (loading) {
             showToast({
@@ -402,7 +412,7 @@ export async function getReviewCardByDateData<R>(
         ) {
           clientStatus.offset += clientStatus.limit;
         }
-        return Promise.resolve(response.data);
+        return Promise.resolve(items);
       } else {
         showFailToast(response.msg);
         return Promise.reject(response.msg);
