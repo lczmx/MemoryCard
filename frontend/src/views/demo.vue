@@ -57,56 +57,50 @@
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref, reactive } from "vue";
 import FlyCard from "../components/FlyCard.vue";
 import img1 from "../assets/1.jpg";
 import img2 from "../assets/2.jpg";
 import img3 from "../assets/3.jpg";
 import img4 from "../assets/4.jpg";
 import img5 from "../assets/5.jpg";
-export default {
-  components: {
-    FlyCard,
+
+const actionName = ref("");
+const cards = reactive([
+  {
+    img: img1,
   },
-  data() {
-    return {
-      actionName: "",
-      cards: [
-        {
-          img: img1,
-        },
-        {
-          img: img2,
-        },
-        {
-          img: img3,
-        },
-        {
-          img: img4,
-        },
-        {
-          img: img5,
-        },
-      ],
-    };
+  {
+    img: img2,
   },
-  methods: {
-    onCardDragMove(obj) {
-      if (obj.left < -10) {
-        this.actionName = "不喜欢";
-      } else if (obj.left > 10) {
-        this.actionName = "喜欢";
-      } else {
-        this.actionName = "";
-      }
-    },
-    onCardDragStop(obj) {
-      this.actionName = "";
-    },
-    onCardThrowDone(obj) {
-      this.cards.splice(0, 1);
-    },
+  {
+    img: img3,
   },
+  {
+    img: img4,
+  },
+  {
+    img: img5,
+  },
+]);
+
+const onCardDragMove = (obj: any) => {
+  if (obj.left < -10) {
+    actionName.value = "不喜欢";
+  } else if (obj.left > 10) {
+    actionName.value = "喜欢";
+  } else {
+    actionName.value = "";
+  }
+};
+
+const onCardDragStop = (obj: any) => {
+  actionName.value = "";
+};
+
+const onCardThrowDone = (obj: any) => {
+  cards.splice(0, 1);
 };
 </script>
 

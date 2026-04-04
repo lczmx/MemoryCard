@@ -27,47 +27,36 @@
   </van-popup>
 </template>
 
-<script lang="ts">
-import { defineComponent, onMounted, ref } from "vue";
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
 import { useStore } from "vuex";
-import { getDataOfOne } from "@/utils/request";
-import { IDocs } from "@/types";
-export default defineComponent({
-  name: "Help",
-  setup() {
-    const store = useStore();
-    store.commit("changeSettingsPageTitle", "帮助中心");
-    // -------- 获取文档数据
-    const docsData = ref<IDocs[]>();
-    const getDocsData = () => {
-      getDataOfOne<IDocs[]>(
-        { url: `${store.state.serverHost}/help/docs` },
-        true
-      ).then((response) => {
-        docsData.value = response;
-      });
-    };
-    onMounted(() => {
-      getDocsData();
-    });
-    // ------- 显示文档
-    const showDocPopup = ref(false);
-    const docContentArr = ref<string[]>([]); // 显示的文档内容
-    const showDoc = (index: number) => {
-      showDocPopup.value = true;
-      if (!docsData.value || !docsData.value[index]) return;
+import { getDataOfOne } from "../utils/request";
+import { IDocs } from "../types";
 
-      docContentArr.value = docsData.value[index].content.split(/\r?\\n/g);
-    };
-    return {
-      // 返回的数据
-      docsData,
-      showDoc,
-      showDocPopup,
-      docContentArr,
-    };
-  },
+const store = useStore();
+store.commit("changeSettingsPageTitle", "帮助中心");
+// -------- 获取文档数据
+const docsData = ref<IDocs[]>();
+const getDocsData = () => {
+  getDataOfOne<IDocs[]>(
+    { url: `${store.state.serverHost}/help/docs` },
+    true
+  ).then((response) => {
+    docsData.value = response;
+  });
+};
+onMounted(() => {
+  getDocsData();
 });
+// ------- 显示文档
+const showDocPopup = ref(false);
+const docContentArr = ref<string[]>([]); // 显示的文档内容
+const showDoc = (index: number) => {
+  showDocPopup.value = true;
+  if (!docsData.value || !docsData.value[index]) return;
+
+  docContentArr.value = docsData.value[index].content.split(/\r?\n/g);
+};
 </script>
 
 <style lang="scss" scoped>

@@ -119,11 +119,11 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, reactive, ref, watch, onMounted } from "vue";
+<script setup lang="ts">
+import { reactive, ref, watch, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-import type { FormInstance } from "vant";
+import type { FormInstance, PickerColumn } from "vant";
 import { Method } from "axios";
 
 import ColorPicker from "@/components/ColorPicker.vue";
@@ -133,212 +133,167 @@ import { getDataOfPage, postCreateData } from "@/utils/request";
 import { showSuccessToast, closeToast } from "vant";
 import userIcons from "@/assets/data/icons";
 import useColors from "@/assets/data/colors";
-export default defineComponent({
-  name: "AddCategory",
-  components: { ColorPicker, IconPicker },
-  props: {
-    propTitle: {
-      type: String,
-    },
-    propName: {
-      type: String,
-      default: "",
-    },
-    propIcon: {
-      type: String,
-      default: "",
-    },
-    propColor: {
-      type: String,
-      default: "",
-    },
-    propPlan: {
-      type: Number,
-    },
-    propPlanText: {
-      type: String,
-      default: "",
-    },
-    successText: {
-      type: String,
-      required: true,
-    },
-    postUrl: {
-      type: String,
-      required: true,
-    },
-  },
-  setup(props) {
-    const store = useStore();
-    // 修改标题
-    store.commit("changePageTitle", props.propTitle);
-    // ------------- 分类名
 
-    const name = ref(props.propName);
+const props = defineProps<{
+  propTitle?: string;
+  propName?: string;
+  propIcon?: string;
+  propColor?: string;
+  propPlan?: string;
+  propPlanText?: string;
+  successText: string;
+  postUrl: string;
+}>();
 
-    // ----------- 颜色
-    const color = ref(props.propColor);
-    const showColorPopup = ref(false);
+const store = useStore();
+// 修改标题
+store.commit("changePageTitle", props.propTitle);
+// ------------- 分类名
 
-    const handlerColorPicked = (pickedColor: string) => {
-      showColorPopup.value = false;
-      color.value = pickedColor;
-    };
-    const colors = useColors();
-    const colorArray = reactive(colors);
+const name = ref(props.propName || "");
 
-    // --------------- 图标
-    const icon = ref(props.propIcon);
-    const showIconPopup = ref(false);
+// ----------- 颜色
+const color = ref(props.propColor || "");
+const showColorPopup = ref(false);
 
-    const icons = userIcons(); // 用于被选择的图标
-    const iconArray = reactive(icons);
-    const handlerIconPicked = (pickedIcon: string) => {
-      showIconPopup.value = false;
-      icon.value = pickedIcon;
-    };
+const handlerColorPicked = (pickedColor: string) => {
+  showColorPopup.value = false;
+  color.value = pickedColor;
+};
+const colors = useColors();
+const colorArray = reactive(colors);
 
-    // ------------ 复习计划
-    const defaultPlanIndex = ref(0); // 默认选中的索引
-    const loadingPlanData = ref(true);
+// --------------- 图标
+const icon = ref(props.propIcon || "");
+const showIconPopup = ref(false);
 
-    const plan = ref<number | undefined>(props.propPlan); // 选中的ID
-    const planText = ref(props.propPlanText); // 用于input展示
+const icons = userIcons(); // 用于被选择的图标
+const iconArray = reactive(icons);
+const handlerIconPicked = (pickedIcon: string) => {
+  showIconPopup.value = false;
+  icon.value = pickedIcon;
+};
 
-    const planData: Record<string, number> = {}; // 全部
+// ------------ 复习计划
+const defaultPlanIndex = ref(0); // 默认选中的索引
+const loadingPlanData = ref(true);
 
-    let planColumns = ref<string[]>([]); // 给选择的
-    const showPlanPicker = ref(false);
+const plan = ref<String | undefined>(props.propPlan); // 选中的ID
+const planText = ref(props.propPlanText || ""); // 用于input展示
 
-    // ----- 请求复习曲线
-    let status = {
-      method: "GET" as Method,
-      limit: 50,
-      offset: 0,
-      hasMore: true,
-    };
-    const config = {
-      url: `${store.state.serverHost}/plans/`,
-    };
+const planData: Record<string, string> = {}; // 全部
 
-    const getPlanData = () => {
-      loadingPlanData.value = true;
-      getDataOfPage<IPlan>(status, config, false).then((response) => {
-        // 加上之前的
-        response.forEach((item, index) => {
-          // 选项
-          planColumns.value.push(item.title);
-          planData[item.title] = item.id;
-          // 修改默认选中值
-          if (
-            defaultPlanIndex.value === 0 &&
-            item.title === planText.value &&
-            item.id === plan.value
-          ) {
-            defaultPlanIndex.value = index;
-          }
+let planColumns = reactive<PickerColumn>([]); // 给选择的
+const showPlanPicker = ref(false);
+
+// ----- 请求复习曲线
+let status = {
+  method: "GET" as Method,
+  limit: 50,
+  offset: 0,
+  hasMore: true,
+};
+const config = {
+  url: `${store.state.serverHost}/plans/`,
+};
+
+const getPlanData = () => {
+  loadingPlanData.value = true;
+  getDataOfPage<IPlan>(status, config, false).then((response) => {
+    // 加上之前的
+    response.forEach((item, index) => {
+      // 选项
+      planColumns.push({ text: item.title, value: item.id});
+      planData[item.title] = item.id;
+      // 修改默认选中值
+      if (
+        defaultPlanIndex.value === 0 &&
+        item.title === planText.value &&
+        String(item.id) === plan.value
+      ) {
+        defaultPlanIndex.value = index;
+      }
+    });
+    loadingPlanData.value = false;
+
+    if (typeof plan.value === "undefined" && !planText.value) {
+      // 初始化plan和planText
+      // 修改页面时 跳过
+      if (planColumns.length > 0) {
+        // 默认为第一个
+        planText.value = planColumns[0].text.toString();
+        plan.value = planColumns[0].value.toString();
+      }
+    }
+  });
+};
+// 正式获取数据
+onMounted(() => {
+  getPlanData();
+});
+// TODO 触底事件, 下一页
+
+const onConfirmPlan = ({selectedOptions}) => {
+  // 选中选项后调用
+  planText.value = selectedOptions[0].text;
+  if (planData) {
+    plan.value = selectedOptions[0].value;
+  }
+  showPlanPicker.value = false;
+};
+// ------------ validate
+const router = useRouter();
+const addCategoryForm = ref<FormInstance>(); // form标签
+// 监听是否可以提交了
+watch(
+  // 监听响应式数据
+  () => store.state.submitData,
+  (value) => {
+    if (value) {
+      // 重新改为false
+      store.commit("changeSubmitData", false);
+
+      // 检验表单数据
+      // 返回Promise对象
+      addCategoryForm.value
+        ?.validate()
+        .then(() => {
+          const data = {
+            name: name.value,
+            icon: icon.value,
+            color: color.value,
+            plan: plan.value as string,
+          };
+          const postConfig = {
+            method: "post" as Method,
+            url: props.postUrl,
+            data,
+          };
+
+          postCreateData<ICategory, IPostCategory>(postConfig, false).then(
+            () => {
+              // 成功创建了
+              showSuccessToast(props.successText);
+              setTimeout(() => {
+                closeToast();
+                router.go(-1);
+              }, 1000);
+            }
+          );
+        })
+        .catch((error) => {
+          console.log(error);
         });
-        loadingPlanData.value = false;
+    }
+  }
+);
 
-        if (typeof plan.value === "undefined" && !planText.value) {
-          // 初始化plan和planText
-          // 修改页面时 跳过
-          if (planColumns.value.length > 0) {
-            // 默认为第一个
-            [planText.value] = planColumns.value;
-            onConfirmPlan(planText.value);
-          }
-        }
-      });
-    };
-    // 正式获取数据
-    onMounted(() => {
-      getPlanData();
-    });
-    // TODO 触底事件, 下一页
+// -------- 监听本页面是否已经被修改
+// plan有默认值 不需要选择
+watch([name, color, icon], () => {
+  // 监视多个数据
 
-    const onConfirmPlan = (value: string) => {
-      // 选中选项后调用
-      planText.value = value;
-      if (planData) {
-        plan.value = planData[value];
-      }
-      showPlanPicker.value = false;
-    };
-    // ------------ validate
-    const router = useRouter();
-    const addCategoryForm = ref<FormInstance>(); // form标签
-    // 监听是否可以提交了
-    watch(
-      // 监听响应式数据
-      () => store.state.submitData,
-      (value) => {
-        if (value) {
-          // 重新改为false
-          store.commit("changeSubmitData", false);
-
-          // 检验表单数据
-          // 返回Promise对象
-          addCategoryForm.value
-            ?.validate()
-            .then(() => {
-              const data = {
-                name: name.value,
-                icon: icon.value,
-                color: color.value,
-                plan: plan.value as number,
-              };
-              const postConfig = {
-                method: "post" as Method,
-                url: props.postUrl,
-                data,
-              };
-
-              postCreateData<ICategory, IPostCategory>(postConfig, false).then(
-                () => {
-                  // 成功创建了
-                  showSuccessToast(props.successText);
-                  setTimeout(() => {
-                    closeToast();
-                    router.go(-1);
-                  }, 1000);
-                }
-              );
-            })
-            .catch((error) => {
-              console.log(error);
-            });
-        }
-      }
-    );
-
-    // -------- 监听本页面是否已经被修改
-    // plan有默认值 不需要选择
-    watch([name, color, icon], () => {
-      // 监视多个数据
-
-      store.commit("changeChangeState", true);
-    });
-    return {
-      // 返回的数据
-      name,
-      color,
-      icon,
-      showColorPopup,
-      showIconPopup,
-      handlerColorPicked,
-      colorArray,
-      iconArray,
-      handlerIconPicked,
-      planText,
-      planColumns,
-      loadingPlanData,
-      showPlanPicker,
-      onConfirmPlan,
-      addCategoryForm,
-      defaultPlanIndex,
-    };
-  },
+  store.commit("changeChangeState", true);
 });
 </script>
 

@@ -142,123 +142,108 @@
     <van-loading color="#1989fa" />
   </div>
 </template>
-<script lang="ts">
-import { defineComponent, ref } from "vue";
+<script setup lang="ts">
+import { ref } from "vue";
 import { useStore } from "vuex";
-import { getDataOfPage, deleteData } from "@/utils/request";
-import { IPlan, IPlanStep } from "@/types";
-import { convert_sec_to_string } from "@/hook";
+import { getDataOfPage, deleteData } from "../utils/request";
+import { IPlan, IPlanStep } from "../types";
+import { convert_sec_to_string } from "../hook";
 import { Method } from "axios";
 import { showSuccessToast, showFailToast } from "vant";
-export default defineComponent({
-  name: "Plan",
 
-  setup() {
-    // ----- 设置标题
-    const store = useStore();
-    store.commit("changeSettingsPageTitle", "复习曲线");
-    // --------- 获取数据
-    const loadingPlanData = ref(false);
-    let status = {
-      method: "GET" as Method,
-      limit: 50,
-      offset: 0,
-      hasMore: true,
-    };
+// ----- 设置标题
+const store = useStore();
+store.commit("changeSettingsPageTitle", "复习曲线");
 
-    const config = {
-      url: `${store.state.serverHost}/plans/`,
-    };
-    const planData = ref<IPlan[]>([]);
+// --------- 获取数据
+const loadingPlanData = ref(false);
+let status = {
+  method: "GET" as Method,
+  limit: 50,
+  offset: 0,
+  hasMore: true,
+};
 
-    const getPlanData = () => {
-      loadingPlanData.value = true;
-      getDataOfPage<IPlan>(status, config, false).then((response) => {
-        // 加上之前的
-        planData.value = [...planData.value, ...response];
-        loadingPlanData.value = false;
-      });
-    };
-    // --------------- 添加按钮
-    const showAddPlanBtnState = ref(true);
-    const handlerShowAddPlanBtn = () => {
-      showAddPlanBtnState.value = true;
-    };
-    const handlerHideAddPlanBtn = () => {
-      showAddPlanBtnState.value = false;
-    };
-    const handlerDeleteBtn = (pid: number) => {
-      // 删除卡片
-      const config = {
-        method: "delete" as Method,
-        url: `${store.state.serverHost}/plans/${pid}`,
-      };
-      deleteData(config, false)
-        .then(() => {
-          // 提示
-          showSuccessToast("已删除");
-          // 移除
-          for (let index in planData.value) {
-            // index 为string
-            const numIndex = Number(index);
-            if (planData.value[numIndex].id === pid) {
-              planData.value.splice(numIndex, 1);
-              break;
-            }
-          }
-        })
-        .catch(() => {
-          showFailToast("删除失败");
-        });
-    };
-    // ----------- 显示曲线
-    const allPlanSteps = ref<IPlanStep[][]>([]);
-    const planSteps = ref<IPlanStep[]>([]);
-    const showPlan = ref(false);
-    const handlerClickShowPlan = (index: number) => {
-      //点击显示曲线
-      showPlan.value = true;
-      planSteps.value = allPlanSteps.value[index];
-    };
-    // 获取整个曲线所需时间
-    const getPlanAllTime = (planContent: string): string => {
-      let temp: IPlanStep[] = [];
+const config = {
+  url: `${store.state.serverHost}/plans/`,
+};
+const planData = ref<IPlan[]>([]);
 
-      let allSec = 0;
-      let reviewCount = 0;
-      planContent.split("-").forEach((sec, index) => {
-        allSec += Number(sec);
+const getPlanData = () => {
+  loadingPlanData.value = true;
+  getDataOfPage<IPlan>(status, config, false).then((response) => {
+    // 加上之前的
+    planData.value = [...planData.value, ...response];
+    loadingPlanData.value = false;
+  });
+};
 
-        const time =
-          index === 0
-            ? `创建卡片${convert_sec_to_string(Number(sec))}后`
-            : `距上一次复习${convert_sec_to_string(Number(sec))}后`;
-        const title = `第${index + 1}次复习`;
-        temp.push({ title, time });
-        reviewCount += 1;
-      });
-      allPlanSteps.value.push(temp);
-      const duration = convert_sec_to_string(allSec);
+// --------------- 添加按钮
+const showAddPlanBtnState = ref(true);
+const handlerShowAddPlanBtn = () => {
+  showAddPlanBtnState.value = true;
+};
+const handlerHideAddPlanBtn = () => {
+  showAddPlanBtnState.value = false;
+};
 
-      return `复习:${reviewCount}次 共需: ${duration}`;
-    };
+const handlerDeleteBtn = (pid: number) => {
+  // 删除卡片
+  const config = {
+    method: "delete" as Method,
+    url: `${store.state.serverHost}/plans/${pid}`,
+  };
+  deleteData(config, false)
+    .then(() => {
+      // 提示
+      showSuccessToast("已删除");
+      // 移除
+      for (let index in planData.value) {
+        // index 为string
+        const numIndex = Number(index);
+        if (planData.value[numIndex].id === pid) {
+          planData.value.splice(numIndex, 1);
+          break;
+        }
+      }
+    })
+    .catch(() => {
+      showFailToast("删除失败");
+    });
+};
 
-    return {
-      loadingPlanData, // 获取复习曲线开始
-      status,
-      getPlanData,
-      planData,
-      showAddPlanBtnState,
-      handlerShowAddPlanBtn, // 按钮控制
-      handlerHideAddPlanBtn,
-      handlerDeleteBtn,
-      handlerClickShowPlan, //点击显示曲线
-      showPlan,
-      planSteps,
-      getPlanAllTime,
-    };
-  },
-});
+// ----------- 显示曲线
+const allPlanSteps = ref<IPlanStep[][]>([]);
+const planSteps = ref<IPlanStep[]>([]);
+const showPlan = ref(false);
+const handlerClickShowPlan = (index: number) => {
+  //点击显示曲线
+  showPlan.value = true;
+  planSteps.value = allPlanSteps.value[index];
+};
+
+// 获取整个曲线所需时间
+const getPlanAllTime = (planContent: string): string => {
+  let temp: IPlanStep[] = [];
+
+  let allSec = 0;
+  let reviewCount = 0;
+  planContent.split("-").forEach((sec, index) => {
+    allSec += Number(sec);
+
+    const time =
+      index === 0
+        ? `创建卡片${convert_sec_to_string(Number(sec))}后`
+        : `距上一次复习${convert_sec_to_string(Number(sec))}后`;
+    const title = `第${index + 1}次复习`;
+    temp.push({ title, time });
+    reviewCount += 1;
+  });
+  allPlanSteps.value.push(temp);
+  const duration = convert_sec_to_string(allSec);
+
+  return `复习:${reviewCount}次 共需: ${duration}`;
+};
 </script>
 <style lang="scss">
 // 加载中

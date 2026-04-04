@@ -14,67 +14,53 @@
   </plan-editor>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, onMounted } from "vue";
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { Toast } from "vant";
 
-import { IPlan } from "@/types";
-import { getDataOfOne } from "@/utils/request";
+import { IPlan } from "../types";
+import { getDataOfOne } from "../utils/request";
 
-import PlanEditor from "@/components/planEditor.vue";
-export default defineComponent({
-  name: "EditorPlan",
-  components: { PlanEditor },
-  setup() {
-    const router = useRouter();
-    const store = useStore();
+import PlanEditor from "../components/planEditor.vue";
 
-    const { pid } = router.currentRoute.value.params;
-    const loading = ref(true);
-    const successText = ref("已修改复习曲线");
+const router = useRouter();
+const store = useStore();
 
-    // -------- 初始化数据
-    const title = ref("编辑复习曲线"); // 导航栏标题
-    const planTitle = ref(""); // 曲线名
-    const planPlans = ref<number[]>([]); // 曲线名
+const { pid } = router.currentRoute.value.params;
+const loading = ref(true);
+const successText = ref("已修改复习曲线");
 
-    const url = ref(`${store.state.serverHost}/plans/${pid}`);
+// -------- 初始化数据
+const title = ref("编辑复习曲线"); // 导航栏标题
+const planTitle = ref(""); // 曲线名
+const planPlans = ref<number[]>([]); // 曲线名
 
-    const config = {
-      url: url.value,
-    };
+const url = ref(`${store.state.serverHost}/plans/${pid}`);
 
-    const getPlanData = () => {
-      getDataOfOne<IPlan>(config, false)
-        .then((response) => {
-          planTitle.value = response.title;
-          if (!planPlans.value) return;
-          response.content.split("-").forEach((sec) => {
-            planPlans.value.push(Number(sec));
-          });
+const config = {
+  url: url.value,
+};
 
-          loading.value = false;
-        })
-        .catch(() => {
-          Toast.fail("编辑复习曲线失败");
-          router.go(-1); // 返回上一页
-        });
-    };
-    onMounted(() => {
-      getPlanData();
+const getPlanData = () => {
+  getDataOfOne<IPlan>(config, false)
+    .then((response) => {
+      planTitle.value = response.title;
+      if (!planPlans.value) return;
+      response.content.split("-").forEach((sec) => {
+        planPlans.value.push(Number(sec));
+      });
+
+      loading.value = false;
+    })
+    .catch(() => {
+      Toast.fail("编辑复习曲线失败");
+      router.go(-1); // 返回上一页
     });
-
-    return {
-      loading,
-      title,
-      planTitle,
-      planPlans,
-      url,
-      successText,
-    };
-  },
+};
+onMounted(() => {
+  getPlanData();
 });
 </script>
 

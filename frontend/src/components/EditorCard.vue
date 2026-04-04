@@ -19,76 +19,57 @@
   </card-editor>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, onMounted } from "vue";
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 
-import { ICard, ICategory } from "@/types";
-import { getDataOfOne } from "@/utils/request";
+import { ICard, ICategory } from "../types";
+import { getDataOfOne } from "../utils/request";
 
-import CardEditor from "@/components/cardEditor.vue";
-export default defineComponent({
-  name: "EditorCard",
-  components: { CardEditor },
-  setup() {
-    const router = useRouter();
-    const store = useStore();
+import CardEditor from "../components/cardEditor.vue";
 
-    const { cid } = router.currentRoute.value.params;
-    const loading = ref(true);
-    const successText = ref("已修改卡片");
+const router = useRouter();
+const store = useStore();
 
-    // -------- 初始化数据
-    const title = ref("编辑卡片"); // 导航栏标题
-    const cardTitle = ref(""); // 卡片名
+const { cid } = router.currentRoute.value.params;
+const loading = ref(true);
+const successText = ref("已修改卡片");
 
-    const url = ref(`${store.state.serverHost}/cards/${cid}`);
-    const category = ref<ICategory>();
-    const categoryText = ref("");
-    const summary = ref("");
-    const summaryText = ref("");
-    const description = ref("");
-    const descriptionText = ref("");
+// -------- 初始化数据
+const title = ref("编辑卡片"); // 导航栏标题
+const cardTitle = ref(""); // 卡片名
 
-    const config = {
-      url: url.value,
-    };
+const url = ref(`${store.state.serverHost}/cards/${cid}`);
+const category = ref<ICategory>();
+const categoryText = ref("");
+const summary = ref("");
+const summaryText = ref("");
+const description = ref("");
+const descriptionText = ref("");
 
-    const getCardData = () => {
-      getDataOfOne<ICard>(config, false).then((response) => {
-        cardTitle.value = response.title;
-        category.value = response.category;
-        categoryText.value = response.category.name;
-        // 不能用<string>, eslint报错
-        if (response.summary && response.description) {
-          summary.value = response.summary;
-          summaryText.value = summary.value.replace(/<\/?.+?>/g, "");
-          description.value = response.description;
-          descriptionText.value = description.value.replace(/<\/?.+?>/g, "");
-        }
+const config = {
+  url: url.value,
+};
 
-        loading.value = false;
-      });
-    };
-    onMounted(() => {
-      getCardData();
-    });
+const getCardData = () => {
+  getDataOfOne<ICard>(config, false).then((response) => {
+    cardTitle.value = response.title;
+    category.value = response.category;
+    categoryText.value = response.category.name;
+    // 不能用<string>, eslint报错
+    if (response.summary && response.description) {
+      summary.value = response.summary;
+      summaryText.value = summary.value.replace(/<\/?[^>]+(>|$)/g, "");
+      description.value = response.description;
+      descriptionText.value = description.value.replace(/<\/?[^>]+(>|$)/g, "");
+    }
 
-    return {
-      loading,
-      title,
-      cardTitle,
-      category,
-      categoryText,
-      summary,
-      summaryText,
-      description,
-      descriptionText,
-      url,
-      successText,
-    };
-  },
+    loading.value = false;
+  });
+};
+onMounted(() => {
+  getCardData();
 });
 </script>
 

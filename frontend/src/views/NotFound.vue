@@ -39,23 +39,14 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script setup lang="ts">
 import { useRouter } from "vue-router";
-export default defineComponent({
-  name: "NotFound",
-  setup() {
-    const router = useRouter();
-    const clickHistoryBack = () => {
-      // router.push({ name: "settings" });
-      router.go(-1);
-    };
-    return {
-      // 返回的数据
-      clickHistoryBack,
-    };
-  },
-});
+
+const router = useRouter();
+const clickHistoryBack = () => {
+  // router.push({ name: "settings" });
+  router.go(-1);
+};
 </script>
 <style lang="scss" scoped>
 @import url(https://fonts.googleapis.com/css?family=Ubuntu);

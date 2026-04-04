@@ -6,18 +6,12 @@
   ></category-editor>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from "vue";
+<script setup lang="ts">
+import { ref } from "vue";
 import { useStore } from "vuex";
 
-import CategoryEditor from "@/components/categoryEditor.vue";
-export default defineComponent({
-  name: "AddCategory",
-  components: { CategoryEditor },
-  setup() {
-    const store = useStore();
-    const url = ref(`${store.state.serverHost}/category/`);
-    return { url };
-  },
-});
+import CategoryEditor from "../components/categoryEditor.vue";
+
+const store = useStore();
+const url = ref(`${store.state.serverHost}/category/`);
 </script>

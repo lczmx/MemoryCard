@@ -130,45 +130,36 @@
     <van-loading color="#1989fa" />
   </div>
 </template>
-<script lang="ts">
-import { defineComponent, ref, onMounted } from "vue";
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
-import { IUserData } from "@/types";
-import { getDataOfOne } from "@/utils/request";
-export default defineComponent({
-  name: "Settings",
-  setup() {
-    /* 用户相关 */
-    // -----------------获取用户数据 开始
-    const store = useStore();
-    const user = ref<IUserData>({ email: "", username: "" } as IUserData);
-    const getUserData = () => {
-      const url = `${store.state.serverHost}/user/`;
-      getDataOfOne<IUserData>({ url }, true).then((response) => {
-        user.value = response;
-      });
-    };
-    // -----------------获取用户数据 结束
-    // ------------- 跳转到About页面
-    const router = useRouter();
+import { IUserData } from "../types";
+import { getDataOfOne } from "../utils/request";
 
-    onMounted(() => {
-      getUserData();
-    });
-    // ---------- 注销登录
-    const handlerClickLogout = () => {
-      store.commit("setToken", { accessToken: "", tokenType: "" });
-      // 跳转到登录页面
-      router.push({ name: "LogIn" });
-    };
-    return {
-      // 返回的数据
-      user,
-      handlerClickLogout,
-    };
-  },
+/* 用户相关 */
+// -----------------获取用户数据 开始
+const store = useStore();
+const user = ref<IUserData>({ email: "", username: "" } as IUserData);
+const getUserData = () => {
+  const url = `${store.state.serverHost}/user/`;
+  getDataOfOne<IUserData>({ url }, true).then((response) => {
+    user.value = response;
+  });
+};
+// -----------------获取用户数据 结束
+// ------------- 跳转到About页面
+const router = useRouter();
+
+onMounted(() => {
+  getUserData();
 });
+// ---------- 注销登录
+const handlerClickLogout = () => {
+  store.commit("setToken", { accessToken: "", tokenType: "" });
+  // 跳转到登录页面
+  router.push({ name: "LogIn" });
+};
 </script>
 
 <style lang="scss">

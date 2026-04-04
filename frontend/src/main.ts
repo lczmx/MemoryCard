@@ -33,6 +33,7 @@ import { Switch } from "vant"; // 开关
 import { Checkbox, CheckboxGroup } from "vant"; // 复选框
 import { Grid, GridItem } from "vant"; // 宫格
 import { Stepper } from "vant"; // 步进器
+import { PullRefresh } from "vant"; // 下拉刷新
 
 import Vue3TouchEvents from "vue3-touch-events"; // 滑动事件
 // 文档: https://github.com/robinrodricks/vue3-touch-events
@@ -72,5 +73,6 @@ app.use(Checkbox);
 app.use(CheckboxGroup);
 app.use(Stepper);
 app.use(Grid).use(GridItem);
+app.use(PullRefresh);
 
 app.use(store).use(router).mount("#app");

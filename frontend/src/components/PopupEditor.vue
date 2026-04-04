@@ -13,69 +13,58 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { watch } from "vue";
+<script setup lang="ts">
+import { nextTick, watch } from "vue";
 import { useWindowSize } from "@vant/use";
 
-export default defineComponent({
-  name: "PopupEditor",
-  props: {
-    title: {
-      type: String,
-      default: "title",
-    },
-  },
-  emits: ["onSuccess"],
-  setup(props, { emit }) {
-    const clickSuccessBtn = () => {
-      // 触发onSuccess事件
-      emit("onSuccess");
-    };
+const props = defineProps<{
+  title: string;
+}>();
 
-    const { width: windowWidth, height: windowHeight } = useWindowSize();
+const emit = defineEmits<{
+  (e: "onSuccess"): void;
+}>();
 
-    watch([windowWidth, windowHeight], ([_, h]) => {
-      console.log("reset");
+const clickSuccessBtn = () => {
+  // 触发onSuccess事件
+  emit("onSuccess");
+};
 
-      setProseMirrorHeight(h);
-    });
-    // 计算toolbar高度
-    // 得出编辑框的高度
-    const setProseMirrorHeight = (wHeight: number) => {
-      let toolBarNodes = document.querySelectorAll(".toolbar");
-      let toolBarNodeHeight: number;
-      toolBarNodes.forEach((toolBarNode) => {
-        // 计算元素高度
-        const { height } = toolBarNode.getBoundingClientRect();
-        if (height) {
-          // 不能为0
-          toolBarNodeHeight = height;
-          return;
-        }
-      });
+const { width: windowWidth, height: windowHeight } = useWindowSize();
 
-      let proseMirrorNodes = document.querySelectorAll(".ProseMirror");
+watch([windowWidth, windowHeight], ([_, h]) => {
+  console.log("reset");
 
-      proseMirrorNodes.forEach((proseMirrorNode) => {
-        // 设置top
-        const nowHeight = toolBarNodeHeight + 46;
-        const ele = proseMirrorNode as HTMLElement;
-        ele.style.top = String(nowHeight) + "px";
-      });
-    };
-    nextTick(() => {
-      // 可以使用回调函数的写法
-      // 这个函数中DOM必定渲染完成
-      setProseMirrorHeight(windowHeight.value);
-    });
+  setProseMirrorHeight(h);
+});
+// 计算toolbar高度
+// 得出编辑框的高度
+const setProseMirrorHeight = (wHeight: number) => {
+  let toolBarNodes = document.querySelectorAll(".toolbar");
+  let toolBarNodeHeight: number;
+  toolBarNodes.forEach((toolBarNode) => {
+    // 计算元素高度
+    const { height } = toolBarNode.getBoundingClientRect();
+    if (height) {
+      // 不能为0
+      toolBarNodeHeight = height;
+      return;
+    }
+  });
 
-    return {
-      // 返回的数据
+  let proseMirrorNodes = document.querySelectorAll(".ProseMirror");
 
-      clickSuccessBtn,
-    };
-  },
+  proseMirrorNodes.forEach((proseMirrorNode) => {
+    // 设置top
+    const nowHeight = toolBarNodeHeight + 46;
+    const ele = proseMirrorNode as HTMLElement;
+    ele.style.top = String(nowHeight) + "px";
+  });
+};
+nextTick(() => {
+  // 可以使用回调函数的写法
+  // 这个函数中DOM必定渲染完成
+  setProseMirrorHeight(windowHeight.value);
 });
 </script>
 <style lang="scss">

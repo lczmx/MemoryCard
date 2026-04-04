@@ -16,26 +16,16 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType, toRef } from "vue";
-import { ICard } from "@/types";
-import { useCurrentCardPlan } from "@/hook";
-export default defineComponent({
-  name: "ShowPlan",
-  props: {
-    card: {
-      type: Object as PropType<ICard>,
-      required: true,
-    },
-  },
-  setup(props) {
-    const cardRef = toRef(props, "card");
-    return {
-      cardRef,
-      useCurrentCardPlan,
-    };
-  },
-});
+<script setup lang="ts">
+import { toRef } from "vue";
+import { ICard } from "../types";
+import { useCurrentCardPlan } from "../hook";
+
+const props = defineProps<{
+  card: ICard;
+}>();
+
+const cardRef = toRef(props, "card");
 </script>
 
 <style lang="scss" scoped>

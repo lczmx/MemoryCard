@@ -13,54 +13,42 @@
   <router-view></router-view>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script setup lang="ts">
 import { useStore } from "vuex";
 import { showConfirmDialog } from "vant";
 
-export default defineComponent({
-  name: "EditorPage",
-  setup() {
-    const store = useStore();
-    const state = store.state;
+const store = useStore();
+const state = store.state;
 
-    // 初始化submitData为false
-    store.commit("changeSubmitData", false);
-    // 初始化changeState为false
-    store.commit("changeChangeState", false);
-    //   返回上一页
-    const backTopPage = () => {
-      //  本页面数据是否被修改
-      if (store.state.changeState) {
-        showConfirmDialog({
-          title: "注意",
-          message: "你尚未保存, 本页面修改的数据将不会被记录",
-        })
-          .then(() => {
-            // 确定返回
-            store.commit("changeChangeState", false);
-            history.back();
-          })
-          .catch(() => {
-            // on cancel
-          });
-      } else {
-        // 直接返回
+// 初始化submitData为false
+store.commit("changeSubmitData", false);
+// 初始化changeState为false
+store.commit("changeChangeState", false);
+//   返回上一页
+const backTopPage = () => {
+  //  本页面数据是否被修改
+  if (store.state.changeState) {
+    showConfirmDialog({
+      title: "注意",
+      message: "你尚未保存, 本页面修改的数据将不会被记录",
+    })
+      .then(() => {
+        // 确定返回
+        store.commit("changeChangeState", false);
         history.back();
-      }
-    };
-    // 提交数据
-    const toSubmitData = () => {
-      // 修改vuex的数据, 让其提交
+      })
+      .catch(() => {
+        // on cancel
+      });
+  } else {
+    // 直接返回
+    history.back();
+  }
+};
+// 提交数据
+const toSubmitData = () => {
+  // 修改vuex的数据, 让其提交
 
-      store.commit("changeSubmitData", true);
-    };
-    return {
-      // 返回的数据
-      backTopPage,
-      state,
-      toSubmitData,
-    };
-  },
-});
+  store.commit("changeSubmitData", true);
+};
 </script>

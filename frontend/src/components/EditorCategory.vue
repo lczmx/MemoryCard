@@ -16,61 +16,47 @@
     :propPlanText="planText"
   ></category-editor>
 </template>
-<script lang="ts">
-import { defineComponent, ref, onMounted } from "vue";
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 
-import { getDataOfOne } from "@/utils/request";
-import { ICategory } from "@/types";
+import { getDataOfOne } from "../utils/request";
+import { ICategory } from "../types";
 
-import CategoryEditor from "@/components/categoryEditor.vue";
-export default defineComponent({
-  name: "EditorCategory",
-  components: { CategoryEditor },
-  setup() {
-    const store = useStore();
-    // 修改标题
-    store.commit("changePageTitle", "");
+import CategoryEditor from "../components/categoryEditor.vue";
 
-    const router = useRouter();
-    const { cid } = router.currentRoute.value.params;
-    // ---------- 一些初始化数据
-    const loading = ref(true);
-    const name = ref<string>();
-    const icon = ref<string>();
-    const color = ref<string>();
-    const plan = ref<number>();
-    const planText = ref<string>();
-    const url = ref(`${store.state.serverHost}/category/${cid}`);
-    // ------------- 获取当前类别的数据
-    const config = {
-      url: url.value,
-    };
+const store = useStore();
+// 修改标题
+store.commit("changePageTitle", "");
 
-    const getCategoryData = () => {
-      getDataOfOne<ICategory>(config, false).then((response) => {
-        name.value = response.name;
-        icon.value = response.icon;
-        color.value = response.color;
-        plan.value = response.plan.id;
-        planText.value = response.plan.title;
-        loading.value = false;
-      });
-    };
-    onMounted(() => {
-      getCategoryData();
-    });
-    return {
-      loading,
-      url,
-      name,
-      icon,
-      color,
-      plan,
-      planText,
-    };
-  },
+const router = useRouter();
+const { cid } = router.currentRoute.value.params;
+// ---------- 一些初始化数据
+const loading = ref(true);
+const name = ref<string>();
+const icon = ref<string>();
+const color = ref<string>();
+const plan = ref<number>();
+const planText = ref<string>();
+const url = ref(`${store.state.serverHost}/category/${cid}`);
+// ------------- 获取当前类别的数据
+const config = {
+  url: url.value,
+};
+
+const getCategoryData = () => {
+  getDataOfOne<ICategory>(config, false).then((response) => {
+    name.value = response.name;
+    icon.value = response.icon;
+    color.value = response.color;
+    plan.value = response.plan.id;
+    planText.value = response.plan.title;
+    loading.value = false;
+  });
+};
+onMounted(() => {
+  getCategoryData();
 });
 </script>
 

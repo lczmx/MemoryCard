@@ -17,34 +17,21 @@
   <router-view></router-view>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script setup lang="ts">
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 
-export default defineComponent({
-  name: "SettingsContent",
+// ---------- 点击返回
+const router = useRouter();
+const clickHistoryBack = () => {
+  // router.push({ name: "settings" });
+  router.go(-1);
+  
+};
+// ------- 返回首页
+const clickGoHome = () => {
+  router.push({ name: "settings" });
 
-  setup() {
-    // ---------- 点击返回
-    const router = useRouter();
-    const clickHistoryBack = () => {
-      // router.push({ name: "settings" });
-      router.go(-1);
-      
-    };
-    // ------- 返回首页
-    const clickGoHome = () => {
-      router.push({ name: "settings" });
-
-    }
-    const store = useStore();
-
-    return {
-      clickHistoryBack,
-      store,
-      clickGoHome
-    };
-  },
-});
+}
+const store = useStore();
 </script>

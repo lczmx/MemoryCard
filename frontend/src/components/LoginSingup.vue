@@ -157,8 +157,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from "vue";
+<script setup lang="ts">
+import { ref } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { showSuccessToast } from "vant";
@@ -167,304 +167,273 @@ import {
   IUserLoginPostData,
   IUserSignUpPostMsg,
   IUerToken,
-} from "@/types";
-import { postCreateData } from "@/utils/request";
+} from "../types";
+import { postCreateData } from "../utils/request";
 import qs from "qs";
-import { getAssetsFile } from '@/utils/assets'
+import { getAssetsFile } from '../utils/assets'
 
-export default defineComponent({
-  name: "LoginSingup",
-  props: {
-    containerCls: {
-      // sign-up-mode 或 ""
-      type: String,
-      default: "",
-    },
-  },
-  setup() {
-    const containerRef = ref<HTMLElement>();
-    // ----------------------- 点击切换
-    const handlerClickSignupBtn = () => {
-      if (!containerRef.value) return;
-      containerRef.value.classList.add("sign-up-mode");
-      // 清空提示
-      loginAccount.value = "";
-      loginPassword.value = "";
-      loginAccountErrorMsg.value = "";
-      loginPasswordErrorMsg.value = "";
-      // 清空sign up数据
-      singUpUsername.value = "";
-      singUpEmail.value = "";
-      singUpPassword1.value = "";
-      singUpPassword2.value = "";
-      singUpUsernameErrorMsg.value = "";
-      singUpEmailErrorMsg.value = "";
-      singUpPassword1ErrorMsg.value = "";
-      singUpPassword2ErrorMsg.value = "";
-    };
-    const handlerClickLoginBtn = () => {
-      if (!containerRef.value) return;
-      containerRef.value.classList.remove("sign-up-mode");
-      // 清空提示
-      loginAccount.value = "";
-      loginPassword.value = "";
-      loginAccountErrorMsg.value = "";
-      loginPasswordErrorMsg.value = "";
-      // 清空sign up数据
-      singUpUsername.value = "";
-      singUpEmail.value = "";
-      singUpPassword1.value = "";
-      singUpPassword2.value = "";
-      singUpUsernameErrorMsg.value = "";
-      singUpEmailErrorMsg.value = "";
-      singUpPassword1ErrorMsg.value = "";
-      singUpPassword2ErrorMsg.value = "";
-    };
-    // --------------------- 注册数据
-    const singUpUsername = ref("");
-    const singUpEmail = ref("");
-    const singUpPassword1 = ref("");
-    const singUpPassword2 = ref("");
-    const singUpUsernameErrorMsg = ref(""); // 错误提示ref
-    const singUpEmailErrorMsg = ref(""); // 错误提示ref
-    const singUpPassword1ErrorMsg = ref(""); // 错误提示ref
-    const singUpPassword2ErrorMsg = ref(""); // 错误提示ref
+// 定义 props
+const props = defineProps<{
+  containerCls?: string; // sign-up-mode 或 ""
+}>();
 
-    // ------- 检测数据
-    // --- 失去焦点事件
-    // 用户名
-    const isEmptySingUpUsername = () => {
-      if (!singUpUsername.value) {
-        singUpUsernameErrorMsg.value = "用户名不能为空";
-      } else {
-        singUpUsernameErrorMsg.value = "";
-      }
-    };
-    const onBlurSingUpUsername = () => isEmptySingUpUsername();
-    const onChangeSingUpUsername = () => isEmptySingUpUsername();
-    // 邮箱
-    const isEmptySingUpEmail = () => {
-      if (!singUpEmail.value) {
-        singUpEmailErrorMsg.value = "邮箱不能为空";
-      } else {
-        singUpEmailErrorMsg.value = "";
-      }
-    };
-    const onBlurSingUpEmail = () => isEmptySingUpEmail();
-    const onChangeSingUpEmail = () => {
-      isEmptySingUpEmail();
-      // 邮箱格式
-      let pattern = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(.[a-zA-Z0-9_-])+/;
-      if (!pattern.test(singUpEmail.value)) {
-        singUpEmailErrorMsg.value = "邮箱格式错误";
-      } else {
-        singUpEmailErrorMsg.value = "";
-      }
-    };
-    // 密码
-    const isEmptySingUpPassword1 = () => {
-      if (!singUpPassword1.value)
-        singUpPassword1ErrorMsg.value = "密码不能为空";
-    };
-    const isEmptySingUpPassword2 = () => {
-      if (!singUpPassword2.value)
-        singUpPassword2ErrorMsg.value = "密码不能为空";
-    };
+const containerRef = ref<HTMLElement>();
 
-    const onBlurSingUpPassword1 = () => isEmptySingUpPassword1();
-    const onChangeSingUpPassword1 = () => {
-      isEmptySingUpPassword1();
-      if (
-        singUpPassword2.value &&
-        singUpPassword1.value !== singUpPassword2.value
-      ) {
-        singUpPassword1ErrorMsg.value = "两次输入的密码不一致";
-        singUpPassword2ErrorMsg.value = "两次输入的密码不一致";
-      } else if (
-        singUpPassword2.value &&
-        singUpPassword1.value === singUpPassword2.value
-      ) {
-        singUpPassword1ErrorMsg.value = "";
-        singUpPassword2ErrorMsg.value = "";
-      }
-    };
-    const onBlurSingUpPassword2 = () => isEmptySingUpPassword2();
-    const onChangeSingUpPassword2 = () => {
-      isEmptySingUpPassword2();
-      if (
-        singUpPassword1.value &&
-        singUpPassword1.value !== singUpPassword2.value
-      ) {
-        singUpPassword1ErrorMsg.value = "两次输入的密码不一致";
-        singUpPassword2ErrorMsg.value = "两次输入的密码不一致";
-      } else if (
-        singUpPassword1.value &&
-        singUpPassword1.value === singUpPassword2.value
-      ) {
-        singUpPassword1ErrorMsg.value = "";
-        singUpPassword2ErrorMsg.value = "";
-      }
-    };
+// --------------------- 注册数据
+const singUpUsername = ref("");
+const singUpEmail = ref("");
+const singUpPassword1 = ref("");
+const singUpPassword2 = ref("");
+const singUpUsernameErrorMsg = ref(""); // 错误提示ref
+const singUpEmailErrorMsg = ref(""); // 错误提示ref
+const singUpPassword1ErrorMsg = ref(""); // 错误提示ref
+const singUpPassword2ErrorMsg = ref(""); // 错误提示ref
 
-    // 提交数据
-    const store = useStore();
-    const handlerClickSignUpSubmitBtn = () => {
-      // 先检验数据
-      new Promise((resolve, reject) => {
-        isEmptySingUpUsername();
-        onChangeSingUpEmail();
-        onChangeSingUpPassword1();
-        onChangeSingUpPassword2();
-        if (
-          singUpUsernameErrorMsg.value ||
-          singUpEmailErrorMsg.value ||
-          singUpPassword1ErrorMsg.value ||
-          singUpPassword2ErrorMsg.value
-        ) {
-          return;
+// ------------------ 登录
+const loginAccount = ref("");
+const loginPassword = ref("");
+const loginAccountErrorMsg = ref(""); // 错误提示ref
+const loginPasswordErrorMsg = ref(""); // 错误提示ref
+
+// ----------------------- 点击切换
+const handlerClickSignupBtn = () => {
+  if (!containerRef.value) return;
+  containerRef.value.classList.add("sign-up-mode");
+  // 清空提示
+  loginAccount.value = "";
+  loginPassword.value = "";
+  loginAccountErrorMsg.value = "";
+  loginPasswordErrorMsg.value = "";
+  // 清空sign up数据
+  singUpUsername.value = "";
+  singUpEmail.value = "";
+  singUpPassword1.value = "";
+  singUpPassword2.value = "";
+  singUpUsernameErrorMsg.value = "";
+  singUpEmailErrorMsg.value = "";
+  singUpPassword1ErrorMsg.value = "";
+  singUpPassword2ErrorMsg.value = "";
+};
+
+const handlerClickLoginBtn = () => {
+  if (!containerRef.value) return;
+  containerRef.value.classList.remove("sign-up-mode");
+  // 清空提示
+  loginAccount.value = "";
+  loginPassword.value = "";
+  loginAccountErrorMsg.value = "";
+  loginPasswordErrorMsg.value = "";
+  // 清空sign up数据
+  singUpUsername.value = "";
+  singUpEmail.value = "";
+  singUpPassword1.value = "";
+  singUpPassword2.value = "";
+  singUpUsernameErrorMsg.value = "";
+  singUpEmailErrorMsg.value = "";
+  singUpPassword1ErrorMsg.value = "";
+  singUpPassword2ErrorMsg.value = "";
+};
+
+// ------- 检测数据
+// --- 失去焦点事件
+// 用户名
+const isEmptySingUpUsername = () => {
+  if (!singUpUsername.value) {
+    singUpUsernameErrorMsg.value = "用户名不能为空";
+  } else {
+    singUpUsernameErrorMsg.value = "";
+  }
+};
+const onBlurSingUpUsername = () => isEmptySingUpUsername();
+const onChangeSingUpUsername = () => isEmptySingUpUsername();
+
+// 邮箱
+const isEmptySingUpEmail = () => {
+  if (!singUpEmail.value) {
+    singUpEmailErrorMsg.value = "邮箱不能为空";
+  } else {
+    singUpEmailErrorMsg.value = "";
+  }
+};
+const onBlurSingUpEmail = () => isEmptySingUpEmail();
+const onChangeSingUpEmail = () => {
+  isEmptySingUpEmail();
+  // 邮箱格式
+  let pattern = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(.[a-zA-Z0-9_-])+/;
+  if (!pattern.test(singUpEmail.value)) {
+    singUpEmailErrorMsg.value = "邮箱格式错误";
+  } else {
+    singUpEmailErrorMsg.value = "";
+  }
+};
+
+// 密码
+const isEmptySingUpPassword1 = () => {
+  if (!singUpPassword1.value)
+    singUpPassword1ErrorMsg.value = "密码不能为空";
+};
+const isEmptySingUpPassword2 = () => {
+  if (!singUpPassword2.value)
+    singUpPassword2ErrorMsg.value = "密码不能为空";
+};
+
+const onBlurSingUpPassword1 = () => isEmptySingUpPassword1();
+const onChangeSingUpPassword1 = () => {
+  isEmptySingUpPassword1();
+  if (
+    singUpPassword2.value &&
+    singUpPassword1.value !== singUpPassword2.value
+  ) {
+    singUpPassword1ErrorMsg.value = "两次输入的密码不一致";
+    singUpPassword2ErrorMsg.value = "两次输入的密码不一致";
+  } else if (
+    singUpPassword2.value &&
+    singUpPassword1.value === singUpPassword2.value
+  ) {
+    singUpPassword1ErrorMsg.value = "";
+    singUpPassword2ErrorMsg.value = "";
+  }
+};
+
+const onBlurSingUpPassword2 = () => isEmptySingUpPassword2();
+const onChangeSingUpPassword2 = () => {
+  isEmptySingUpPassword2();
+  if (
+    singUpPassword1.value &&
+    singUpPassword1.value !== singUpPassword2.value
+  ) {
+    singUpPassword1ErrorMsg.value = "两次输入的密码不一致";
+    singUpPassword2ErrorMsg.value = "两次输入的密码不一致";
+  } else if (
+    singUpPassword1.value &&
+    singUpPassword1.value === singUpPassword2.value
+  ) {
+    singUpPassword1ErrorMsg.value = "";
+    singUpPassword2ErrorMsg.value = "";
+  }
+};
+
+// 提交数据
+const store = useStore();
+const handlerClickSignUpSubmitBtn = () => {
+  // 先检验数据
+  new Promise((resolve, reject) => {
+    isEmptySingUpUsername();
+    onChangeSingUpEmail();
+    onChangeSingUpPassword1();
+    onChangeSingUpPassword2();
+    if (
+      singUpUsernameErrorMsg.value ||
+      singUpEmailErrorMsg.value ||
+      singUpPassword1ErrorMsg.value ||
+      singUpPassword2ErrorMsg.value
+    ) {
+      return;
+    }
+    // 验证通过
+    resolve("success");
+  }).then(() => {
+    const data = {
+      username: singUpUsername.value,
+      email: singUpEmail.value,
+      password1: singUpPassword1.value,
+      password2: singUpPassword2.value,
+    };
+    postCreateData<IUserSignUpPostMsg, IUserSignUpPostData>(
+      {
+        url: `${store.state.serverHost}/user/signup`,
+        method: "post",
+        data,
+      },
+      true
+    )
+      .then((response) => {
+        // 创建成功
+        showSuccessToast("注册成功");
+        // 跳到对应页面
+        handlerClickLoginBtn();
+        // 设置login账号数据
+        loginAccount.value = response.username ? response.username : "";
+      })
+      .catch((error) => {
+        const msg = error.data as IUserSignUpPostMsg;
+        if (msg.username) singUpUsernameErrorMsg.value = msg.username;
+        if (msg.email) singUpEmailErrorMsg.value = msg.email;
+        if (msg.password2 || msg.password1) {
+          const passwordError = msg.password2
+            ? msg.password2
+            : msg.password1;
+          singUpPassword1ErrorMsg.value = passwordError as string;
+          singUpPassword2ErrorMsg.value = passwordError as string;
         }
-        // 验证通过
-        resolve("success");
-      }).then(() => {
-        const data = {
-          username: singUpUsername.value,
-          email: singUpEmail.value,
-          password1: singUpPassword1.value,
-          password2: singUpPassword2.value,
-        };
-        postCreateData<IUserSignUpPostMsg, IUserSignUpPostData>(
-          {
-            url: `${store.state.serverHost}/user/signup`,
-            method: "post",
-            data,
-          },
-          true
-        )
-          .then((response) => {
-            // 创建成功
-            showSuccessToast("注册成功");
-            // 跳到对应页面
-            handlerClickLoginBtn();
-            // 设置login账号数据
-            loginAccount.value = response.username ? response.username : "";
-          })
-          .catch((error) => {
-            const msg = error.data as IUserSignUpPostMsg;
-            if (msg.username) singUpUsernameErrorMsg.value = msg.username;
-            if (msg.email) singUpEmailErrorMsg.value = msg.email;
-            if (msg.password2 || msg.password1) {
-              const passwordError = msg.password2
-                ? msg.password2
-                : msg.password1;
-              singUpPassword1ErrorMsg.value = passwordError as string;
-              singUpPassword2ErrorMsg.value = passwordError as string;
-            }
-          });
       });
-    };
-    // ------------------ 登录
-    const loginAccount = ref("");
-    const loginPassword = ref("");
-    const loginAccountErrorMsg = ref(""); // 错误提示ref
-    const loginPasswordErrorMsg = ref(""); // 错误提示ref
-    // 检验
-    const isEmptyLoginAccount = () => {
-      if (!loginAccount.value) {
-        loginAccountErrorMsg.value = "账号不能为空";
-      } else {
-        loginAccountErrorMsg.value = "";
-      }
-    };
-    const isEmptyLoginPassword = () => {
-      if (!loginPassword.value) {
-        loginPasswordErrorMsg.value = "密码不能为空";
-      } else {
-        loginPasswordErrorMsg.value = "";
-      }
-    };
+  });
+};
 
-    const onBlurLoginAccount = () => isEmptyLoginAccount();
-    const onChangeLoginAccount = () => isEmptyLoginAccount();
-    const onBlurLoginPassword = () => isEmptyLoginPassword();
-    const onChangeLoginPassword = () => isEmptyLoginPassword();
-    // ------- 提交登录数据
-    const router = useRouter();
-    const handlerClickLoginSubmitBtn = () => {
-      // 先检验数据
-      new Promise((resolve, reject) => {
-        isEmptyLoginAccount();
-        isEmptyLoginPassword();
+// 检验
+const isEmptyLoginAccount = () => {
+  if (!loginAccount.value) {
+    loginAccountErrorMsg.value = "账号不能为空";
+  } else {
+    loginAccountErrorMsg.value = "";
+  }
+};
+const isEmptyLoginPassword = () => {
+  if (!loginPassword.value) {
+    loginPasswordErrorMsg.value = "密码不能为空";
+  } else {
+    loginPasswordErrorMsg.value = "";
+  }
+};
 
-        if (loginAccountErrorMsg.value || loginPasswordErrorMsg.value) {
-          return;
-        }
-        // 验证通过
-        resolve("success");
-      }).then(() => {
-        const data: IUserLoginPostData = {
-          username: loginAccount.value,
-          password: loginPassword.value,
-        };
-        postCreateData<IUerToken, string>(
-          {
-            url: `${store.state.serverHost}/user/token`,
-            method: "post",
-            data: qs.stringify(data),
-            headers: { "content-type": "application/x-www-form-urlencoded" }, //表单数据
-          },
-          true
-        )
-          .then(({ accessToken, tokenType }) => {
-            // 创建成功
+const onBlurLoginAccount = () => isEmptyLoginAccount();
+const onChangeLoginAccount = () => isEmptyLoginAccount();
+const onBlurLoginPassword = () => isEmptyLoginPassword();
+const onChangeLoginPassword = () => isEmptyLoginPassword();
 
-            // 保存到store
-            store.commit("setToken", { accessToken, tokenType });
-            showSuccessToast("登录成功");
-            // 跳转上一个页面
-            router.go(-1);
-          })
-          .catch((error) => {
-            const msg = error.msg as string;
-            loginAccountErrorMsg.value = msg;
-            loginPasswordErrorMsg.value = msg;
-          });
+// ------- 提交登录数据
+const router = useRouter();
+const handlerClickLoginSubmitBtn = () => {
+  // 先检验数据
+  new Promise((resolve, reject) => {
+    isEmptyLoginAccount();
+    isEmptyLoginPassword();
+
+    if (loginAccountErrorMsg.value || loginPasswordErrorMsg.value) {
+      return;
+    }
+    // 验证通过
+    resolve("success");
+  }).then(() => {
+    const data: IUserLoginPostData = {
+      username: loginAccount.value,
+      password: loginPassword.value,
+    };
+    postCreateData<IUerToken, string>(
+      {
+        url: `${store.state.serverHost}/user/token`,
+        method: "post",
+        data: qs.stringify(data),
+        headers: { "content-type": "application/x-www-form-urlencoded" }, //表单数据
+      },
+      true
+    )
+      .then(({ accessToken, tokenType }) => {
+        // 创建成功
+
+        // 保存到store
+        store.commit("setToken", { accessToken, tokenType });
+        showSuccessToast("登录成功");
+        // 跳转上一个页面
+        router.go(-1);
+      })
+      .catch((error) => {
+        const msg = error.msg as string;
+        loginAccountErrorMsg.value = msg;
+        loginPasswordErrorMsg.value = msg;
       });
-    };
-    return {
-      // 返回的数据
-      containerRef,
-      handlerClickSignupBtn,
-      handlerClickLoginBtn,
-      singUpUsername, // 注册开始
-      singUpEmail,
-      singUpPassword1,
-      singUpPassword2,
-      singUpUsernameErrorMsg,
-      singUpEmailErrorMsg,
-      singUpPassword1ErrorMsg,
-      singUpPassword2ErrorMsg,
-      onBlurSingUpUsername,
-      onChangeSingUpUsername,
-      onBlurSingUpEmail,
-      onChangeSingUpEmail,
-      onBlurSingUpPassword1,
-      onChangeSingUpPassword1,
-      onBlurSingUpPassword2,
-      onChangeSingUpPassword2,
-      handlerClickSignUpSubmitBtn, // 提交
-      loginAccount, // 登录
-      loginPassword,
-      loginAccountErrorMsg,
-      loginPasswordErrorMsg,
-      onBlurLoginAccount, // 检测数据
-      onChangeLoginAccount,
-      onBlurLoginPassword,
-      onChangeLoginPassword,
-      handlerClickLoginSubmitBtn, /// 提交
-      getAssetsFile
-    };
-  },
-});
+  });
+};
 </script>
 
 <style scoped>

@@ -8,24 +8,21 @@
     "
   >
     <template #left>
-      <van-loading color="#1989fa" size="18" v-show="loading" />
-      <div v-show="!loading">
-        <div class="select-mode-tool-wrap" v-if="selectMode">
-          <div class="tool-item" @click.stop="handlerClickCancel">取消</div>
-          <div class="tool-item" @click.stop="handlerClickSelectInverse">
-            反选
-          </div>
-          <div class="tool-item" @click.stop="handlerClickSelectAll">全选</div>
+      <div class="select-mode-tool-wrap" v-if="selectMode">
+        <div class="tool-item" @click.stop="handlerClickCancel">取消</div>
+        <div class="tool-item" @click.stop="handlerClickSelectInverse">
+          反选
         </div>
-        <van-icon
-          v-else
-          Inverse
-          class="iconfont"
-          class-prefix="icon"
-          name="rili"
-          size="16"
-        />
+        <div class="tool-item" @click.stop="handlerClickSelectAll">全选</div>
       </div>
+      <van-icon
+        v-else
+        Inverse
+        class="iconfont"
+        class-prefix="icon"
+        name="rili"
+        size="16"
+      />
     </template>
     <template #right>
       <div v-if="selectMode" class="select-mode-tool-success-review">
@@ -43,18 +40,10 @@
       >
         <template #reference>
           <van-icon
-            v-show="!showPopover"
             size="20"
             class="iconfont"
             class-prefix="icon"
             name="ellipsis-h-solid"
-          />
-          <van-icon
-            v-show="showPopover"
-            size="20"
-            class="iconfont"
-            class-prefix="icon"
-            name="ellipsis-v-solid"
           />
         </template>
       </van-popover>
@@ -75,20 +64,21 @@
     @confirm="handlerConfirmCal"
   />
 
-  <van-list
-    v-model:loading="loading"
-    :finished="finished"
-    @load="getReviewData"
-  >
-    <template #loading></template>
-    <van-empty
-      description="没有需要复习的卡片"
-      :style="{ backgroundColor: '#f4f3f5' }"
-      v-if="!loading && data.length <= 0"
-      class="review_body_empty"
-    />
-    <!-- 复习页面的主体 -->
-    <div class="review_body van-clearfix" v-else>
+  <van-pull-refresh v-model:loading="loading" pulling-text="下拉刷新" @refresh="onRefresh">
+    <van-list
+      v-model:loading="loading"
+      :finished="finished"
+      @load="getReviewData"
+    >
+      <template #loading></template>
+      <van-empty
+        description="没有需要复习的卡片"
+        :style="{ backgroundColor: '#f4f3f5' }"
+        v-if="!loading && data.length <= 0"
+        class="review_body_empty"
+      />
+      <!-- 复习页面的主体 -->
+      <div class="review_body van-clearfix" v-else>
       <van-checkbox-group v-model="checkedCard" ref="checkboxGroupRef">
         <van-cell-group
           inset
@@ -167,6 +157,7 @@
       </van-checkbox-group>
     </div>
   </van-list>
+  </van-pull-refresh>
   <!-- 展示分类筛选的类别 开始 -->
   <van-popup
     v-model:show="showFilterCategory"
@@ -233,9 +224,9 @@
   <!-- 展示分类筛选的类别 结束 -->
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, watch } from "vue";
-import { PopoverAction, showToast, showSuccessToast } from "vant";
+<script setup lang="ts">
+import { ref, watch } from "vue";
+import { PopoverAction, showToast, showSuccessToast, showLoadingToast, closeToast } from "vant";
 import { useWindowSize } from "@vant/use";
 import type { CheckboxInstance, CheckboxGroupInstance } from "vant";
 import { useStore } from "vuex";
@@ -251,411 +242,395 @@ import {
   getReviewCardByDateData,
 } from "@/utils/request";
 
-export default defineComponent({
-  name: "Review",
+const store = useStore();
+const showPopover = ref(false);
+const showCal = ref(false); // 显示日历
+// 弹框选项
 
-  setup() {
-    const store = useStore();
-    const showPopover = ref(false);
-    const showCal = ref(false); // 显示日历
-    // 弹框选项
+const actions = [
+  { text: "今日卡片", icon: " iconfont icon-jinri" },
+  { text: "筛选类别", icon: " iconfont icon-fenlei" },
+  { text: "选择卡片", icon: " iconfont icon-select" },
+];
+// 弹框选项选中回调
+const onSelect = (action: PopoverAction, index: number) => {
+  switch (index) {
+    case 0:
+      showTodayReviewCard(action);
+      break;
+    case 1:
+      filterCardByCategory();
+      break;
+    case 2:
+      handlerClickSelectBtn();
+      break;
+  }
+};
+// ------- 今日卡片
+const showTodayReviewCard = (action: PopoverAction) => {
+  // 初始化状态
+  getReviewDataStatus.hasMore = true;
+  getReviewDataStatus.limit = 10;
+  getReviewDataStatus.offset = 0;
+  data.value = [];
+  if (action.text === "今日卡片") {
+    action.text = "显示全部";
+    action.icon = " iconfont icon-all";
+    getReviewDataStatus.date = dayjs().format("YYYY-MM-DD");
+    // 只修改日期
+    // 在getReviewData中获取数据
+    getReviewData();
+  } else {
+    status.hasMore = true;
+    status.limit = 10;
+    status.offset = 0;
 
-    const actions = [
-      { text: "今日卡片", icon: " iconfont icon-jinri" },
-      { text: "筛选类别", icon: " iconfont icon-fenlei" },
-      { text: "选择卡片", icon: " iconfont icon-select" },
-    ];
-    // 弹框选项选中回调
-    const onSelect = (action: PopoverAction, index: number) => {
-      switch (index) {
-        case 0:
-          showTodayReviewCard(action);
-          break;
-        case 1:
-          filterCardByCategory();
-          break;
-        case 2:
-          handlerClickSelectBtn();
-          break;
-      }
-    };
-    // ------- 今日卡片
-    const showTodayReviewCard = (action: PopoverAction) => {
-      // 初始化状态
-      getReviewDataStatus.hasMore = true;
-      getReviewDataStatus.limit = 10;
-      getReviewDataStatus.offset = 0;
-      data.value = [];
-      if (action.text === "今日卡片") {
-        action.text = "显示全部";
-        action.icon = " iconfont icon-all";
-        getReviewDataStatus.date = dayjs().format("YYYY-MM-DD");
-        // 只修改日期
-        // 在getReviewData中获取数据
-        getReviewData();
-      } else {
-        status.hasMore = true;
-        status.limit = 10;
-        status.offset = 0;
+    action.text = "今日卡片";
+    action.icon = " iconfont icon-jinri";
+    getReviewData();
+  }
+};
 
-        action.text = "今日卡片";
-        action.icon = " iconfont icon-jinri";
-        getReviewData();
-      }
-    };
+let getReviewDataStatus = {
+  method: "GET" as Method,
+  limit: 10,
+  offset: 0,
+  hasMore: true,
+  date: "",
+};
+const getReviewCardByDateConfig = {
+  url: `${store.state.serverHost}/review/date`,
+};
 
-    let getReviewDataStatus = {
-      method: "GET" as Method,
-      limit: 10,
-      offset: 0,
-      hasMore: true,
-      date: "",
-    };
-    const getReviewCardByDateConfig = {
-      url: `${store.state.serverHost}/review/date`,
-    };
-
-    // ------- 根据日期查询卡片
-    const getReviewCardByDate = () => {
-      loading.value = true;
-      getReviewCardByDateData<ICard>(
-        getReviewDataStatus,
-        getReviewCardByDateConfig,
-        false
-      ).then((response) => {
-        data.value = [...data.value, ...response];
-        loading.value = false;
-        if (!getReviewDataStatus.hasMore) {
-          finished.value = true;
-        }
-      });
-    };
-
-    // ----------- 筛选类别
-
-    const filterCategoryLoading = ref(false);
-
-    let filterCategoryStatus = {
-      method: "GET" as Method,
-      limit: 10,
-      offset: 0,
-      hasMore: true,
-    };
-    const showFilterCategory = ref(false);
-
-    const filterCategoryData = ref<ICategory[]>([]);
-    const getFilterCategoryData = () => {
-      // 获取类别信息
-
-      filterCategoryLoading.value = true;
-      getDataOfPage<ICategory>(
-        filterCategoryStatus,
-        { url: `${store.state.serverHost}/review/category` },
-        false
-      ).then((response) => {
-        filterCategoryData.value = [...filterCategoryData.value, ...response];
-        filterCategoryLoading.value = false;
-      });
-    };
-    const filterCardByCategory = () => {
-      // 显示 popup
-      showFilterCategory.value = true;
-      // if (!filterCategoryStatus.hasMore) return;
-      // 1. 获取要复习卡片的类别
-      // getFilterCategoryData();
-      // 2. 展示类别 -> template
-      // 3. 点击类别跳转到指定类别 -> @click
-    };
-    // 修改status
-    const handlerClickFilterCategory = (cid: number) => {
-      if (status.category && status.category === cid) {
-        status.category = 0;
-      } else {
-        status.category = cid;
-      }
-      // 重置数据
-      data.value = [];
-      status.limit = 10;
-      status.offset = 0;
-      status.hasMore = true;
-      finished.value = false;
-      getReviewData();
-
-      //  隐藏 popup
-      showFilterCategory.value = false;
-    };
-    // --------- 选择卡片 开始
-    const selectMode = ref(false); // 是否为选择模式
-    let hasMoreBak: boolean; // 备份是否还有下一页, 原数据将会被修改
-    const handlerClickSelectBtn = () => {
-      selectMode.value = true;
-      // 默认的宽度会将CheckBox挤到外部
-      // 需要重新设置宽度
-      // --- copy from resetFiledWidth
-      const field = document.querySelector(".van-swipe-cell") as HTMLElement;
-      if (!field) return;
-      const { width: fieldWidth } = field.getBoundingClientRect();
-
-      const contentItem = document.querySelectorAll(
-        ".review_body .content_item"
-      );
-      const titleNodes = document.querySelectorAll(".review_body .item-title");
-      const categoryNodes = document.querySelectorAll(
-        ".review_body .item-category"
-      );
-
-      contentItem.forEach((titleNode) => {
-        const ele = titleNode as HTMLElement;
-        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 30) + "px";
-      });
-      titleNodes.forEach((titleNode) => {
-        const ele = titleNode as HTMLElement;
-        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 40) + "px";
-      });
-      categoryNodes.forEach((titleNode) => {
-        const ele = titleNode as HTMLElement;
-        // 120px=时间宽度
-        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 40 - 120) + "px";
-      });
-      // 禁止, 触底获取数据
-      // 免得, 新获取的数据与原来的数据样式不一样
-      // finished也要修改, 防止多一次触底
-      hasMoreBak = status.hasMore;
-      status.hasMore = false;
+// ------- 根据日期查询卡片
+const getReviewCardByDate = () => {
+  loading.value = true;
+  showLoadingToast({
+    message: "加载中...",
+    forbidClick: true,
+    loadingType: "spinner",
+    duration: 0,
+  });
+  getReviewCardByDateData<ICard>(
+    getReviewDataStatus,
+    getReviewCardByDateConfig,
+    false
+  ).then((response) => {
+    data.value = [...data.value, ...response];
+    loading.value = false;
+    closeToast();
+    if (!getReviewDataStatus.hasMore) {
       finished.value = true;
-    };
-    // 复选框
-    const checkedCard = ref<number[]>([]);
-    const checkboxRefs = ref<CheckboxInstance[]>([]);
-    const checkboxGroupRef = ref<CheckboxGroupInstance>();
-    // 点击卡片切换
-    const toggleCardCheckboxStatus = (index: number) => {
-      if (checkboxRefs.value) {
-        checkboxRefs.value[index].toggle();
+    }
+  });
+};
+
+// ----------- 筛选类别
+
+const filterCategoryLoading = ref(false);
+
+let filterCategoryStatus = {
+  method: "GET" as Method,
+  limit: 10,
+  offset: 0,
+  hasMore: true,
+};
+const showFilterCategory = ref(false);
+
+const filterCategoryData = ref<ICategory[]>([]);
+const getFilterCategoryData = () => {
+  // 获取类别信息
+
+  filterCategoryLoading.value = true;
+  getDataOfPage<ICategory>(
+    filterCategoryStatus,
+    { url: `${store.state.serverHost}/review/category` },
+    false
+  ).then((response) => {
+    filterCategoryData.value = [...filterCategoryData.value, ...response];
+    filterCategoryLoading.value = false;
+  });
+};
+const filterCardByCategory = () => {
+  // 显示 popup
+  showFilterCategory.value = true;
+  // if (!filterCategoryStatus.hasMore) return;
+  // 1. 获取要复习卡片的类别
+  // getFilterCategoryData();
+  // 2. 展示类别 -> template
+  // 3. 点击类别跳转到指定类别 -> @click
+};
+// 修改status
+const handlerClickFilterCategory = (cid: number) => {
+  if (status.category && status.category === cid) {
+    status.category = 0;
+  } else {
+    status.category = cid;
+  }
+  // 重置数据
+  data.value = [];
+  status.limit = 10;
+  status.offset = 0;
+  status.hasMore = true;
+  finished.value = false;
+  getReviewData();
+
+  //  隐藏 popup
+  showFilterCategory.value = false;
+};
+// --------- 选择卡片 开始
+const selectMode = ref(false); // 是否为选择模式
+let hasMoreBak: boolean; // 备份是否还有下一页, 原数据将会被修改
+const handlerClickSelectBtn = () => {
+  selectMode.value = true;
+  // 默认的宽度会将CheckBox挤到外部
+  // 需要重新设置宽度
+  // --- copy from resetFiledWidth
+  const field = document.querySelector(".van-swipe-cell") as HTMLElement;
+  if (!field) return;
+  const { width: fieldWidth } = field.getBoundingClientRect();
+
+  const contentItem = document.querySelectorAll(
+    ".review_body .content_item"
+  );
+  const titleNodes = document.querySelectorAll(".review_body .item-title");
+  const categoryNodes = document.querySelectorAll(
+    ".review_body .item-category"
+  );
+
+  contentItem.forEach((titleNode) => {
+    const ele = titleNode as HTMLElement;
+    ele.style.width = String(fieldWidth - 30 - 24 - 15 - 30) + "px";
+  });
+  titleNodes.forEach((titleNode) => {
+    const ele = titleNode as HTMLElement;
+    ele.style.width = String(fieldWidth - 30 - 24 - 15 - 40) + "px";
+  });
+  categoryNodes.forEach((titleNode) => {
+    const ele = titleNode as HTMLElement;
+    // 120px=时间宽度
+    ele.style.width = String(fieldWidth - 30 - 24 - 15 - 40 - 120) + "px";
+  });
+  // 禁止, 触底获取数据
+  // 免得, 新获取的数据与原来的数据样式不一样
+  // finished也要修改, 防止多一次触底
+  hasMoreBak = status.hasMore;
+  status.hasMore = false;
+  finished.value = true;
+};
+// 复选框
+const checkedCard = ref<number[]>([]);
+const checkboxRefs = ref<CheckboxInstance[]>([]);
+const checkboxGroupRef = ref<CheckboxGroupInstance>();
+// 点击卡片切换
+const toggleCardCheckboxStatus = (index: number) => {
+  if (checkboxRefs.value) {
+    checkboxRefs.value[index].toggle();
+  }
+};
+// 取消
+const handlerClickCancel = () => {
+  selectMode.value = false;
+  // 恢复宽度
+  resetFiledWidth();
+  // 恢复hasMore
+  status.hasMore = hasMoreBak;
+  finished.value = !status.hasMore;
+  // 全部取消选择
+  if (checkboxGroupRef.value) {
+    checkboxGroupRef.value.toggleAll(false);
+  }
+};
+// 反选
+const handlerClickSelectInverse = () => {
+  if (checkboxGroupRef.value) {
+    checkboxGroupRef.value.toggleAll();
+  }
+};
+// 全选
+const handlerClickSelectAll = () => {
+  if (checkboxGroupRef.value) {
+    checkboxGroupRef.value.toggleAll(true);
+  }
+};
+// 批量完成复习
+const handlerClickSuccessReview = () => {
+  if (!checkedCard.value || checkedCard.value.length <= 0) {
+    // 提示先选择
+    showToast("请先选择卡片");
+    return;
+  }
+  const postConfig = {
+    method: "post" as Method,
+    url: `${store.state.serverHost}/review/batch-review`,
+    data: {
+      cards: checkedCard.value,
+    },
+  };
+
+  postCreateData<null, IBatchPostCardData>(postConfig, false).then(() => {
+    // 提示
+    showSuccessToast("已批量复习");
+    // 删除选中
+    const shouldDeleteCount = checkedCard.value.length;
+    let currentDeleteCount = 0;
+    // 需要倒序遍历, 否则后面元素将往前移动
+
+    for (let index = data.value.length - 1; index >= 0; index--) {
+      const item = data.value[index];
+      if (checkedCard.value.includes(item.id)) {
+        // 符合要求, 删除
+        data.value.splice(index, 1);
+        currentDeleteCount += 1;
+
+        // 检测是否已经判断完了
+        if (currentDeleteCount === shouldDeleteCount) break;
       }
-    };
-    // 取消
-    const handlerClickCancel = () => {
-      selectMode.value = false;
-      // 恢复宽度
-      resetFiledWidth();
-      // 恢复hasMore
-      status.hasMore = hasMoreBak;
-      finished.value = !status.hasMore;
-      // 全部取消选择
-      if (checkboxGroupRef.value) {
-        checkboxGroupRef.value.toggleAll(false);
+    }
+    // 关闭选择模式
+    handlerClickCancel();
+  });
+};
+
+// --------- 选择卡片 结束
+
+// ------- 滑动-完成复习
+const handlerSuccessBtn = (cid: number) => {
+  const postConfig = {
+    method: "post" as Method,
+    url: `${store.state.serverHost}/review/${cid}`,
+  };
+
+  postCreateData<null, null>(postConfig, false).then(() => {
+    // 提示
+    showSuccessToast("已跳过");
+    // 移除
+    for (let index in data.value) {
+      // index 为string
+      const numIndex = Number(index);
+      if (data.value[numIndex].id === cid) {
+        data.value.splice(numIndex, 1);
+        break;
       }
-    };
-    // 反选
-    const handlerClickSelectInverse = () => {
-      if (checkboxGroupRef.value) {
-        checkboxGroupRef.value.toggleAll();
-      }
-    };
-    // 全选
-    const handlerClickSelectAll = () => {
-      if (checkboxGroupRef.value) {
-        checkboxGroupRef.value.toggleAll(true);
-      }
-    };
-    // 批量完成复习
-    const handlerClickSuccessReview = () => {
-      if (!checkedCard.value || checkedCard.value.length <= 0) {
-        // 提示先选择
-        showToast("请先选择卡片");
-        return;
-      }
-      const postConfig = {
-        method: "post" as Method,
-        url: `${store.state.serverHost}/review/batch-review`,
-        data: {
-          cards: checkedCard.value,
-        },
-      };
+    }
+  });
+};
+const router = useRouter();
+const handlerEditBtn = (cid: number) => {
+  router.push({ name: "editorCard", params: { cid } });
+};
+// ---- 点击日历回调
+const handlerConfirmCal = (value: Date) => {
+  showCal.value = false;
+  // 修改配置
+  // 初始化状态
+  getReviewDataStatus.hasMore = true;
+  getReviewDataStatus.limit = 10;
+  getReviewDataStatus.offset = 0;
+  getReviewDataStatus.date = dayjs(value).format("YYYY-MM-DD");
+  data.value = [];
+  actions[0].text = "显示全部";
+  actions[0].icon = " iconfont icon-all";
+  finished.value = false;
+  getReviewData();
+};
+// ----------------------- 获取复习卡片
+const loading = ref(false);
+const finished = ref(false);
+const data = ref<ICard[]>([]);
+let status = {
+  method: "GET" as Method,
+  limit: 10,
+  offset: 0,
+  hasMore: true,
+  category: 0,
+};
+const config = {
+  url: `${store.state.serverHost}/review/`,
+};
 
-      postCreateData<null, IBatchPostCardData>(postConfig, false).then(() => {
-        // 提示
-        showSuccessToast("已批量复习");
-        // 删除选中
-        const shouldDeleteCount = checkedCard.value.length;
-        let currentDeleteCount = 0;
-        // 需要倒序遍历, 否则后面元素将往前移动
-
-        for (let index = data.value.length - 1; index >= 0; index--) {
-          const item = data.value[index];
-          if (checkedCard.value.includes(item.id)) {
-            // 符合要求, 删除
-            data.value.splice(index, 1);
-            currentDeleteCount += 1;
-
-            // 检测是否已经判断完了
-            if (currentDeleteCount === shouldDeleteCount) break;
-          }
-        }
-        // 关闭选择模式
-        handlerClickCancel();
-      });
-    };
-
-    // --------- 选择卡片 结束
-
-    // ------- 滑动-完成复习
-    const handlerSuccessBtn = (cid: number) => {
-      const postConfig = {
-        method: "post" as Method,
-        url: `${store.state.serverHost}/review/${cid}`,
-      };
-
-      postCreateData<null, null>(postConfig, false).then(() => {
-        // 提示
-        showSuccessToast("已跳过");
-        // 移除
-        for (let index in data.value) {
-          // index 为string
-          const numIndex = Number(index);
-          if (data.value[numIndex].id === cid) {
-            data.value.splice(numIndex, 1);
-            break;
-          }
-        }
-      });
-    };
-    const router = useRouter();
-    const handlerEditBtn = (cid: number) => {
-      router.push({ name: "editorCard", params: { cid } });
-    };
-    // ---- 点击日历回调
-    const handlerConfirmCal = (value: Date) => {
-      showCal.value = false;
-      // 修改配置
-      // 初始化状态
-      getReviewDataStatus.hasMore = true;
-      getReviewDataStatus.limit = 10;
-      getReviewDataStatus.offset = 0;
-      getReviewDataStatus.date = dayjs(value).format("YYYY-MM-DD");
-      data.value = [];
-      actions[0].text = "显示全部";
-      actions[0].icon = " iconfont icon-all";
-      finished.value = false;
-      getReviewData();
-    };
-    // ----------------------- 获取复习卡片
-    const loading = ref(false);
-    const data = ref<ICard[]>([]);
-    const finished = ref(false);
-    let status = {
-      method: "GET" as Method,
-      limit: 10,
-      offset: 0,
-      hasMore: true,
-      category: 0,
-    };
-    const config = {
-      url: `${store.state.serverHost}/review/`,
-    };
-
-    const getReviewData = () => {
-      // 1. 判断是否为根据日期查看
-      // 2. 直接获取, 日期在其他函数中获取
-      finished.value = false;
-      if (actions[0].text === "今日卡片") {
-        loading.value = true;
-        getReviewDataOfPage<ICard>(status, config, false).then((response) => {
-          data.value = [...data.value, ...response];
-          loading.value = false;
-          // 判断是否完成
-          if (!status.hasMore) {
-            finished.value = true;
-          }
-        });
-      } else {
-        getReviewCardByDate();
-      }
-    };
-    // ----------------------- 限制category和title的width
-    const resetFiledWidth = () => {
-      const field = document.querySelector(".van-swipe-cell") as HTMLElement;
-      if (!field) return;
-      const { width: fieldWidth } = field.getBoundingClientRect();
-
-      const contentItem = document.querySelectorAll(
-        ".review_body .content_item"
-      );
-      const titleNodes = document.querySelectorAll(".review_body  .item-title");
-      const categoryNodes = document.querySelectorAll(
-        ".review_body .item-category"
-      );
-      // 30 - 24 - 15
-      // 代表 图标的两边margin - 图标大小 - 右边的空白
-      contentItem.forEach((titleNode) => {
-        const ele = titleNode as HTMLElement;
-        ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
-      });
-      titleNodes.forEach((titleNode) => {
-        const ele = titleNode as HTMLElement;
-        ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
-      });
-      categoryNodes.forEach((titleNode) => {
-        const ele = titleNode as HTMLElement;
-        // 120px 是时间宽度
-        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 120) + "px";
-      });
-    };
-
-    const { width, height } = useWindowSize();
-    // 窗口大小改变时
-    watch([width, height], () => {
-      // 选择模式下, 不应该重新设置宽度
-      if (selectMode.value) return;
-      resetFiledWidth();
+const getReviewData = () => {
+  finished.value = false;
+  if (actions[0].text === "今日卡片") {
+    loading.value = true;
+    showLoadingToast({
+      message: "加载中...",
+      forbidClick: true,
+      loadingType: "spinner",
+      duration: 0,
     });
-    // 有新数据时
-    watch([data], () => {
-      // 选择模式下, 不应该重新设置宽度
-
-      if (selectMode.value) return;
-      resetFiledWidth();
+    getReviewDataOfPage<ICard>(status, config, false).then((response) => {
+      data.value = [...data.value, ...response];
+      loading.value = false;
+      closeToast();
+      if (!status.hasMore) {
+        finished.value = true;
+      }
     });
+  } else {
+    getReviewCardByDate();
+  }
+};
 
-    // ---------- 点击跳转到复习页面
-    const handlerClickReviewBody = (cid: number) => {
-      router.push({ name: "CardReview", query: { cid } });
-    };
+// 下拉刷新
+const onRefresh = () => {
+  data.value = [];
+  finished.value = false;
+  status.hasMore = true;
+  status.limit = 10;
+  status.offset = 0;
+  getReviewData();
+};
 
-    return {
-      loading,
-      status,
-      finished,
-      getReviewData,
-      data,
-      handlerSuccessBtn,
-      handlerEditBtn,
-      showPopover,
-      showCal,
-      onSelect,
-      actions,
-      handlerConfirmCal,
-      handlerClickReviewBody,
-      checkedCard,
-      checkboxRefs,
-      checkboxGroupRef,
-      selectMode,
-      toggleCardCheckboxStatus,
-      handlerClickCancel,
-      handlerClickSelectInverse,
-      handlerClickSelectAll,
-      handlerClickSuccessReview,
-      showFilterCategory, // 分类筛选
-      filterCategoryData,
-      handlerClickFilterCategory,
-      filterCategoryLoading,
-      filterCategoryStatus,
-      getFilterCategoryData,
-      useCurrentCardPlan, // 展示复习
-    };
-  },
+// ----------------------- 限制category和title的width
+const resetFiledWidth = () => {
+  const field = document.querySelector(".van-swipe-cell") as HTMLElement;
+  if (!field) return;
+  const { width: fieldWidth } = field.getBoundingClientRect();
+
+  const contentItem = document.querySelectorAll(
+    ".review_body .content_item"
+  );
+  const titleNodes = document.querySelectorAll(".review_body  .item-title");
+  const categoryNodes = document.querySelectorAll(
+    ".review_body .item-category"
+  );
+  // 30 - 24 - 15
+  // 代表 图标的两边margin - 图标大小 - 右边的空白
+  contentItem.forEach((titleNode) => {
+    const ele = titleNode as HTMLElement;
+    ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
+  });
+  titleNodes.forEach((titleNode) => {
+    const ele = titleNode as HTMLElement;
+    ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
+  });
+  categoryNodes.forEach((titleNode) => {
+    const ele = titleNode as HTMLElement;
+    // 120px 是时间宽度
+    ele.style.width = String(fieldWidth - 30 - 24 - 15 - 120) + "px";
+  });
+};
+
+const { width, height } = useWindowSize();
+// 窗口大小改变时
+watch([width, height], () => {
+  // 选择模式下, 不应该重新设置宽度
+  if (selectMode.value) return;
+  resetFiledWidth();
 });
+// 有新数据时
+watch([data], () => {
+  // 选择模式下, 不应该重新设置宽度
+
+  if (selectMode.value) return;
+  resetFiledWidth();
+});
+
+// ---------- 点击跳转到复习页面
+const handlerClickReviewBody = (cid: number) => {
+  router.push({ name: "CardReview", query: { cid } });
+};
 </script>
 
 <style lang="scss">

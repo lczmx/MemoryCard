@@ -67,150 +67,127 @@
   <div class="chart-wrap-bkg"></div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, onMounted } from "vue";
+<script setup lang="ts">
+import { defineProps, ref, onMounted } from "vue";
 import dayjs from "dayjs";
 dayjs.locale("zh-cn");
 import { Line } from "@antv/g2plot";
-import { IAnalyseData, IAnalysePostData } from "@/types";
-import { postCreateData } from "@/utils/request";
+import { IAnalyseData, IAnalysePostData } from "../types";
+import { postCreateData } from "../utils/request";
 import { Method } from "axios";
 import { Toast } from "vant";
 import { useStore } from "vuex";
-export default defineComponent({
-  name: "AnalyseChart",
-  props: {
-    url: {
-      type: String,
-      required: true,
+
+const props = defineProps<{
+  url: string;
+  title: string;
+}>();
+
+// ----- 设置标题
+const store = useStore();
+store.commit("changeSettingsPageTitle", props.title);
+
+const data = ref<IAnalyseData[]>();
+// 获取数据:
+const getAnalyseData = () => {
+  if (!showDateStart.value || !showDateEnd.value) {
+    Toast.fail("非法时间格式");
+    return;
+  }
+  const config = {
+    method: "post" as Method,
+    url: props.url,
+    data: {
+      startDate: showDateStart.value,
+      endDate: showDateEnd.value,
     },
-    title: {
-      type: String,
-      required: true,
+  };
+
+  postCreateData<IAnalyseData[], IAnalysePostData>(config, true).then(
+    (response) => {
+      data.value = response;
+      // 渲染
+      if (!line) initChart();
+      changeData();
+    }
+  );
+};
+// -- 更新数据
+const changeData = () => {
+  if (!data.value) return;
+  line.changeData(data.value);
+};
+// ---------- 创建line实例
+let line: Line;
+const loadingChart = ref(true); // 加载line实例中
+const initChart = () => {
+  line = new Line("container", {
+    data: [], // 后面才指定
+    xField: "date",
+    yField: "count",
+    xAxis: {
+      range: [0, 1],
+      tickCount: 5,
     },
-  },
-  setup(props) {
-    // ----- 设置标题
-    const store = useStore();
-    store.commit("changeSettingsPageTitle", props.title);
+    smooth: true,
+  });
+  line.render();
+  loadingChart.value = false;
+};
+// 初始化开始-截止时间
+const showDateStart = ref<string>();
+const showDateEnd = ref<string>();
 
-    const data = ref<IAnalyseData[]>();
-    // 获取数据:
-    const getAnalyseData = () => {
-      if (!showDateStart.value || !showDateEnd.value) {
-        Toast.fail("非法时间格式");
-        return;
-      }
-      const config = {
-        method: "post" as Method,
-        url: props.url,
-        data: {
-          startDate: showDateStart.value,
-          endDate: showDateEnd.value,
-        },
-      };
+const now = dayjs(); // 目前
+const beforeYear = now.subtract(1, "year");
+const initDate = (value = 7, unit = "day") => {
+  const before = now.subtract(value, unit);
+  showDateStart.value = before.format("YYYY-MM-DD");
+  showDateEnd.value = now.format("YYYY-MM-DD");
+};
+// -------- 日历选择
 
-      postCreateData<IAnalyseData[], IAnalysePostData>(config, true).then(
-        (response) => {
-          data.value = response;
-          // 渲染
-          if (!line) initChart();
-          changeData();
-        }
-      );
-    };
-    // -- 更新数据
-    const changeData = () => {
-      if (!data.value) return;
-      line.changeData(data.value);
-    };
-    // ---------- 创建line实例
-    let line: Line;
-    const loadingChart = ref(true); // 加载line实例中
-    const initChart = () => {
-      line = new Line("container", {
-        data: [], // 后面才指定
-        xField: "date",
-        yField: "count",
-        xAxis: {
-          range: [0, 1],
-          tickCount: 5,
-        },
-        smooth: true,
-      });
-      line.render();
-      loadingChart.value = false;
-    };
-    // 初始化开始-截止时间
-    const showDateStart = ref<string>();
-    const showDateEnd = ref<string>();
-
-    const now = dayjs(); // 目前
-    const beforeYear = now.subtract(1, "year");
-    const initDate = (value = 7, unit = "day") => {
-      const before = now.subtract(value, unit);
-      showDateStart.value = before.format("YYYY-MM-DD");
-      showDateEnd.value = now.format("YYYY-MM-DD");
-    };
-    // -------- 日历选择
-
-    const showCalendar = ref(false);
-    const onConfirmCalendar = (values: Date[]) => {
-      showCalendar.value = false;
-      const [start, end] = values;
-      showDateStart.value = dayjs(start).format("YYYY-MM-DD");
-      showDateEnd.value = dayjs(end).format("YYYY-MM-DD");
+const showCalendar = ref(false);
+const onConfirmCalendar = (values: Date[]) => {
+  showCalendar.value = false;
+  const [start, end] = values;
+  showDateStart.value = dayjs(start).format("YYYY-MM-DD");
+  showDateEnd.value = dayjs(end).format("YYYY-MM-DD");
+  getAnalyseData();
+};
+// ------- 时间选择 btn组
+const activeDateIndex = ref(0);
+const handlerClickDateBtn = (index: number) => {
+  switch (index) {
+    case 0:
+      initDate(7, "day");
       getAnalyseData();
-    };
-    // ------- 时间选择 btn组
-    const activeDateIndex = ref(0);
-    const handlerClickDateBtn = (index: number) => {
-      switch (index) {
-        case 0:
-          initDate(7, "day");
-          getAnalyseData();
-          break;
-        case 1:
-          initDate(1, "month");
-          getAnalyseData();
-          break;
-        case 2:
-          initDate(6, "month");
-          getAnalyseData();
-          break;
-        case 3:
-          initDate(1, "year");
-          getAnalyseData();
-          break;
-      }
-      activeDateIndex.value = index;
-    };
-    // ------ 防止多次生成line实例
-    const lineContainer = ref<HTMLElement>();
-    const emptyLineContainer = () => {
-      if (!lineContainer.value) return;
-      lineContainer.value.innerHTML = ""; // 清空
-    };
-    onMounted(() => {
-      emptyLineContainer();
-      initDate();
+      break;
+    case 1:
+      initDate(1, "month");
       getAnalyseData();
-    });
-    // ------- 修改日期时 重新获取数据
-    return {
-      now,
-      beforeYear,
-      showDateStart,
-      showDateEnd,
-      showCalendar,
-      onConfirmCalendar,
-      activeDateIndex,
-      handlerClickDateBtn,
-      loadingChart,
-      dayjs,
-      lineContainer,
-    };
-  },
+      break;
+    case 2:
+      initDate(6, "month");
+      getAnalyseData();
+      break;
+    case 3:
+      initDate(1, "year");
+      getAnalyseData();
+      break;
+  }
+  activeDateIndex.value = index;
+};
+// ------ 防止多次生成line实例
+const lineContainer = ref<HTMLElement>();
+const emptyLineContainer = () => {
+  if (!lineContainer.value) return;
+  lineContainer.value.innerHTML = ""; // 清空
+};
+onMounted(() => {
+  emptyLineContainer();
+  initDate();
+  getAnalyseData();
 });
 </script>
 

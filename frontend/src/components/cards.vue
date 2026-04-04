@@ -2,7 +2,6 @@
   <van-nav-bar
     :title="selectMode ? '' : '卡片'"
     :fixed="true"
-    @click-left="() => (selectMode ? (selectMode = true) : reload())"
     @click-right="() => (selectMode ? (selectMode = true) : more())"
   >
     <!-- 根据selectMode和判断不同的执行方式 -->
@@ -14,17 +13,6 @@
         </div>
         <div class="tool-item" @click.stop="handlerClickSelectAll">全选</div>
       </div>
-      <van-icon
-        v-else
-        size="20"
-        v-show="!loading"
-        class="iconfont"
-        class-prefix="icon"
-        name="reload"
-        color="#1989fa"
-      />
-
-      <van-loading color="#1989fa" size="20" v-show="loading" />
     </template>
     <template #right>
       <div class="select-mode-right-tool-wrap" v-if="selectMode">
@@ -53,43 +41,36 @@
       >
         <template #reference>
           <van-icon
-            v-show="!showPopover"
             size="20"
             class="iconfont"
             class-prefix="icon"
             name="ellipsis-h-solid"
           />
-          <van-icon
-            v-show="showPopover"
-            size="20"
-            class="iconfont"
-            class-prefix="icon"
-            name="ellipsis-v-solid"
-          />
         </template>
       </van-popover>
     </template>
   </van-nav-bar>
-  <van-list
-    v-model:loading="loading"
-    :finished="!status.hasMore"
-    @load="getCardData"
-  >
-    <template #loading></template>
-    <van-empty
-      description="请先添加卡片"
-      :style="{ backgroundColor: '#f4f3f5' }"
-      v-if="!loading && data.length <= 0"
-      class="cards_body_empty"
-    />
-    <!-- 全部卡片 主体 -->
-    <div
-      v-else
-      class="cards_body van-clearfix"
-      v-touch:swipe.bottom="handlerShowAddCardBtn"
-      v-touch:swipe.top="handlerHideAddCardBtn"
+
+  <van-pull-refresh v-model:loading="loading" pulling-text="下拉刷新" @refresh="onRefresh">
+    <van-list
+      v-model:loading="loading"
+      :finished="finished"
+      @load="getCardData"
     >
-      <div class="data_wrap">
+      <template #loading> </template>
+      <van-empty
+        description="请先添加卡片"
+        :style="{ backgroundColor: '#f4f3f5' }"
+        v-if="!loading && data.length <= 0"
+        class="cards_body_empty"
+      />
+      <!-- 卡片主体 -->
+      <div
+        v-else
+        class="cards_body van-clearfix"
+        v-touch:swipe.bottom="handlerShowAddCardBtn"
+        v-touch:swipe.top="handlerHideAddCardBtn"
+      >
         <van-checkbox-group v-model="checkedCard" ref="checkboxGroupRef">
           <van-cell-group
             inset
@@ -106,7 +87,6 @@
                 label-class="content_date"
               >
                 <template #icon>
-                  <!-- 使用iconfont -->
                   <i
                     :class="`left-icon iconfont ${item.category.icon}`"
                     :style="{ 'font-size': '24px', color: item.category.color }"
@@ -137,7 +117,6 @@
                 </template>
               </van-cell>
               <template #right>
-                <!-- 右边滑动区域 -->
                 <div class="swipe_right_wrap">
                   <van-button
                     class="swipe_right_btn"
@@ -146,7 +125,6 @@
                     round
                     :block="true"
                     @click="handlerEditBtn(item.id)"
-                    :cid="item.id"
                   />
                   <van-button
                     class="swipe_right_btn"
@@ -155,7 +133,6 @@
                     round
                     :block="true"
                     @click="handlerDeleteBtn(item.id)"
-                    :cid="item.id"
                   />
                   <van-button
                     color="#f08300"
@@ -183,7 +160,6 @@
                       />
                     </template>
                   </van-button>
-                  <!-- 重置按钮 -->
                   <van-button
                     class="swipe_right_btn"
                     icon="replay"
@@ -200,10 +176,10 @@
           </van-cell-group>
         </van-checkbox-group>
       </div>
-    </div>
-  </van-list>
+    </van-list>
+  </van-pull-refresh>
+
   <!-- 添加卡片的btn -->
-  <!-- 上滑进入 -->
   <transition name="van-slide-up">
     <div class="addCardBtnWrap" v-show="showAddCardBtnState">
       <van-button
@@ -215,6 +191,7 @@
       ></van-button>
     </div>
   </transition>
+
   <!-- 排序选项 动作面板 -->
   <van-action-sheet
     v-model:show="showSortActionSheet"
@@ -226,7 +203,6 @@
   >
     <template #action="{ action }">
       <van-cell :title="action.name" :style="{ margin: 0, padding: 0 }">
-        <!-- 使用 right-icon 插槽来自定义右侧图标 -->
         <template #right-icon>
           <van-icon
             :color="action.active ? '#1989fa' : ''"
@@ -241,10 +217,10 @@
   </van-action-sheet>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { defineComponent, ref, watch } from "vue";
 import { useStore } from "vuex";
-import { PopoverAction, showToast, showSuccessToast, showConfirmDialog } from "vant";
+import { PopoverAction, showToast, showSuccessToast, showConfirmDialog, showLoadingToast, closeToast } from "vant";
 import type {
   CheckboxInstance,
   CheckboxGroupInstance,
@@ -256,515 +232,492 @@ import { getDataOfPage, postCreateData, deleteData } from "@/utils/request";
 import ShowPlan from "@/components/showPlan.vue";
 import { Method } from "axios";
 import { useRouter } from "vue-router";
-export default defineComponent({
-  name: "Cards",
-  components: { ShowPlan },
-  setup() {
-    const data = ref<ICard[]>([]);
-    const showPopover = ref(false);
-    // 弹框选项
-    const actions = [
-      { text: "排序", icon: " iconfont icon-sorting" },
-      { text: "只看星标", icon: " iconfont icon-star" },
-      { text: "选择卡片", icon: " iconfont icon-select" },
-    ];
-    // ------ 弹框选项选中回调
-    const onSelect = (action: PopoverAction, index: number) => {
-      switch (index) {
-        case 0:
-          // 直接打开排序动作面板
-          showSortActionSheet.value = true;
-          break;
-        case 1:
-          onlyShowStarCard(action);
-          break;
-        case 2:
-          handlerClickSelectBtn();
-          break;
+
+const data = ref<ICard[]>([]);
+const showPopover = ref(false);
+// 弹框选项
+const actions = [
+  { text: "排序", icon: " iconfont icon-sorting" },
+  { text: "只看星标", icon: " iconfont icon-star" },
+  { text: "选择卡片", icon: " iconfont icon-select" },
+];
+// ------ 弹框选项选中回调
+const onSelect = (action: PopoverAction, index: number) => {
+  switch (index) {
+    case 0:
+      // 直接打开排序动作面板
+      showSortActionSheet.value = true;
+      break;
+    case 1:
+      onlyShowStarCard(action);
+      break;
+    case 2:
+      handlerClickSelectBtn();
+      break;
+  }
+  console.log(action, index);
+};
+// ------------- 只看星标
+let dataBak: ICard[]; // 用于备份
+const onlyShowStarCard = (action: PopoverAction) => {
+  if (action.text === "只看星标") {
+    // 1. 查看是否有下一页, 继续获取
+    // 2. 备份
+    // 3 . 修改选项内容
+
+    actions[1].text = "显示全部";
+
+    if (status.hasMore) {
+      // 假如还有的话, 需要继续获取星标, 因为 星标数据不是全部的
+      // 内部函数将备份dataBak
+      dataBak = [];
+      reload();
+    } else {
+      dataBak = data.value as ICard[];
+      data.value = data.value.filter((value) => value.isStar);
+    }
+  } else {
+    // 显示全部
+    // 1. 恢复备份
+    // 2. 清空备份
+    // 3. 修改选项内容
+    data.value = dataBak as ICard[];
+    dataBak = [];
+    actions[1].text = "只看星标";
+  }
+};
+
+const handlerDeleteBtn = (cid: number) => {
+  // 删除卡片
+  const config = {
+    method: "delete" as Method,
+    url: `${store.state.serverHost}/cards/${cid}`,
+  };
+  deleteData(config, false).then(() => {
+    // 提示
+    showSuccessToast("已删除");
+    // 移除
+    for (let index in data.value) {
+      // index 为string
+      const numIndex = Number(index);
+      if (data.value[numIndex].id === cid) {
+        data.value.splice(numIndex, 1);
+        break;
       }
-      console.log(action, index);
-    };
-    // ------------- 只看星标
-    let dataBak: ICard[]; // 用于备份
-    const onlyShowStarCard = (action: PopoverAction) => {
-      if (action.text === "只看星标") {
-        // 1. 查看是否有下一页, 继续获取
-        // 2. 备份
-        // 3 . 修改选项内容
+    }
+  });
+};
 
-        actions[1].text = "显示全部";
+// --------- 选择卡片 开始
+const selectMode = ref(false); // 是否为选择模式
+let hasMoreBak: boolean; // 备份是否还有下一页, 原数据将会被修改
+const handlerClickSelectBtn = () => {
+  selectMode.value = true;
+  // 默认的宽度会将CheckBox挤到外部
+  // 需要重新设置宽度
+  // --- copy from resetFiledWidth
+  const field = document.querySelector(".van-swipe-cell") as HTMLElement;
+  if (!field) return;
+  const { width: fieldWidth } = field.getBoundingClientRect();
 
-        if (status.hasMore) {
-          // 假如还有的话, 需要继续获取星标, 因为 星标数据不是全部的
-          // 内部函数将备份dataBak
-          dataBak = [];
-          reload();
-        } else {
-          dataBak = data.value as ICard[];
-          data.value = data.value.filter((value) => value.isStar);
-        }
-      } else {
-        // 显示全部
+  const contentItem = document.querySelectorAll(".content_item");
+  const titleNodes = document.querySelectorAll(".item-title");
+  const categoryNodes = document.querySelectorAll(".item-category");
 
-        // 1. 恢复备份
-        // 2. 清空备份
-        // 3. 修改选项内容
-        data.value = dataBak as ICard[];
-        dataBak = [];
+  contentItem.forEach((titleNode) => {
+    const ele = titleNode as HTMLElement;
+    ele.style.width = String(fieldWidth - 30 - 24 - 15 - 30) + "px";
+  });
+  titleNodes.forEach((titleNode) => {
+    const ele = titleNode as HTMLElement;
+    ele.style.width = String(fieldWidth - 30 - 24 - 15 - 40) + "px";
+  });
+  categoryNodes.forEach((titleNode) => {
+    const ele = titleNode as HTMLElement;
+    ele.style.width = String(fieldWidth - 30 - 24 - 15 - 40) + "px";
+  });
+  // 禁止, 触底获取数据
+  // 免得, 新获取的数据与原来的数据样式不一样
+  // finished也要修改, 防止多一次触底
+  hasMoreBak = status.hasMore;
+  status.hasMore = false;
+};
+// 复选框
+const checkedCard = ref<number[]>([]);
+const checkboxRefs = ref<CheckboxInstance[]>([]);
+const checkboxGroupRef = ref<CheckboxGroupInstance>();
+// 点击卡片切换
+const toggleCardCheckboxStatus = (index: number) => {
+  // 不在选择模式, 不能选中
+  if (!selectMode.value) return;
+  if (checkboxRefs.value) {
+    checkboxRefs.value[index].toggle();
+  }
+};
+// 取消
+const handlerClickCancel = () => {
+  selectMode.value = false;
+  // 恢复宽度
+  resetFiledWidth();
+  // 恢复hasMore
+  status.hasMore = hasMoreBak;
+  // 全部取消选择
+  if (checkboxGroupRef.value) {
+    checkboxGroupRef.value.toggleAll(false);
+  }
+};
+// 反选
+const handlerClickSelectInverse = () => {
+  if (checkboxGroupRef.value) {
+    checkboxGroupRef.value.toggleAll();
+  }
+};
+// 全选
+const handlerClickSelectAll = () => {
+  if (checkboxGroupRef.value) {
+    checkboxGroupRef.value.toggleAll(true);
+  }
+};
+// 批量星标
+const handlerClickBatchStar = () => {
+  if (!checkedCard.value || checkedCard.value.length <= 0) {
+    // 提示先选择
+    showToast("请先选择卡片");
+    return;
+  }
 
-        actions[1].text = "只看星标";
+  const config = {
+    method: "post" as Method,
+    url: `${store.state.serverHost}/cards/batch-star`,
+    data: {
+      cards: checkedCard.value,
+    },
+  };
+
+  postCreateData<null, IBatchPostCardData>(config, false).then(() => {
+    // 提示
+    showSuccessToast("已批量星标");
+    // 切换选中的星标状态
+    const shouldStarCount = checkedCard.value.length; // 应该星标的数量
+    let currentStarCount = 0;
+
+    for (let item of data.value) {
+      if (checkedCard.value.includes(item.id)) {
+        // 符合要求, 星标
+        item.isStar = true;
+        currentStarCount += 1;
+        if (currentStarCount === shouldStarCount) break;
       }
-    };
+    }
 
-    const handlerDeleteBtn = (cid: number) => {
-      // 删除卡片
+    // 关闭选择模式
+    handlerClickCancel();
+  });
+};
+// 批量重置复习
+const handlerClickBatchReset = () => {
+  if (!checkedCard.value || checkedCard.value.length <= 0) {
+    // 提示先选择
+    showToast("请先选择卡片");
+    return;
+  }
+
+  const config = {
+    method: "post" as Method,
+    url: `${store.state.serverHost}/cards/batch-reset`,
+    data: {
+      cards: checkedCard.value,
+    },
+  };
+
+  postCreateData<null, IBatchPostCardData>(config, false).then(() => {
+    // 提示
+    showSuccessToast("已批量重置");
+    // 切换选中的星标状态
+    const shouldStarCount = checkedCard.value.length; // 应该重置的数量
+    let currentStarCount = 0;
+    for (let item of data.value) {
+      if (checkedCard.value.includes(item.id)) {
+        item.reviewTimes = 0;
+        currentStarCount += 1;
+        if (currentStarCount === shouldStarCount) break;
+      }
+    }
+
+    // 关闭选择模式
+    handlerClickCancel();
+  });
+};
+// 批量删除
+const handlerClickBatchDelete = () => {
+  if (!checkedCard.value || checkedCard.value.length <= 0) {
+    // 提示先选择
+    showToast("请先选择卡片");
+    return;
+  }
+
+  showConfirmDialog({
+    title: "警告",
+    message: "删除后无法恢复, 你确定要继续吗?",
+  })
+    .then(() => {
       const config = {
         method: "delete" as Method,
-        url: `${store.state.serverHost}/cards/${cid}`,
-      };
-      deleteData(config, false).then(() => {
-        // 提示
-        showSuccessToast("已删除");
-        // 移除
-        for (let index in data.value) {
-          // index 为string
-          const numIndex = Number(index);
-          if (data.value[numIndex].id === cid) {
-            data.value.splice(numIndex, 1);
-            break;
-          }
-        }
-      });
-    };
-
-    // --------- 选择卡片 开始
-    const selectMode = ref(false); // 是否为选择模式
-    let hasMoreBak: boolean; // 备份是否还有下一页, 原数据将会被修改
-    const handlerClickSelectBtn = () => {
-      selectMode.value = true;
-      // 默认的宽度会将CheckBox挤到外部
-      // 需要重新设置宽度
-      // --- copy from resetFiledWidth
-      const field = document.querySelector(".van-swipe-cell") as HTMLElement;
-      if (!field) return;
-      const { width: fieldWidth } = field.getBoundingClientRect();
-
-      const contentItem = document.querySelectorAll(".content_item");
-      const titleNodes = document.querySelectorAll(".item-title");
-      const categoryNodes = document.querySelectorAll(".item-category");
-
-      contentItem.forEach((titleNode) => {
-        const ele = titleNode as HTMLElement;
-        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 30) + "px";
-      });
-      titleNodes.forEach((titleNode) => {
-        const ele = titleNode as HTMLElement;
-        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 40) + "px";
-      });
-      categoryNodes.forEach((titleNode) => {
-        const ele = titleNode as HTMLElement;
-        ele.style.width = String(fieldWidth - 30 - 24 - 15 - 40) + "px";
-      });
-      // 禁止, 触底获取数据
-      // 免得, 新获取的数据与原来的数据样式不一样
-      // finished也要修改, 防止多一次触底
-      hasMoreBak = status.hasMore;
-      status.hasMore = false;
-    };
-    // 复选框
-    const checkedCard = ref<number[]>([]);
-    const checkboxRefs = ref<CheckboxInstance[]>([]);
-    const checkboxGroupRef = ref<CheckboxGroupInstance>();
-    // 点击卡片切换
-    const toggleCardCheckboxStatus = (index: number) => {
-      // 不在选择模式, 不能选中
-      if (!selectMode.value) return;
-      if (checkboxRefs.value) {
-        checkboxRefs.value[index].toggle();
-      }
-    };
-    // 取消
-    const handlerClickCancel = () => {
-      selectMode.value = false;
-      // 恢复宽度
-      resetFiledWidth();
-      // 恢复hasMore
-      status.hasMore = hasMoreBak;
-      // 全部取消选择
-      if (checkboxGroupRef.value) {
-        checkboxGroupRef.value.toggleAll(false);
-      }
-    };
-    // 反选
-    const handlerClickSelectInverse = () => {
-      if (checkboxGroupRef.value) {
-        checkboxGroupRef.value.toggleAll();
-      }
-    };
-    // 全选
-    const handlerClickSelectAll = () => {
-      if (checkboxGroupRef.value) {
-        checkboxGroupRef.value.toggleAll(true);
-      }
-    };
-    // 批量星标
-    const handlerClickBatchStar = () => {
-      if (!checkedCard.value || checkedCard.value.length <= 0) {
-        // 提示先选择
-        showToast("请先选择卡片");
-        return;
-      }
-
-      const config = {
-        method: "post" as Method,
-        url: `${store.state.serverHost}/cards/batch-star`,
+        url: `${store.state.serverHost}/cards/batch-delete`,
         data: {
           cards: checkedCard.value,
         },
       };
 
-      postCreateData<null, IBatchPostCardData>(config, false).then(() => {
+      deleteData<IBatchPostCardData>(config, false).then(() => {
         // 提示
-        showSuccessToast("已批量星标");
-        // 切换选中的星标状态
-        const shouldStarCount = checkedCard.value.length; // 应该星标的数量
-        let currentStarCount = 0;
+        showSuccessToast("已批量删除");
+        // 删除选中
+        const shouldDeleteCount = checkedCard.value.length;
+        let currentDeleteCount = 0;
+        // 需要倒序遍历, 否则后面元素将往前移动
 
-        for (let item of data.value) {
+        for (let index = data.value.length - 1; index >= 0; index--) {
+          const item = data.value[index];
           if (checkedCard.value.includes(item.id)) {
-            // 符合要求, 星标
-            item.isStar = true;
-            currentStarCount += 1;
-            if (currentStarCount === shouldStarCount) break;
+            // 符合要求, 删除
+            data.value.splice(index, 1);
+            currentDeleteCount += 1;
+
+            // 检测是否已经判断完了
+            if (currentDeleteCount === shouldDeleteCount) break;
           }
         }
-
         // 关闭选择模式
         handlerClickCancel();
       });
-    };
-    // 批量重置复习
-    const handlerClickBatchReset = () => {
-      if (!checkedCard.value || checkedCard.value.length <= 0) {
-        // 提示先选择
-        showToast("请先选择卡片");
-        return;
-      }
-
-      const config = {
-        method: "post" as Method,
-        url: `${store.state.serverHost}/cards/batch-reset`,
-        data: {
-          cards: checkedCard.value,
-        },
-      };
-
-      postCreateData<null, IBatchPostCardData>(config, false).then(() => {
-        // 提示
-        showSuccessToast("已批量重置");
-        // 切换选中的星标状态
-        const shouldStarCount = checkedCard.value.length; // 应该重置的数量
-        let currentStarCount = 0;
-        for (let item of data.value) {
-          if (checkedCard.value.includes(item.id)) {
-            item.reviewTimes = 0;
-            currentStarCount += 1;
-            if (currentStarCount === shouldStarCount) break;
-          }
-        }
-
-        // 关闭选择模式
-        handlerClickCancel();
-      });
-    };
-    // 批量删除
-    const handlerClickBatchDelete = () => {
-      if (!checkedCard.value || checkedCard.value.length <= 0) {
-        // 提示先选择
-        showToast("请先选择卡片");
-        return;
-      }
-
-      showConfirmDialog({
-        title: "警告",
-        message: "删除后无法恢复, 你确定要继续吗?",
-      })
-        .then(() => {
-          const config = {
-            method: "delete" as Method,
-            url: `${store.state.serverHost}/cards/batch-delete`,
-            data: {
-              cards: checkedCard.value,
-            },
-          };
-
-          deleteData<IBatchPostCardData>(config, false).then(() => {
-            // 提示
-            showSuccessToast("已批量删除");
-            // 删除选中
-            const shouldDeleteCount = checkedCard.value.length;
-            let currentDeleteCount = 0;
-            // 需要倒序遍历, 否则后面元素将往前移动
-
-            for (let index = data.value.length - 1; index >= 0; index--) {
-              const item = data.value[index];
-              if (checkedCard.value.includes(item.id)) {
-                // 符合要求, 删除
-                data.value.splice(index, 1);
-                currentDeleteCount += 1;
-
-                // 检测是否已经判断完了
-                if (currentDeleteCount === shouldDeleteCount) break;
-              }
-            }
-            // 关闭选择模式
-            handlerClickCancel();
-          });
-        })
-        .catch(() => {
-          showToast("已经取消");
-        });
-    };
-
-    // --------- 选择卡片 结束
-    // ----- 编辑按钮
-    const router = useRouter();
-    const handlerEditBtn = (cid: number) => {
-      router.push({ name: "editorCard", params: { cid } });
-    };
-
-    const reload = () => {
-      // 重新加载 卡片数据
-      loading.value = true;
-      data.value = [];
-      dataBak = [];
-      status.hasMore = true;
-      status.limit = 10;
-      status.offset = 0;
-      getCardData();
-    };
-
-    const more = () => {
-      console.log("more");
-    };
-    // ----------------------- 添加按钮显示与隐藏
-    const [showAddCardBtnState, toggleAddCardBtn] = useToggle(true);
-
-    const handlerShowAddCardBtn = () => {
-      toggleAddCardBtn(true);
-    };
-    const handlerHideAddCardBtn = () => {
-      toggleAddCardBtn(false);
-    };
-
-    // ------------------- 获取数据
-    const loading = ref(false);
-    const store = useStore();
-    let status = {
-      method: "GET" as Method,
-      limit: 10,
-      offset: 0,
-      order: "createAt",
-      hasMore: true,
-    };
-    const config = {
-      url: `${store.state.serverHost}/cards/`,
-    };
-
-    const getCardData = () => {
-      loading.value = true;
-      getDataOfPage<ICard>(status, config, false).then((response) => {
-        // 判断是否为只看星标
-
-        if (actions[1].text === "显示全部") {
-          // 只看星标状态
-          // 1. 备份全部
-          dataBak = [...dataBak, ...response];
-          // 2. 过滤星标
-          data.value = [
-            ...data.value,
-            ...response.filter((value) => value.isStar),
-          ];
-        } else {
-          // 要显示全部 (默认)
-          data.value = [...data.value, ...response];
-        }
-
-        loading.value = false;
-      });
-    };
-    // ---------- 点击星标后
-    const handlerToggleStarStatus = (
-      event: MouseEvent,
-      index: number,
-      cid: number
-    ) => {
-      const ele = event.target as HTMLElement;
-
-      let starStatus = ele.classList.contains("star_true") ? true : false;
-
-      const postConfig = {
-        method: "post" as Method,
-        url: `${store.state.serverHost}/cards/${cid}/star`,
-        data: {
-          isStar: starStatus,
-        },
-      };
-
-      postCreateData<IStar, IStar>(postConfig, false).then((response) => {
-        data.value[index].isStar = response.isStar;
-      });
-    };
-    // --------- 重置复习
-    const handlerResetReview = (index: number, cid: number) => {
-      const config = {
-        method: "post" as Method,
-        url: `${store.state.serverHost}/cards/reset`,
-        data: {
-          cid,
-        },
-      };
-
-      postCreateData<IResetCardReview, Record<string, number>>(
-        config,
-        false
-      ).then((response) => {
-        // 提示
-        if (data.value[index] && data.value[index].id === response.id) {
-          data.value[index].reviewAt = response.reviewAt;
-          data.value[index].reviewTimes = response.reviewTimes;
-          showSuccessToast("已重置复习");
-        }
-      });
-    };
-    // ----------------------- 限制category和title的width
-    const resetFiledWidth = () => {
-      const field = document.querySelector(".van-swipe-cell") as HTMLElement;
-      if (!field) return;
-      const { width: fieldWidth } = field.getBoundingClientRect();
-      const contentItem = document.querySelectorAll(".content_item");
-      const titleNodes = document.querySelectorAll(".item-title");
-      const categoryNodes = document.querySelectorAll(".item-category");
-      // 30 - 24 - 15
-      // 代表 图标的两边margin - 图标大小 - 右边的空白
-      contentItem.forEach((titleNode) => {
-        const ele = titleNode as HTMLElement;
-        ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
-      });
-      titleNodes.forEach((titleNode) => {
-        const ele = titleNode as HTMLElement;
-        ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
-      });
-      categoryNodes.forEach((titleNode) => {
-        const ele = titleNode as HTMLElement;
-        ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
-      });
-    };
-
-    const { width, height } = useWindowSize();
-    // 窗口大小改变时
-    watch([width, height], () => {
-      // 选择模式下, 不应该重新设置宽度
-      if (selectMode.value) return;
-      resetFiledWidth();
+    })
+    .catch(() => {
+      showToast("已经取消");
     });
-    // 有新数据时
-    watch([data], () => {
-      // 选择模式下, 不应该重新设置宽度
-      if (selectMode.value) return;
-      resetFiledWidth();
-    });
-    // ---------------------------- 排序开始
-    const showSortActionSheet = ref(false);
-    // 默认正序
-    // icon-
-    const sortActions = [
-      { name: "创建时间", icon: "zhengxu1", active: true },
-      { name: "卡片名称", icon: "zhengxu1", active: false },
-      { name: "根据类别", icon: "zhengxu1", active: false },
-    ];
-    const onSelectSort = (action: ActionSheetAction, index: number) => {
-      const item = sortActions[index];
-      // 假如active为true, 互换
-      if (item.active) {
-        item.icon = item.icon === "zhengxu1" ? "daoxu-" : "zhengxu1";
-      } else {
-        // 正序, 并将之前的选项设为false
-        for (let iString in sortActions) {
-          const i = Number(iString);
-          if (i === index) {
-            // 设置为true
-            sortActions[i].active = true;
-          } else if (sortActions[i].active) {
-            sortActions[i].active = false;
-            sortActions[i].icon = "zhengxu1";
-          } else {
-            sortActions[i].active = false;
-          }
-        }
-      }
-      // 判断是否为正序, 已经以什么排序
-      const char = item.icon === "zhengxu1" ? "" : "-";
-      let order = "";
-      switch (index) {
-        case 0:
-          order = "createAt";
-          break;
-        case 1:
-          order = "title";
-          break;
-        case 2:
-          order = "category";
-          break;
-      }
-      // 发起请求
-      // 1. 重置状态
+};
 
-      status.hasMore = true;
-      status.limit = 10;
-      status.offset = 0;
-      status.order = `${char}${order}`;
-      data.value = [];
+// --------- 选择卡片 结束
+// ----- 编辑按钮
+const router = useRouter();
+const handlerEditBtn = (cid: number) => {
+  router.push({ name: "editorCard", params: { cid } });
+};
 
-      // 2. 调用函数
-      getCardData();
-    };
-    // ---------------------------- 排序结束
+const reload = () => {
+  data.value = [];
+  dataBak = [];
+  status.hasMore = true;
+  status.limit = 10;
+  status.offset = 0;
+  getCardData();
+};
 
-    return {
-      reload,
-      more,
-      data,
-      loading,
-      status,
-      getCardData,
-      handlerDeleteBtn,
-      handlerEditBtn,
-      handlerToggleStarStatus,
-      handlerResetReview,
-      showPopover,
-      onSelect,
-      actions,
-      handlerShowAddCardBtn,
-      handlerHideAddCardBtn,
-      showAddCardBtnState,
-      checkedCard,
-      checkboxRefs,
-      checkboxGroupRef,
-      selectMode,
-      toggleCardCheckboxStatus,
-      handlerClickCancel,
-      handlerClickSelectInverse,
-      handlerClickSelectAll,
-      handlerClickBatchStar,
-      handlerClickBatchReset,
-      handlerClickBatchDelete,
-      showSortActionSheet, // 排序开始
-      sortActions,
-      onSelectSort,
-    };
-  },
+// ----------------------- 添加按钮显示与隐藏
+const [showAddCardBtnState, toggleAddCardBtn] = useToggle(true);
+
+const handlerShowAddCardBtn = () => {
+  toggleAddCardBtn(true);
+};
+const handlerHideAddCardBtn = () => {
+  toggleAddCardBtn(false);
+};
+
+// ------------------- 获取数据
+const loading = ref(false);
+const finished = ref(false);
+const store = useStore();
+let status = {
+  method: "GET" as Method,
+  limit: 10,
+  offset: 0,
+  order: "createAt",
+  hasMore: true,
+};
+const config = {
+  url: `${store.state.serverHost}/cards/`,
+};
+
+const getCardData = () => {
+  loading.value = true;
+  showLoadingToast({
+    message: "加载中...",
+    forbidClick: true,
+    loadingType: "spinner",
+    duration: 0,
+  });
+  getDataOfPage<ICard>(status, config, false).then((response) => {
+    // 判断是否为只看星标
+
+    if (actions[1].text === "显示全部") {
+      // 只看星标状态
+      // 1. 备份全部
+      dataBak = [...dataBak, ...response];
+      // 2. 过滤星标
+      data.value = [
+        ...data.value,
+        ...response.filter((value) => value.isStar),
+      ];
+    } else {
+      // 要显示全部 (默认)
+      data.value = [...data.value, ...response];
+    }
+
+    loading.value = false;
+    closeToast();
+    if (!status.hasMore) {
+      finished.value = true;
+    }
+  });
+};
+
+// 下拉刷新
+const onRefresh = () => {
+  data.value = [];
+  dataBak = [];
+  status.hasMore = true;
+  status.limit = 10;
+  status.offset = 0;
+  finished.value = false;
+  getCardData();
+};
+// ---------- 点击星标后
+const handlerToggleStarStatus = (
+  event: MouseEvent,
+  index: number,
+  cid: number
+) => {
+  const ele = event.target as HTMLElement;
+
+  let starStatus = ele.classList.contains("star_true") ? true : false;
+
+  const postConfig = {
+    method: "post" as Method,
+    url: `${store.state.serverHost}/cards/${cid}/star`,
+    data: {
+      isStar: starStatus,
+    },
+  };
+
+  postCreateData<IStar, IStar>(postConfig, false).then((response) => {
+    data.value[index].isStar = response.isStar;
+  });
+};
+// --------- 重置复习
+const handlerResetReview = (index: number, cid: number) => {
+  const config = {
+    method: "post" as Method,
+    url: `${store.state.serverHost}/cards/reset`,
+    data: {
+      cid,
+    },
+  };
+
+  postCreateData<IResetCardReview, Record<string, number>>(
+    config,
+    false
+  ).then((response) => {
+    // 提示
+    if (data.value[index] && data.value[index].id === response.id) {
+      data.value[index].reviewAt = response.reviewAt;
+      data.value[index].reviewTimes = response.reviewTimes;
+      showSuccessToast("已重置复习");
+    }
+  });
+};
+// ----------------------- 限制category和title的width
+const resetFiledWidth = () => {
+  const field = document.querySelector(".van-swipe-cell") as HTMLElement;
+  if (!field) return;
+  const { width: fieldWidth } = field.getBoundingClientRect();
+  const contentItem = document.querySelectorAll(".content_item");
+  const titleNodes = document.querySelectorAll(".item-title");
+  const categoryNodes = document.querySelectorAll(".item-category");
+  // 30 - 24 - 15
+  // 代表 图标的两边margin - 图标大小 - 右边的空白
+  contentItem.forEach((titleNode) => {
+    const ele = titleNode as HTMLElement;
+    ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
+  });
+  titleNodes.forEach((titleNode) => {
+    const ele = titleNode as HTMLElement;
+    ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
+  });
+  categoryNodes.forEach((titleNode) => {
+    const ele = titleNode as HTMLElement;
+    ele.style.width = String(fieldWidth - 30 - 24 - 15) + "px";
+  });
+};
+
+const { width, height } = useWindowSize();
+// 窗口大小改变时
+watch([width, height], () => {
+  // 选择模式下, 不应该重新设置宽度
+  if (selectMode.value) return;
+  resetFiledWidth();
 });
+// 有新数据时
+watch([data], () => {
+  // 选择模式下, 不应该重新设置宽度
+  if (selectMode.value) return;
+  resetFiledWidth();
+});
+// ---------------------------- 排序开始
+const showSortActionSheet = ref(false);
+// 默认正序
+// icon-
+const sortActions = [
+  { name: "创建时间", icon: "zhengxu1", active: true },
+  { name: "卡片名称", icon: "zhengxu1", active: false },
+  { name: "根据类别", icon: "zhengxu1", active: false },
+];
+const onSelectSort = (action: ActionSheetAction, index: number) => {
+  const item = sortActions[index];
+  // 假如active为true, 互换
+  if (item.active) {
+    item.icon = item.icon === "zhengxu1" ? "daoxu-" : "zhengxu1";
+  } else {
+    // 正序, 并将之前的选项设为false
+    for (let iString in sortActions) {
+      const i = Number(iString);
+      if (i === index) {
+        // 设置为true
+        sortActions[i].active = true;
+      } else if (sortActions[i].active) {
+        sortActions[i].active = false;
+        sortActions[i].icon = "zhengxu1";
+      } else {
+        sortActions[i].active = false;
+      }
+    }
+  }
+  // 判断是否为正序, 已经以什么排序
+  const char = item.icon === "zhengxu1" ? "" : "-";
+  let order = "";
+  switch (index) {
+    case 0:
+      order = "createAt";
+      break;
+    case 1:
+      order = "title";
+      break;
+    case 2:
+      order = "category";
+      break;
+  }
+  // 发起请求
+  // 1. 重置状态
+
+  status.hasMore = true;
+  status.limit = 10;
+  status.offset = 0;
+  status.order = `${char}${order}`;
+  data.value = [];
+
+  // 2. 调用函数
+  getCardData();
+};
+// ---------------------------- 排序结束
 </script>
 
 <style lang="scss">

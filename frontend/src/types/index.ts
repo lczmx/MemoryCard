@@ -11,7 +11,7 @@ export interface IPostCategory {
   name: string;
   icon: string;
   color: string;
-  plan: number;
+  plan: string;
 }
 
 export interface ICategory {
@@ -48,7 +48,7 @@ export interface IGetReviewClientStatus {
 }
 // ---------------- 复习曲线相关
 export interface IPlan {
-  id: number;
+  id: string;
   title: string;
   content: string;
   editable: Boolean;

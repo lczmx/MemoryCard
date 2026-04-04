@@ -31,8 +31,8 @@
   </div>
 </template>
 
-<script>
-import { defineComponent, ref, reactive } from "vue";
+<script setup lang="ts">
+import { ref, reactive, watch, onMounted, onBeforeUnmount } from "vue";
 
 import { Editor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
@@ -41,121 +41,125 @@ import Underline from "@tiptap/extension-underline";
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 
-export default defineComponent({
-  name: "TiptapEditor",
-  components: {
-    EditorContent,
-  },
-  props: {
-    modelValue: {
-      type: String,
-      default: "",
-    },
-  },
-  setup() {
-    const editor = ref(null);
-    const textActions = reactive([
-      { slug: "bold", icon: "ri-bold", active: "bold" },
-      { slug: "italic", icon: "ri-italic", active: "italic" },
-      { slug: "underline", icon: "ri-underline", active: "underline" },
-      { slug: "strike", icon: "ri-strikethrough", active: "strike" },
-      {
-        slug: "align",
-        option: "left",
-        icon: "ri-align-left",
-        active: { textAlign: "left" },
-      },
-      {
-        slug: "align",
-        option: "center",
-        icon: "ri-align-center",
-        active: { textAlign: "center" },
-      },
-      {
-        slug: "align",
-        option: "right",
-        icon: "ri-align-right",
-        active: { textAlign: "right" },
-      },
-      {
-        slug: "align",
-        option: "justify",
-        icon: "ri-align-justify",
-        active: { textAlign: "justify" },
-      },
-      { slug: "bulletList", icon: "ri-list-unordered", active: "bulletList" },
-      { slug: "orderedList", icon: "ri-list-ordered", active: "orderedList" },
-      { slug: "subscript", icon: "ri-subscript-2", active: "subscript" },
-      {
-        slug: "superscript",
-        icon: "ri-superscript-2",
-        active: "superscript",
-      },
-      { slug: "undo", icon: "ri-arrow-go-back-line", active: "undo" },
-      { slug: "redo", icon: "ri-arrow-go-forward-line", active: "redo" },
-      { slug: "clear", icon: "ri-format-clear", active: "clear" },
-    ]);
-    return {
-      editor,
-      textActions,
-    };
-  },
+// 定义 props
+const props = defineProps<{
+  modelValue?: string;
+}>();
 
-  watch: {
-    modelValue(value) {
-      if (this.editor.getHTML() === value) return;
-      console.log(this.editor.storage.characterCount.characters());
-      this.editor.commands.setContent(this.modelValue, false);
-    },
-  },
-  methods: {
-    onActionClick(slug, option = null) {
-      const vm = this.editor.chain().focus();
-      const actionTriggers = {
-        bold: () => vm.toggleBold().run(),
-        italic: () => vm.toggleItalic().run(),
-        underline: () => vm.toggleUnderline().run(),
-        strike: () => vm.toggleStrike().run(),
-        bulletList: () => vm.toggleBulletList().run(),
-        orderedList: () => vm.toggleOrderedList().run(),
-        align: () => vm.setTextAlign(option).run(),
-        subscript: () => vm.toggleSubscript().run(),
-        superscript: () => vm.toggleSuperscript().run(),
-        undo: () => vm.undo().run(),
-        redo: () => vm.redo().run(),
-        clear: () => {
-          vm.clearNodes().run();
-          vm.unsetAllMarks().run();
-        },
-      };
+// 定义 emits
+const emit = defineEmits<{
+  (e: "update:modelValue", value: string): void;
+}>();
 
-      actionTriggers[slug]();
+const editor = ref<Editor | null>(null);
+const textActions = reactive([
+  { slug: "bold", icon: "ri-bold", active: "bold" },
+  { slug: "italic", icon: "ri-italic", active: "italic" },
+  { slug: "underline", icon: "ri-underline", active: "underline" },
+  { slug: "strike", icon: "ri-strikethrough", active: "strike" },
+  {
+    slug: "align",
+    option: "left",
+    icon: "ri-align-left",
+    active: { textAlign: "left" },
+  },
+  {
+    slug: "align",
+    option: "center",
+    icon: "ri-align-center",
+    active: { textAlign: "center" },
+  },
+  {
+    slug: "align",
+    option: "right",
+    icon: "ri-align-right",
+    active: { textAlign: "right" },
+  },
+  {
+    slug: "align",
+    option: "justify",
+    icon: "ri-align-justify",
+    active: { textAlign: "justify" },
+  },
+  { slug: "bulletList", icon: "ri-list-unordered", active: "bulletList" },
+  { slug: "orderedList", icon: "ri-list-ordered", active: "orderedList" },
+  { slug: "subscript", icon: "ri-subscript-2", active: "subscript" },
+  {
+    slug: "superscript",
+    icon: "ri-superscript-2",
+    active: "superscript",
+  },
+  { slug: "undo", icon: "ri-arrow-go-back-line", active: "undo" },
+  { slug: "redo", icon: "ri-arrow-go-forward-line", active: "redo" },
+  { slug: "clear", icon: "ri-format-clear", active: "clear" },
+]);
+
+// 监听 modelValue 变化
+watch(
+  () => props.modelValue,
+  (value) => {
+    if (!editor.value) return;
+    if (editor.value.getHTML() === value) return;
+    console.log(editor.value.storage.characterCount?.characters());
+    editor.value.commands.setContent(value || "", false);
+  }
+);
+
+// 方法
+const onActionClick = (slug: string, option: any = null) => {
+  if (!editor.value) return;
+  const vm = editor.value.chain().focus();
+  const actionTriggers: Record<string, () => void> = {
+    bold: () => vm.toggleBold().run(),
+    italic: () => vm.toggleItalic().run(),
+    underline: () => vm.toggleUnderline().run(),
+    strike: () => vm.toggleStrike().run(),
+    bulletList: () => vm.toggleBulletList().run(),
+    orderedList: () => vm.toggleOrderedList().run(),
+    align: () => vm.setTextAlign(option).run(),
+    subscript: () => vm.toggleSubscript().run(),
+    superscript: () => vm.toggleSuperscript().run(),
+    undo: () => vm.undo().run(),
+    redo: () => vm.redo().run(),
+    clear: () => {
+      vm.clearNodes().run();
+      vm.unsetAllMarks().run();
     },
-    onHeadingClick(index) {
-      const vm = this.editor.chain().focus();
-      vm.toggleHeading({ level: index }).run();
+  };
+
+  actionTriggers[slug]?.();
+};
+
+const onHeadingClick = (index: number) => {
+  if (!editor.value) return;
+  const vm = editor.value.chain().focus();
+  vm.toggleHeading({ level: index }).run();
+};
+
+// 生命周期
+onMounted(() => {
+  editor.value = new Editor({
+    content: props.modelValue || "",
+    extensions: [
+      StarterKit,
+      Underline,
+      Subscript,
+      Superscript,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+    ],
+    onUpdate: () => {
+      if (!editor.value) return;
+      emit("update:modelValue", editor.value.getHTML());
     },
-  },
-  mounted() {
-    this.editor = new Editor({
-      content: this.modelValue,
-      extensions: [
-        StarterKit,
-        Underline,
-        Subscript,
-        Superscript,
-        TextAlign.configure({
-          types: ["heading", "paragraph"],
-        }),
-      ],
-      onUpdate: () => {
-        this.$emit("update:modelValue", this.editor.getHTML());
-      },
-    });
-  },
-  beforeUnmount() {
-    this.editor.destroy();
-  },
+  });
+});
+
+onBeforeUnmount(() => {
+  if (editor.value) {
+    editor.value.destroy();
+  }
 });
 </script>
 <style scoped src="@/assets/RemixIcon_Font/remixicon.css"></style>

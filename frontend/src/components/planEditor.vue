@@ -154,8 +154,8 @@
   />
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, reactive, watch } from "vue";
+<script setup lang="ts">
+import { ref, reactive, watch } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { showSuccessToast, showFailToast, closeToast } from "vant";
@@ -170,211 +170,174 @@ import {
   convert_sec_to_other,
 } from "@/hook";
 
-export default defineComponent({
-  name: "PlanEditor",
+const props = defineProps<{
+  propTitle?: string;
+  successText: string;
+  postUrl: string;
+  planTitle?: string;
+  planPlans?: number[];
+}>();
 
-  props: {
-    propTitle: {
-      type: String,
-    },
-    successText: {
-      type: String,
-      required: true,
-    },
-    postUrl: {
-      type: String,
-      required: true,
-    },
-    planTitle: {
-      type: String,
-      default: "",
-    },
-    planPlans: {
-      type: Array,
-      default: () => [],
-    },
-  },
-  setup(props) {
-    const store = useStore();
-    // 修改标题
-    store.commit("changePageTitle", props.propTitle);
-    const title = ref(props.planTitle);
-    const value = ref(0);
-    const plans = ref<number[]>(props.planPlans as number[]); // 曲线秒数
-    const planText = ref("");
+const store = useStore();
+// 修改标题
+store.commit("changePageTitle", props.propTitle);
+const title = ref(props.planTitle || "");
+const value = ref(0);
+const plans = ref<number[]>(props.planPlans as number[] || []); // 曲线秒数
+const planText = ref("");
 
-    // -------- 显示 popup
-    const showPlansPopup = ref(false);
-    const handlerClickAddPlanBtn = () => {
-      // 重置数据
-      currentPlan.day = 0;
-      currentPlan.hour = 0;
-      currentPlan.minute = 0;
-      currentPlan.second = 0;
-      // 显示
-      showPlansPopup.value = true;
-    };
-    // 步进器
-    const currentPlan = reactive({
-      day: 0,
-      hour: 0,
-      minute: 0,
-      second: 0,
-    });
-    // -------- 点击关闭, 保存数据
-    const handlerClickCloseIcon = () => {
-      const sec = use_fmt_to_sec(
-        currentPlan.day,
-        currentPlan.hour,
-        currentPlan.minute,
-        currentPlan.second
-      );
-      // 设置 or 修改
-      if (typeof currentStepIndex !== "number") {
-        if (sec > 0) {
-          plans.value.push(sec);
-        }
-      } else {
-        if (sec > 0) plans.value[currentStepIndex] = sec;
-        // 重置index
-        currentStepIndex = null;
-      }
-
-      showPlansPopup.value = false;
-    };
-
-    // ---- 格式化plans的数据
-    const convert_plan_to_title = (index: number) => {
-      return `第${index + 1}次复习`;
-    };
-    const convert_plan_to_time = (sec: number, index: number) => {
-      return index === 0
-        ? `创建卡片${convert_sec_to_string(sec)}后`
-        : `距上一次复习${convert_sec_to_string(sec)}后`;
-    };
-    // ----------- 点击step
-    const showStepOptionActionSheet = ref(false);
-    let currentStepIndex: number | null = null;
-    const showStepOption = ref([
-      { name: "修改" },
-      { name: "删除", color: "red" },
-    ]);
-    const handlerClickShowStepOption = (index: number) => {
-      currentStepIndex = index;
-      showStepOptionActionSheet.value = true;
-    };
-    // 选中选项
-    const onSelectStepOption = (action: ActionSheetAction, index: number) => {
-      if (typeof currentStepIndex !== "number") return;
-      if (plans.value && plans.value.length <= currentStepIndex) return;
-      switch (index) {
-        case 0: {
-          // 修改
-          const sec = plans.value[currentStepIndex];
-          const { days, hours, minutes, seconds } = convert_sec_to_other(sec);
-
-          currentPlan.day = days;
-          currentPlan.hour = hours;
-          currentPlan.minute = minutes;
-          currentPlan.second = seconds;
-          // 隐藏options
-          showPlansPopup.value = true;
-          showStepOptionActionSheet.value = false;
-
-          break;
-        }
-        case 1:
-          // 删除
-          plans.value.splice(currentStepIndex, 1);
-          // 隐藏options
-          showStepOptionActionSheet.value = false;
-          // 重置
-          currentStepIndex = null;
-          break;
-      }
-    };
-    // ------------ validate
-    const router = useRouter();
-    const addPlanForm = ref<FormInstance>(); // form标签
-    // 监听是否可以提交了
-    watch(
-      // 监听响应式数据
-      () => store.state.submitData,
-      (value) => {
-        if (value) {
-          // 重新改为false
-          store.commit("changeSubmitData", false);
-          // 修改PlanText, 让其有值
-          if (plans.value.length > 0) {
-            planText.value = " ".repeat(plans.value.length);
-          } else {
-            showFailToast("请先添加复习时间");
-            return;
-          }
-
-          // 检验表单数据
-          // 返回Promise对象
-          addPlanForm.value
-            ?.validate()
-            .then(() => {
-              // 格式化plans
-              if (!title.value) return;
-              const content = plans.value.join("-");
-              const data = {
-                title: title.value,
-                content,
-              };
-              const postConfig = {
-                method: "post" as Method,
-                url: props.postUrl,
-                data,
-              };
-              postCreateData<IPlan, IPostPlan>(postConfig, false).then(() => {
-                // 成功创建了
-                showSuccessToast(props.successText);
-                setTimeout(() => {
-                  closeToast();
-                  router.go(-1);
-                }, 1000);
-              });
-            })
-            .catch((error) => {
-              console.log(error);
-            });
-        }
-      }
-    );
-    // 监听本页面是否已经被修改
-    watch(
-      [title, plans.value],
-      () => {
-        // 监视多个数据
-        store.commit("changeChangeState", true);
-      },
-      {
-        deep: true, // 是否是深度监视, 默认是false
-      }
-    );
-    return {
-      // 返回的数据
-      title,
-      value,
-      plans,
-      planText,
-      showPlansPopup,
-      handlerClickAddPlanBtn,
-      currentPlan,
-      handlerClickCloseIcon,
-      convert_plan_to_title,
-      convert_plan_to_time,
-      handlerClickShowStepOption, //显示plan的动作面板
-      showStepOptionActionSheet,
-      showStepOption,
-      onSelectStepOption, // 验证
-      addPlanForm,
-    };
-  },
+// -------- 显示 popup
+const showPlansPopup = ref(false);
+const handlerClickAddPlanBtn = () => {
+  // 重置数据
+  currentPlan.day = 0;
+  currentPlan.hour = 0;
+  currentPlan.minute = 0;
+  currentPlan.second = 0;
+  // 显示
+  showPlansPopup.value = true;
+};
+// 步进器
+const currentPlan = reactive({
+  day: 0,
+  hour: 0,
+  minute: 0,
+  second: 0,
 });
+// -------- 点击关闭, 保存数据
+const handlerClickCloseIcon = () => {
+  const sec = use_fmt_to_sec(
+    currentPlan.day,
+    currentPlan.hour,
+    currentPlan.minute,
+    currentPlan.second
+  );
+  // 设置 or 修改
+  if (typeof currentStepIndex !== "number") {
+    if (sec > 0) {
+      plans.value.push(sec);
+    }
+  } else {
+    if (sec > 0) plans.value[currentStepIndex] = sec;
+    // 重置index
+    currentStepIndex = null;
+  }
+
+  showPlansPopup.value = false;
+};
+
+// ---- 格式化plans的数据
+const convert_plan_to_title = (index: number) => {
+  return `第${index + 1}次复习`;
+};
+const convert_plan_to_time = (sec: number, index: number) => {
+  return index === 0
+    ? `创建卡片${convert_sec_to_string(sec)}后`
+    : `距上一次复习${convert_sec_to_string(sec)}后`;
+};
+// ----------- 点击step
+const showStepOptionActionSheet = ref(false);
+let currentStepIndex: number | null = null;
+const showStepOption = ref([
+  { name: "修改" },
+  { name: "删除", color: "red" },
+]);
+const handlerClickShowStepOption = (index: number) => {
+  currentStepIndex = index;
+  showStepOptionActionSheet.value = true;
+};
+// 选中选项
+const onSelectStepOption = (action: ActionSheetAction, index: number) => {
+  if (typeof currentStepIndex !== "number") return;
+  if (plans.value && plans.value.length <= currentStepIndex) return;
+  switch (index) {
+    case 0: {
+      // 修改
+      const sec = plans.value[currentStepIndex];
+      const { days, hours, minutes, seconds } = convert_sec_to_other(sec);
+
+      currentPlan.day = days;
+      currentPlan.hour = hours;
+      currentPlan.minute = minutes;
+      currentPlan.second = seconds;
+      // 隐藏options
+      showPlansPopup.value = true;
+      showStepOptionActionSheet.value = false;
+
+      break;
+    }
+    case 1:
+      // 删除
+      plans.value.splice(currentStepIndex, 1);
+      // 隐藏options
+      showStepOptionActionSheet.value = false;
+      // 重置
+      currentStepIndex = null;
+      break;
+  }
+};
+// ------------ validate
+const router = useRouter();
+const addPlanForm = ref<FormInstance>(); // form标签
+// 监听是否可以提交了
+watch(
+  // 监听响应式数据
+  () => store.state.submitData,
+  (value) => {
+    if (value) {
+      // 重新改为false
+      store.commit("changeSubmitData", false);
+      // 修改PlanText, 让其有值
+      if (plans.value.length > 0) {
+        planText.value = " ".repeat(plans.value.length);
+      } else {
+        showFailToast("请先添加复习时间");
+        return;
+      }
+
+      // 检验表单数据
+      // 返回Promise对象
+      addPlanForm.value
+        ?.validate()
+        .then(() => {
+          // 格式化plans
+          if (!title.value) return;
+          const content = plans.value.join("-");
+          const data = {
+            title: title.value,
+            content,
+          };
+          const postConfig = {
+            method: "post" as Method,
+            url: props.postUrl,
+            data,
+          };
+          postCreateData<IPlan, IPostPlan>(postConfig, false).then(() => {
+            // 成功创建了
+            showSuccessToast(props.successText);
+            setTimeout(() => {
+              closeToast();
+              router.go(-1);
+            }, 1000);
+          });
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+  }
+);
+// 监听本页面是否已经被修改
+watch(
+  [title, plans.value],
+  () => {
+    // 监视多个数据
+    store.commit("changeChangeState", true);
+  },
+  {
+    deep: true, // 是否是深度监视, 默认是false
+  }
+);
 </script>
 
 <style lang="scss">

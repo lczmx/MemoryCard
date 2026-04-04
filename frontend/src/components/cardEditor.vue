@@ -170,14 +170,12 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import {
-  defineComponent,
   ref,
   watch,
   onMounted,
   nextTick,
-  PropType,
 } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
@@ -191,239 +189,183 @@ import { getDataOfPage, postCreateData } from "@/utils/request";
 import TiptapEditor from "@/components/TiptapEditor.vue";
 import PopupEditor from "@/components/PopupEditor.vue";
 
-export default defineComponent({
-  name: "CardEditor",
-  components: { TiptapEditor, PopupEditor },
-  props: {
-    propTitle: {
-      type: String,
-    },
-    propCardTitle: {
-      type: String,
-      default: "",
-    },
-    propCategory: {
-      type: Object as PropType<ICategory>,
-      default: {} as ICategory, // 这个可以为空, 但默认值是对象类型, 并转换
-    },
-    propCategoryText: {
-      type: String,
-      default: "",
-    },
-    propSummary: {
-      type: String,
-      default: "",
-    },
-    propSummaryText: {
-      type: String,
-      default: "",
-    },
-    propDescription: {
-      type: String,
-      default: "",
-    },
-    propDescriptionText: {
-      type: String,
-      default: "",
-    },
+const props = defineProps<{
+  propTitle?: string;
+  propCardTitle?: string;
+  propCategory?: ICategory;
+  propCategoryText?: string;
+  propSummary?: string;
+  propSummaryText?: string;
+  propDescription?: string;
+  propDescriptionText?: string;
+  successText: string;
+  postUrl: string;
+}>();
 
-    successText: {
-      type: String,
-      required: true,
-    },
-    postUrl: {
-      type: String,
-      required: true,
-    },
-  },
-  setup(props) {
-    const store = useStore();
-    // 修改标题
-    store.commit("changePageTitle", props.propTitle);
-    // ------------ 名称
-    const title = ref(props.propCardTitle);
-    /* ----- 获取分类数据 --------- */
+const store = useStore();
+// 修改标题
+store.commit("changePageTitle", props.propTitle);
+// ------------ 名称
+const title = ref(props.propCardTitle || "");
+/* ----- 获取分类数据 --------- */
 
-    const loadingCategoryData = ref(true);
-    const category = ref<ICategory>(props.propCategory); // 选中的类别
-    const categoryText = ref(props.propCategoryText); // 用于v-model绑定
-    const categoryData: Record<string, ICategory> = {}; // 全部 name:id
+const loadingCategoryData = ref(true);
+const category = ref<ICategory>(props.propCategory || {} as ICategory); // 选中的类别
+const categoryText = ref(props.propCategoryText || ""); // 用于v-model绑定
+const categoryData: Record<string, ICategory> = {}; // 全部 name:id
 
-    let categoryColumns = ref<string[]>([]); // 给选择的
-    const showCategoryPicker = ref(false);
-    let getCategoryStatus = {
-      method: "GET" as Method,
-      limit: 50,
-      offset: 0,
-      hasMore: true,
-    };
-    const getCategoryConfig = {
-      url: `${store.state.serverHost}/category/`,
-    };
-    const defaultCategoryIndex = ref(0); // 默认选中项索引
-    // TODO: 分页
-    const getCategoryData = () => {
-      loadingCategoryData.value = true;
+let categoryColumns = ref<{text: string; value: number}[]>([]); // 给选择的
+const showCategoryPicker = ref(false);
+let getCategoryStatus = {
+  method: "GET" as Method,
+  limit: 50,
+  offset: 0,
+  hasMore: true,
+};
+const getCategoryConfig = {
+  url: `${store.state.serverHost}/category/`,
+};
+const defaultCategoryIndex = ref(0); // 默认选中项索引
+// TODO: 分页
+const getCategoryData = () => {
+  loadingCategoryData.value = true;
 
-      getDataOfPage<ICategory>(
-        getCategoryStatus,
-        getCategoryConfig,
-        false
-      ).then((response) => {
-        response.forEach((item, index) => {
-          // 选项
-          categoryColumns.value.push(item.name);
-          categoryData[item.name] = item;
+  getDataOfPage<ICategory>(
+    getCategoryStatus,
+    getCategoryConfig,
+    false
+  ).then((response) => {
+    response.forEach((item, index) => {
+      // 选项
+      categoryColumns.value.push({ text: item.name, value: item.id });
+      categoryData[item.name] = item;
 
-          // 修改选中值
-          if (
-            defaultCategoryIndex.value === 0 &&
-            category.value.id === item.id
-          ) {
-            defaultCategoryIndex.value = index;
+      // 修改选中值
+      if (
+        defaultCategoryIndex.value === 0 &&
+        category.value.id === item.id
+      ) {
+        defaultCategoryIndex.value = index;
+      }
+    });
+    loadingCategoryData.value = false;
+  });
+};
+
+const onConfirmCategory = ({ selectedOptions }: { selectedOptions: { text: string; value: number }[] }) => {
+  if (selectedOptions && selectedOptions[0]) {
+    const selected = selectedOptions[0];
+    category.value = categoryData[selected.text];
+    categoryText.value = selected.text;
+  }
+  showCategoryPicker.value = false;
+};
+
+// ---------------------- 概要信息
+
+const showSummaryPicker = ref(false);
+const summary = ref(props.propSummary || "");
+const summaryText = ref(props.propSummaryText || ""); // 用于展示
+
+watch(summary, () => {
+  summaryText.value = summary.value.replace(/<\/?[^>]+(>|$)/g, "");
+});
+
+// 编辑内容
+
+const summaryEditorTitle = ref("编辑概要");
+// ---------------------- 详细信息
+const showDescriptionPicker = ref(false);
+const description = ref(props.propDescription || "");
+const descriptionText = ref(props.propDescriptionText || ""); // 用于展示
+
+const descriptionEditorTitle = ref("编辑详细备注");
+
+watch(description, () => {
+  descriptionText.value = description.value.replace(/<\/?[^>]+(>|$)/g, "");
+});
+// ------------ validate
+const router = useRouter();
+const addCardForm = ref<FormInstance>(); // form标签
+// 监听是否可以提交了
+watch(
+  // 监听响应式数据
+  () => store.state.submitData,
+  (value) => {
+    if (value) {
+      // 重新改为false
+      store.commit("changeSubmitData", false);
+
+      // 检验表单数据
+      // 返回Promise对象
+      addCardForm.value
+        ?.validate()
+        .then(() => {
+          if (!category.value) {
+            return;
           }
+          const data = {
+            title: title.value,
+            category: category.value.id,
+            summary: summary.value,
+            description: description.value,
+          };
+          const postConfig = {
+            method: "post" as Method,
+            url: props.postUrl,
+            data,
+          };
+          postCreateData<ICard, IPostCard>(postConfig, false).then(() => {
+            // 成功创建了
+            showSuccessToast(props.successText);
+            setTimeout(() => {
+              closeToast();
+              router.go(-1);
+            }, 1000);
+          });
+        })
+        .catch((error) => {
+          console.log(error);
         });
-        loadingCategoryData.value = false;
-      });
-    };
+    }
+  }
+);
+//  设置展示的width
+const categoryContentEle = ref<HTMLElement>();
+const summaryEle = ref<HTMLElement>();
+const descriptionEle = ref<HTMLElement>();
 
-    const onConfirmCategory = (value: string) => {
-      if (categoryData) {
-        category.value = categoryData[value];
-        categoryText.value = category.value.name;
-      }
-      showCategoryPicker.value = false;
-    };
+const resetFiledWidth = () => {
+  const field = document.querySelector(
+    ".van-field__control"
+  ) as HTMLElement;
+  if (!field) return;
+  const { width: fieldWidth } = field.getBoundingClientRect();
 
-    // ---------------------- 概要信息
+  if (categoryContentEle.value) {
+    categoryContentEle.value.style.width = String(fieldWidth) + "px";
+  }
+  if (summaryEle.value) {
+    summaryEle.value.style.width = String(fieldWidth) + "px";
+  }
+  if (descriptionEle.value) {
+    descriptionEle.value.style.width = String(fieldWidth) + "px";
+  }
+};
+const { width, height } = useWindowSize();
+// 窗口大小改变时
+watch([width, height], resetFiledWidth);
+// 加载dom完成后
+nextTick(resetFiledWidth);
 
-    const showSummaryPicker = ref(false);
-    const summary = ref(props.propSummary);
-    const summaryText = ref(props.propSummaryText); // 用于展示
-
-    watch(summary, () => {
-      summaryText.value = summary.value.replace(/<\/?.+?>/g, "");
-    });
-
-    // 编辑内容
-
-    const summaryEditorTitle = ref("编辑概要");
-    // ---------------------- 详细信息
-    const showDescriptionPicker = ref(false);
-    const description = ref(props.propDescription);
-    const descriptionText = ref(props.propDescriptionText); // 用于展示
-
-    const descriptionEditorTitle = ref("编辑详细备注");
-
-    watch(description, () => {
-      descriptionText.value = description.value.replace(/<\/?.+?>/g, "");
-    });
-    // ------------ validate
-    const router = useRouter();
-    const addCardForm = ref<FormInstance>(); // form标签
-    // 监听是否可以提交了
-    watch(
-      // 监听响应式数据
-      () => store.state.submitData,
-      (value) => {
-        if (value) {
-          // 重新改为false
-          store.commit("changeSubmitData", false);
-
-          // 检验表单数据
-          // 返回Promise对象
-          addCardForm.value
-            ?.validate()
-            .then(() => {
-              if (!category.value) {
-                return;
-              }
-              const data = {
-                title: title.value,
-                category: category.value.id,
-                summary: summary.value,
-                description: description.value,
-              };
-              const postConfig = {
-                method: "post" as Method,
-                url: props.postUrl,
-                data,
-              };
-              postCreateData<ICard, IPostCard>(postConfig, false).then(() => {
-                // 成功创建了
-                showSuccessToast(props.successText);
-                setTimeout(() => {
-                  closeToast();
-                  router.go(-1);
-                }, 1000);
-              });
-            })
-            .catch((error) => {
-              console.log(error);
-            });
-        }
-      }
-    );
-    //  设置展示的width
-    const categoryContentEle = ref<HTMLElement>();
-    const summaryEle = ref<HTMLElement>();
-    const descriptionEle = ref<HTMLElement>();
-
-    const resetFiledWidth = () => {
-      const field = document.querySelector(
-        ".van-field__control"
-      ) as HTMLElement;
-      const { width: fieldWidth } = field.getBoundingClientRect();
-
-      if (categoryContentEle.value) {
-        categoryContentEle.value.style.width = String(fieldWidth) + "px";
-      }
-      if (summaryEle.value) {
-        summaryEle.value.style.width = String(fieldWidth) + "px";
-      }
-      if (descriptionEle.value) {
-        descriptionEle.value.style.width = String(fieldWidth) + "px";
-      }
-    };
-    const { width, height } = useWindowSize();
-    // 窗口大小改变时
-    watch([width, height], resetFiledWidth);
-    // 加载dom完成后
-    nextTick(resetFiledWidth);
-
-    // 正式获取数据
-    onMounted(() => {
-      getCategoryData(); // 分类数据
-    });
-    // 监听本页面是否已经被修改
-    watch([title, categoryText, summaryText, descriptionText], () => {
-      // 监视多个数据
-      store.commit("changeChangeState", true);
-    });
-    return {
-      // 返回的数据
-      title,
-      addCardForm,
-      category,
-      categoryText,
-      showCategoryPicker,
-      categoryColumns,
-      onConfirmCategory,
-      loadingCategoryData,
-      categoryContentEle,
-      showSummaryPicker,
-      summary,
-      summaryText,
-      summaryEle,
-      summaryEditorTitle,
-      showDescriptionPicker,
-      description,
-      descriptionText,
-      descriptionEle,
-      descriptionEditorTitle,
-      defaultCategoryIndex,
-    };
-  },
+// 正式获取数据
+onMounted(() => {
+  getCategoryData(); // 分类数据
+});
+// 监听本页面是否已经被修改
+watch([title, categoryText, summaryText, descriptionText], () => {
+  // 监视多个数据
+  store.commit("changeChangeState", true);
 });
 </script>
 

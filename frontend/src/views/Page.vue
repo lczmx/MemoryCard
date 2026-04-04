@@ -238,20 +238,12 @@
   </van-tabbar>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from "vue";
+<script setup lang="ts">
+import { ref } from "vue";
 import { useRouter } from "vue-router";
-export default defineComponent({
-  name: "Page",
-  setup() {
-    // 根据路由的name, 动态修改active
-    const router = useRouter();
-    const currentRoute = router.currentRoute.value.name;
-    const active = ref<string>(currentRoute.toString());
 
-    return {
-      active,
-    };
-  },
-});
+// 根据路由的name, 动态修改active
+const router = useRouter();
+const currentRoute = router.currentRoute.value.name;
+const active = ref<string>(currentRoute.toString());
 </script>

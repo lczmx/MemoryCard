@@ -82,45 +82,36 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, onMounted } from "vue";
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
 import { useStore } from "vuex";
-import { IAnalyseSummaryData } from "@/types";
-import { getDataOfOne } from "@/utils/request";
+import { IAnalyseSummaryData } from "../types";
+import { getDataOfOne } from "../utils/request";
 import dayjs from "dayjs";
-export default defineComponent({
-  name: "Analyse",
-  setup() {
-    // ----- 设置标题
-    const store = useStore();
-    store.commit("changeSettingsPageTitle", "数据统计");
-    // ------ 获取数据
-    const analyse_data = ref<IAnalyseSummaryData>({
-      review: { today: 0, incr: 0 },
-      create: { today: 0, incr: 0 },
-      categoryCount: 0,
-    });
-    const config = {
-      url: `${store.state.serverHost}/analyse/`,
-    };
-    const getAnalyseData = () => {
-      getDataOfOne<IAnalyseSummaryData>(config, true).then((response) => {
-        analyse_data.value = response;
-      });
-    };
 
-    onMounted(() => {
-      getAnalyseData();
-    });
-    // 当前时间
-    const nowDateString = dayjs().format("YYYY年MM月DD日 HH:mm:ss");
-    return {
-      // 返回的数据
-      analyse_data,
-      nowDateString,
-    };
-  },
+// ----- 设置标题
+const store = useStore();
+store.commit("changeSettingsPageTitle", "数据统计");
+// ------ 获取数据
+const analyse_data = ref<IAnalyseSummaryData>({
+  review: { today: 0, incr: 0 },
+  create: { today: 0, incr: 0 },
+  categoryCount: 0,
 });
+const config = {
+  url: `${store.state.serverHost}/analyse/`,
+};
+const getAnalyseData = () => {
+  getDataOfOne<IAnalyseSummaryData>(config, true).then((response) => {
+    analyse_data.value = response;
+  });
+};
+
+onMounted(() => {
+  getAnalyseData();
+});
+// 当前时间
+const nowDateString = dayjs().format("YYYY年MM月DD日 HH:mm:ss");
 </script>
 
 <style lang="scss">
