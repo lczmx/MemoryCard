@@ -2,7 +2,9 @@
   <van-nav-bar
     :title="selectMode ? '' : '卡片'"
     :fixed="true"
-    @click-right="() => (selectMode ? (selectMode = true) : more())"
+    @click-right="
+          (e) => { if (!selectMode) { e.stopPropagation() } }
+        "
   >
     <!-- 根据selectMode和判断不同的执行方式 -->
     <template #left>
@@ -40,18 +42,20 @@
         @select="onSelect"
       >
         <template #reference>
-          <van-icon
-            size="20"
-            class="iconfont"
-            class-prefix="icon"
-            name="ellipsis-h-solid"
-          />
+          <div class="popover-trigger" :class="{ 'is-active': showPopover }" @click.stop="showPopover = !showPopover">
+            <van-icon
+              size="20"
+              class="iconfont popover-icon"
+              class-prefix="icon"
+              name="ellipsis-h-solid"
+            />
+          </div>
         </template>
       </van-popover>
     </template>
   </van-nav-bar>
 
-  <van-pull-refresh v-model:loading="loading" pulling-text="下拉刷新" @refresh="onRefresh">
+  <van-pull-refresh v-model="loading" pulling-text="下拉刷新" @refresh="onRefresh">
     <van-list
       v-model:loading="loading"
       :finished="finished"
@@ -721,6 +725,35 @@ const onSelectSort = (action: ActionSheetAction, index: number) => {
 </script>
 
 <style lang="scss">
+// Popover 触发器样式
+.popover-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: transparent;
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  // 激活状态 - 弹窗打开时
+  &.is-active {
+    background-color: rgba(25, 137, 250, 0.15);
+
+    .popover-icon {
+      color: #1989fa;
+    }
+  }
+
+  .popover-icon {
+    transition: all 0.3s ease;
+  }
+}
+
 // 选择模式样式
 .select-mode-left-tool-wrap {
   display: flex;

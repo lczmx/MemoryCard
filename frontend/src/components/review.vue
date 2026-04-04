@@ -4,7 +4,7 @@
     :fixed="true"
     @click-left="() => (selectMode ? (showCal = false) : (showCal = true))"
     @click-right="
-      () => (selectMode ? handlerClickSuccessReview() : (showPopover = true))
+      (e) => { if (selectMode) { handlerClickSuccessReview() } else { e.stopPropagation() } }
     "
   >
     <template #left>
@@ -39,12 +39,14 @@
         @select="onSelect"
       >
         <template #reference>
-          <van-icon
-            size="20"
-            class="iconfont"
-            class-prefix="icon"
-            name="ellipsis-h-solid"
-          />
+          <div class="popover-trigger" :class="{ 'is-active': showPopover }" @click.stop="showPopover = !showPopover">
+            <van-icon
+              size="20"
+              class="iconfont popover-icon"
+              class-prefix="icon"
+              name="ellipsis-h-solid"
+            />
+          </div>
         </template>
       </van-popover>
     </template>
@@ -64,7 +66,7 @@
     @confirm="handlerConfirmCal"
   />
 
-  <van-pull-refresh v-model:loading="loading" pulling-text="下拉刷新" @refresh="onRefresh">
+  <van-pull-refresh v-model="loading" pulling-text="下拉刷新" @refresh="onRefresh">
     <van-list
       v-model:loading="loading"
       :finished="finished"
@@ -634,6 +636,35 @@ const handlerClickReviewBody = (cid: number) => {
 </script>
 
 <style lang="scss">
+// Popover 触发器样式
+.popover-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: transparent;
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  // 激活状态 - 弹窗打开时
+  &.is-active {
+    background-color: rgba(25, 137, 250, 0.15);
+
+    .popover-icon {
+      color: #1989fa;
+    }
+  }
+
+  .popover-icon {
+    transition: all 0.3s ease;
+  }
+}
+
 // 选择模式样式
 .select-mode-tool-wrap {
   display: flex;
