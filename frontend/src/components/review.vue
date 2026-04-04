@@ -546,7 +546,7 @@ let status = {
   category: 0,
 };
 const config = {
-  url: `${store.state.serverHost}/review/`,
+  url: `${store.state.serverHost}/review`,
 };
 
 const getReviewData = () => {

@@ -535,7 +535,7 @@ let status = {
   hasMore: true,
 };
 const config = {
-  url: `${store.state.serverHost}/cards/`,
+  url: `${store.state.serverHost}/cards`,
 };
 
 const getCardData = () => {

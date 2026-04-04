@@ -165,7 +165,7 @@ let status = {
 };
 
 const config = {
-  url: `${store.state.serverHost}/plans/`,
+  url: `${store.state.serverHost}/plans`,
 };
 const planData = ref<IPlan[]>([]);
 

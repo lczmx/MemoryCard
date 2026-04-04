@@ -223,7 +223,7 @@ let getCategoryStatus = {
   hasMore: true,
 };
 const getCategoryConfig = {
-  url: `${store.state.serverHost}/category/`,
+  url: `${store.state.serverHost}/category`,
 };
 const defaultCategoryIndex = ref(0); // 默认选中项索引
 // TODO: 分页

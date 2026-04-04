@@ -15,5 +15,5 @@ import { useStore } from "vuex";
 const store = useStore();
 const title = ref("新增卡片"); // 导航栏标题
 const successText = ref("已创建卡片");
-const url = ref(`${store.state.serverHost}/cards/`);
+const url = ref(`${store.state.serverHost}/cards`);
 </script>

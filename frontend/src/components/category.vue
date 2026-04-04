@@ -508,7 +508,7 @@ let status = {
   order: "createAt",
 };
 const config = {
-  url: `${store.state.serverHost}/category/`,
+  url: `${store.state.serverHost}/category`,
 };
 
 const getCategoryData = () => {

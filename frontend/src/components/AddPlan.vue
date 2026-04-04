@@ -15,5 +15,5 @@ import { useStore } from "vuex";
 const store = useStore();
 const title = ref("新增复习曲线"); // 导航栏标题
 const successText = ref("已创建复习曲线");
-const url = ref(`${store.state.serverHost}/plans/`);
+const url = ref(`${store.state.serverHost}/plans`);
 </script>

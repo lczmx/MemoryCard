@@ -110,7 +110,7 @@ let status = {
   hasMore: true,
 };
 const config = {
-  url: `${store.state.serverHost}/category/`,
+  url: `${store.state.serverHost}/category`,
 };
 
 const getCategoryData = () => {
@@ -263,7 +263,7 @@ const data = {
 };
 const postConfig = {
   method: "post" as Method,
-  url: `${store.state.serverHost}/category/`,
+  url: `${store.state.serverHost}/category`,
   data,
 };
 

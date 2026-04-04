@@ -13,5 +13,5 @@ import { useStore } from "vuex";
 import CategoryEditor from "../components/categoryEditor.vue";
 
 const store = useStore();
-const url = ref(`${store.state.serverHost}/category/`);
+const url = ref(`${store.state.serverHost}/category`);
 </script>
