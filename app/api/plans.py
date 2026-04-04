@@ -47,7 +47,9 @@ async def get_plans(query_limit_params: QueryLimit = Depends(get_limit_params),
         offset=query_limit_params.offset,
         page=page,
         page_size=query_limit_params.limit,
-        total_pages=total_pages
+        total_pages=total_pages,
+        has_next=page < total_pages,
+        has_prev=page > 1
     )
     return {
         "status": 1,
