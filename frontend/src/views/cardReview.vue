@@ -684,7 +684,7 @@ useEventListener(
   justify-content: center;
   align-items: center;
   height: 100vh;
-  widows: 100vw;
+  width: 100vw;
 }
 .popup-desc-wrap {
   position: absolute;

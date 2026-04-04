@@ -122,8 +122,8 @@ const nowDateString = dayjs().format("YYYY年MM月DD日 HH:mm:ss");
   .analyse-date-text {
     color: #969790;
     font-size: 12px;
-    margin-top: 10;
-    margin-bottom: 10;
+    margin-top: 10px;
+    margin-bottom: 10px;
   }
   .analyse-item {
     margin-bottom: 30px;

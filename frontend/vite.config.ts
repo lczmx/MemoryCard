@@ -8,5 +8,12 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, 'src')
     }
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler', // 使用新版 API，移除弃用警告
+      }
+    }
   }
 })
