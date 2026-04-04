@@ -7,11 +7,29 @@ from fastapi import APIRouter, Depends
 
 from dependencies.auth import jwt_get_current_user
 from schemas.analyse import ParamsAnalyseModel, ReadAnalyseModel, SummaryAnalyseModel
-from schemas.generic import GenericResponse
+from schemas.generic import GenericResponse, PaginatedData, PaginationMeta
 from schemas.user import DBUserModel
 from service import record_service, category_service
 
 router = APIRouter(prefix="/analyse", tags=["分析相关"])
+
+
+def build_pagination_meta(total: int, limit: int, offset: int) -> PaginationMeta:
+    """
+    构建分页元数据
+    """
+    page = (offset // limit) + 1 if limit > 0 else 1
+    total_pages = (total + limit - 1) // limit if limit > 0 else 1
+    return PaginationMeta(
+        total=total,
+        limit=limit,
+        offset=offset,
+        page=page,
+        page_size=limit,
+        total_pages=total_pages,
+        has_next=page < total_pages,
+        has_prev=page > 1
+    )
 
 
 @router.get("/", response_model=GenericResponse[SummaryAnalyseModel])
@@ -45,7 +63,7 @@ async def get_summary_analyse_data(user: DBUserModel = Depends(jwt_get_current_u
     return {"status": 1, "msg": "获取成功", "data": data}
 
 
-@router.post("/review", response_model=GenericResponse[List[ReadAnalyseModel]])
+@router.post("/review", response_model=GenericResponse[PaginatedData[ReadAnalyseModel]])
 async def analyse_review(data: ParamsAnalyseModel, user: DBUserModel = Depends(jwt_get_current_user)):
     """
     获取累计复习次数数据
@@ -60,10 +78,19 @@ async def analyse_review(data: ParamsAnalyseModel, user: DBUserModel = Depends(j
     for d in sorted_date:
         temp.append({"date": d, "count": date_and_count[d]})
 
-    return {"status": 1, "msg": "获取成功", "data": temp}
+    # 计算分页
+    total = len(temp)
+    paginated_result = temp[data.offset: data.offset + data.limit]
+    meta = build_pagination_meta(total, data.limit, data.offset)
+
+    return {
+        "status": 1,
+        "msg": "获取成功",
+        "data": PaginatedData(items=paginated_result, meta=meta)
+    }
 
 
-@router.post("/create", response_model=GenericResponse[List[ReadAnalyseModel]])
+@router.post("/create", response_model=GenericResponse[PaginatedData[ReadAnalyseModel]])
 async def analyse_create(data: ParamsAnalyseModel, user: DBUserModel = Depends(jwt_get_current_user)):
     """
     获取累计创建卡片次数数据
@@ -79,4 +106,13 @@ async def analyse_create(data: ParamsAnalyseModel, user: DBUserModel = Depends(j
     for d in sorted_date:
         temp.append({"date": d, "count": date_and_count[d]})
 
-    return {"status": 1, "msg": "获取成功", "data": temp}
+    # 计算分页
+    total = len(temp)
+    paginated_result = temp[data.offset: data.offset + data.limit]
+    meta = build_pagination_meta(total, data.limit, data.offset)
+
+    return {
+        "status": 1,
+        "msg": "获取成功",
+        "data": PaginatedData(items=paginated_result, meta=meta)
+    }

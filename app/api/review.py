@@ -9,7 +9,7 @@ from fastapi.exceptions import HTTPException
 
 from service import utils
 from models import Card, Record, Category
-from schemas.generic import QueryLimit, GenericResponse, CardDateQueryLimit
+from schemas.generic import QueryLimit, GenericResponse, CardDateQueryLimit, PaginatedData, PaginationMeta
 from schemas.card import ReadSummaryCardModel, BatchCard, ReadDescNoPlanCardModel
 from schemas.category import ReadNoLoadPlanCategoryModel
 from schemas.user import DBUserModel
@@ -22,7 +22,25 @@ from dependencies.auth import jwt_get_current_user
 router = APIRouter(prefix="/review", tags=["复习相关"])
 
 
-@router.get("/", response_model=GenericResponse[List[ReadSummaryCardModel]])
+def build_pagination_meta(total: int, limit: int, offset: int) -> PaginationMeta:
+    """
+    构建分页元数据
+    """
+    page = (offset // limit) + 1 if limit > 0 else 1
+    total_pages = (total + limit - 1) // limit if limit > 0 else 1
+    return PaginationMeta(
+        total=total,
+        limit=limit,
+        offset=offset,
+        page=page,
+        page_size=limit,
+        total_pages=total_pages,
+        has_next=page < total_pages,
+        has_prev=page > 1
+    )
+
+
+@router.get("/", response_model=GenericResponse[PaginatedData[ReadSummaryCardModel]])
 async def get_review(
         limit_params: QueryLimit = Depends(get_limit_params),
         cid: int = Query(None, ge=0, description="类别的id", alias="category"),
@@ -34,14 +52,19 @@ async def get_review(
     cards_query = Card.filter(user=user).prefetch_related("category__plan")
     if cid:
         cards_query = cards_query.filter(category__id=cid)
-    cards = await cards_query.limit(limit_params.limit).offset(limit_params.offset).all()
+    cards = await cards_query.all()
     # 判断可以复习
     need_review_cards = await utils.use_need_review_cards(cards)
+    # 计算总数
+    total = len(need_review_cards)
+    # 应用分页
+    paginated_cards = need_review_cards[limit_params.offset: limit_params.offset + limit_params.limit]
+    meta = build_pagination_meta(total, limit_params.limit, limit_params.offset)
 
     return {
         "status": 1,
         "msg": "获取成功",
-        "data": need_review_cards
+        "data": PaginatedData(items=paginated_cards, meta=meta)
     }
 
 
@@ -78,7 +101,7 @@ async def batch_review_card(review_cards: BatchCard, user: DBUserModel = Depends
             status["fail_count"] += 1
             continue
         new_times = old_times + 1
-        card.review_at = datetime.now()
+        card.review_at = utils.get_now_with_timezone()
         card.review_times = new_times
         await card.save()
         await Record.create(user=user, operation=operation)
@@ -90,7 +113,7 @@ async def batch_review_card(review_cards: BatchCard, user: DBUserModel = Depends
     }
 
 
-@router.get("/need", response_model=GenericResponse[List[int]])
+@router.get("/need", response_model=GenericResponse[PaginatedData[int]])
 async def get_need_card_id(limit_params: QueryLimit = Depends(get_limit_params),
                            user: DBUserModel = Depends(jwt_get_current_user)):
     """
@@ -99,15 +122,18 @@ async def get_need_card_id(limit_params: QueryLimit = Depends(get_limit_params),
     # TODO: 优化查询, 可以跳过offset
     cards = await Card.filter(user=user).all()
     cards_id_lst = [card.pk for card in cards if await utils.card_can_review(card)]
+    total = len(cards_id_lst)
+    paginated_ids = cards_id_lst[limit_params.offset: limit_params.offset + limit_params.limit]
+    meta = build_pagination_meta(total, limit_params.limit, limit_params.offset)
 
     return {
         "status": 1,
         "msg": "获取成功",
-        "data": cards_id_lst[limit_params.offset: limit_params.offset + limit_params.limit]
+        "data": PaginatedData(items=paginated_ids, meta=meta)
     }
 
 
-@router.get("/date", response_model=GenericResponse[List[ReadSummaryCardModel]])
+@router.get("/date", response_model=GenericResponse[PaginatedData[ReadSummaryCardModel]])
 async def get_card_by_date(query_params: CardDateQueryLimit = Depends(get_card_by_date_limit_params),
                            user: DBUserModel = Depends(jwt_get_current_user)):
     """
@@ -119,16 +145,18 @@ async def get_card_by_date(query_params: CardDateQueryLimit = Depends(get_card_b
     can_review_cards = [card for card in cards if
                         await utils.card_can_review_by_date(card, query_date=query_params.date)]
 
+    total = len(can_review_cards)
     need_review_cards = can_review_cards[query_params.offset: query_params.offset + query_params.limit]
+    meta = build_pagination_meta(total, query_params.limit, query_params.offset)
 
     return {
         "status": 1,
         "msg": "获取成功",
-        "data": need_review_cards
+        "data": PaginatedData(items=need_review_cards, meta=meta)
     }
 
 
-@router.get("/category", response_model=GenericResponse[List[ReadNoLoadPlanCategoryModel]])
+@router.get("/category", response_model=GenericResponse[PaginatedData[ReadNoLoadPlanCategoryModel]])
 async def get_review_card_category(limit_params: QueryLimit = Depends(get_limit_params),
                                    user: DBUserModel = Depends(jwt_get_current_user)):
     """
@@ -146,10 +174,14 @@ async def get_review_card_category(limit_params: QueryLimit = Depends(get_limit_
             res.count = len(need_review_cards)
             result.append(res.dict())
 
+    total = len(result)
+    paginated_result = result[limit_params.offset: limit_params.offset + limit_params.limit]
+    meta = build_pagination_meta(total, limit_params.limit, limit_params.offset)
+
     return {
         "status": 1,
         "msg": "获取成功",
-        "data": result[limit_params.offset: limit_params.offset + limit_params.limit]
+        "data": PaginatedData(items=paginated_result, meta=meta)
     }
 
 
@@ -192,7 +224,7 @@ async def review_done(cid: int, user: DBUserModel = Depends(jwt_get_current_user
         return {"status": 0, "msg": "该卡片已复习完毕"}
     # ## 完成复习, 更新数据
     new_times = old_times + 1
-    card.review_at = datetime.now()
+    card.review_at = utils.get_now_with_timezone()
     card.review_times = new_times
     await card.save()
     await Record.create(user=user, operation=operation)

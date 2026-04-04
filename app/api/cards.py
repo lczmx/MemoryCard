@@ -7,7 +7,7 @@ from fastapi import APIRouter, status, Depends
 from fastapi.exceptions import HTTPException
 from schemas.card import ParamsCardModel, ReadSummaryCardModel, ReadNoCategoryCardModel, StarModel, BatchCard, \
     ResetModel, ReadResetModel
-from schemas.generic import GenericResponse, QueryLimit
+from schemas.generic import GenericResponse, QueryLimit, PaginatedData, PaginationMeta
 
 from models import Card, Category, Record
 from schemas.user import DBUserModel
@@ -22,21 +22,37 @@ from service import utils
 router = APIRouter(prefix="/cards", tags=["卡片相关"])
 
 
-@router.get("/", response_model=GenericResponse[List[ReadSummaryCardModel]])
+@router.get("/", response_model=GenericResponse[PaginatedData[ReadSummaryCardModel]])
 async def get_cards(limit_params: QueryLimit = Depends(get_limit_params), order=Depends(convert_card_order),
                     user: DBUserModel = Depends(jwt_get_current_user)):
     """
     获取多个卡片
     """
     # 先预加载 category 和 category__plan 关系
-    cards = Card.filter(user=user).prefetch_related("category__plan")
+    cards_query = Card.filter(user=user).prefetch_related("category__plan")
+    # 获取总数
+    total = await cards_query.count()
+    # 应用排序和分页
     if order:
-        cards = cards.order_by(order)
-    cards = await cards.limit(limit_params.limit).offset(limit_params.offset).all()
+        cards_query = cards_query.order_by(order)
+    cards = await cards_query.limit(limit_params.limit).offset(limit_params.offset).all()
+    # 计算分页元数据
+    page = (limit_params.offset // limit_params.limit) + 1 if limit_params.limit > 0 else 1
+    total_pages = (total + limit_params.limit - 1) // limit_params.limit if limit_params.limit > 0 else 1
+    meta = PaginationMeta(
+        total=total,
+        limit=limit_params.limit,
+        offset=limit_params.offset,
+        page=page,
+        page_size=limit_params.limit,
+        total_pages=total_pages,
+        has_next=page < total_pages,
+        has_prev=page > 1
+    )
     return {
         "status": 1,
         "msg": "获取成功",
-        "data": cards
+        "data": PaginatedData(items=cards, meta=meta)
     }
 
 

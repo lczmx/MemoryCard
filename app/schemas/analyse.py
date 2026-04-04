@@ -32,6 +32,8 @@ class ReadAnalyseModel(BaseModel):
 class ParamsAnalyseModel(BaseModel):
     start_date: date = Field(..., alias="startDate")
     end_date: date = Field(..., alias="endDate")
+    limit: int = Field(50, ge=1, le=100, description="查询条数")
+    offset: int = Field(0, ge=0, description="跳过多少条")
 
     @validator("start_date")
     def vali_min_date(cls, v, **kwargs):

@@ -8,7 +8,7 @@ from dependencies.queryParams import get_limit_params
 from dependencies.auth import jwt_get_current_user
 
 from models import Plan, Card, Record, Category
-from schemas.generic import QueryLimit, GenericResponse
+from schemas.generic import QueryLimit, GenericResponse, PaginatedData, PaginationMeta
 from schemas.plan import ReadPlanModel, ParamsPlanModel
 from schemas.user import DBUserModel
 from schemas.other import DBOperationModel
@@ -17,10 +17,11 @@ from service import utils
 router = APIRouter(prefix="/plans", tags=["复习计划相关"])
 
 
-@router.get('/', response_model=GenericResponse[List[ReadPlanModel]])
+@router.get('/', response_model=GenericResponse[PaginatedData[ReadPlanModel]])
 async def get_plans(query_limit_params: QueryLimit = Depends(get_limit_params),
                     user: DBUserModel = Depends(jwt_get_current_user),
                     no_login_user: DBUserModel = Depends(orm.get_no_login_user)):
+    """获取多个复习曲线"""
     plans = []
     # TODO: 优化offset
     default_plans = await Plan.filter(user=no_login_user).all()
@@ -35,10 +36,23 @@ async def get_plans(query_limit_params: QueryLimit = Depends(get_limit_params),
         temp.editable = True
         plans.append(temp)
 
+    # 计算分页
+    total = len(plans)
+    page = (query_limit_params.offset // query_limit_params.limit) + 1 if query_limit_params.limit > 0 else 1
+    total_pages = (total + query_limit_params.limit - 1) // query_limit_params.limit if query_limit_params.limit > 0 else 1
+    paginated_plans = plans[query_limit_params.offset: query_limit_params.offset + query_limit_params.limit]
+    meta = PaginationMeta(
+        total=total,
+        limit=query_limit_params.limit,
+        offset=query_limit_params.offset,
+        page=page,
+        page_size=query_limit_params.limit,
+        total_pages=total_pages
+    )
     return {
         "status": 1,
         "msg": "获取成功",
-        "data": plans[query_limit_params.offset: query_limit_params.offset + query_limit_params.limit]
+        "data": PaginatedData(items=paginated_plans, meta=meta)
     }
 
 

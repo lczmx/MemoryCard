@@ -7,7 +7,7 @@ from fastapi import APIRouter, status, Depends
 from fastapi.exceptions import HTTPException
 from schemas.category import ParamsCategoryModel, ReadCategoryModel, StarModel, BatchCategory, \
     ResetCardByCategory, ReadNoLoadPlanCategoryModel
-from schemas.generic import GenericResponse, QueryLimit
+from schemas.generic import GenericResponse, QueryLimit, PaginatedData, PaginationMeta
 from dependencies.queryParams import get_limit_params, convert_category_order
 from dependencies.auth import jwt_get_current_user
 
@@ -22,7 +22,25 @@ from tortoise.exceptions import DoesNotExist, MultipleObjectsReturned
 router = APIRouter(prefix="/category", tags=["分类相关"])
 
 
-@router.get("/", response_model=GenericResponse[List[ReadNoLoadPlanCategoryModel]])
+def build_pagination_meta(total: int, limit: int, offset: int) -> PaginationMeta:
+    """
+    构建分页元数据
+    """
+    page = (offset // limit) + 1 if limit > 0 else 1
+    total_pages = (total + limit - 1) // limit if limit > 0 else 1
+    return PaginationMeta(
+        total=total,
+        limit=limit,
+        offset=offset,
+        page=page,
+        page_size=limit,
+        total_pages=total_pages,
+        has_next=page < total_pages,
+        has_prev=page > 1
+    )
+
+
+@router.get("/", response_model=GenericResponse[PaginatedData[ReadNoLoadPlanCategoryModel]])
 async def get_category(query_limit_params: QueryLimit = Depends(get_limit_params),
                        order=Depends(convert_category_order), user: DBUserModel = Depends(jwt_get_current_user)):
     """
@@ -30,10 +48,12 @@ async def get_category(query_limit_params: QueryLimit = Depends(get_limit_params
     """
     # 使用 prefetch_related 预加载 plan 关系
     category_query = Category.filter(user=user).prefetch_related("plan")
+    total = await category_query.count()
 
     if order and order not in ["cardCount", "-cardCount"]:
         category_data = await category_query.limit(query_limit_params.limit).offset(
             query_limit_params.offset).order_by(order).all()
+        meta = build_pagination_meta(total, query_limit_params.limit, query_limit_params.offset)
     elif order in ["cardCount", "-cardCount"]:
         # 获取所有分类及其卡片数量
         category_lst = await category_query.all()
@@ -45,19 +65,22 @@ async def get_category(query_limit_params: QueryLimit = Depends(get_limit_params
             res.count = len(cards)
             result.append(res.dict())
         if order == "cardCount":
-            category_data = sorted(result, key=lambda x: x.get('count'))[
-                query_limit_params.offset:query_limit_params.offset + query_limit_params.limit]
+            sorted_result = sorted(result, key=lambda x: x.get('count'))
         else:
-            category_data = sorted(result, key=lambda x: x.get('count'), reverse=True)[
-                query_limit_params.offset:query_limit_params.offset + query_limit_params.limit]
+            sorted_result = sorted(result, key=lambda x: x.get('count'), reverse=True)
+        # 分页在排序后进行
+        total = len(sorted_result)
+        category_data = sorted_result[query_limit_params.offset:query_limit_params.offset + query_limit_params.limit]
+        meta = build_pagination_meta(total, query_limit_params.limit, query_limit_params.offset)
     else:
         category_data = await category_query.limit(query_limit_params.limit).offset(
             query_limit_params.offset).all()
+        meta = build_pagination_meta(total, query_limit_params.limit, query_limit_params.offset)
 
     return {
         "status": 1,
         "msg": "获取成功",
-        "data": category_data
+        "data": PaginatedData(items=category_data, meta=meta)
     }
 
 
